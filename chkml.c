@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 	len = strlen(argv[1]);
 
 	if (isalpha(fname[len - 1]))
-		err(EXIT_FAILURE, "isnum");
+		warnx("isnum");
 	else
 		section = strtoul(&fname[len - 1], 0, 10);
 
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 		/* Run it */
 		ret = system(cmd);
 		if (ret == -1)
-			warn("system");
+			warnx("system");
 		else if (ret == 127)
 			warnx("execution of shell failed");
 		else if (ret != 0)
