@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 	if (argc != 2)
 		usage();
 
-	/* Extract section number from file extenstion */
+	/* Extract section number from file extention */
 	/* XXX: not really necessary */
 	fname = argv[1];
 	len = strlen(argv[1]);
