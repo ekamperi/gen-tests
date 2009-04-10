@@ -105,7 +105,8 @@ int main(int argc, char *argv[])
 		else if (ret == 127)
 			warnx("execution of shell failed");
 		else if (ret != 0)
-			printf("Possibly missing MLINK for %s\n", mp->m_fname);
+			printf("Possibly missing MLINK for %s (%s)\n",
+			    mp->m_fname, argv[1]);
 
 		/* We don't need the function node any more in the linked list */
 		SLIST_REMOVE(&head, mp, m_entry, m_entries);
