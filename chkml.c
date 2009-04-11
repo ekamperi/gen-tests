@@ -14,7 +14,7 @@ int verbose = 0;			/* verbose level */
 SLIST_HEAD(slisthead, m_entry) head =
     SLIST_HEAD_INITIALIZER(head);
 struct m_entry {
-	char m_fname[64];		/* function name */
+	char m_fname[100];		/* function name */
 	SLIST_ENTRY(m_entry) m_entries;
 };
 
