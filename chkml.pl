@@ -9,7 +9,8 @@ use constant VERBOSE => 0;		# verbose level
 sub extract_functions;
 sub test_mlinks;
 
-extract_functions $ARGV[0];
+my @functions = extract_functions($ARGV[0]);
+test_mlinks(@functions);
 
 sub extract_functions {
     my $fname = @_[0];
@@ -17,12 +18,11 @@ sub extract_functions {
     # Open file for parsing
     open(FILE, "<", $fname) or die "Can't open $fname";
 
-    #
+    # Parse file
     my $syn = 0;
     my $desc = 0;
+    my @functions;
     while (my $line = <FILE>) {
-	my @functions;
-
 	# Mark the beginning of the SYNOPSIS section.
 	if ($line =~ m/.Sh SYNOPSIS/) {
 	    $syn = 1;
@@ -44,20 +44,18 @@ sub extract_functions {
 	    # We reached beyond the DESCRIPTION section.
 	    last if $desc == 1;
 	}
-
-	# Traverse the list of cross referenced functions and check if there exists
-	# an MLINK to it.
-	test_mlinks(@functions);
     }
-
     close(FILE);
+
+    # Return the list of cross referenced functions
+    return @functions;
 }
 
 # For every function, a specially crafted man(1) invocation
 # is constructed, ran and has its return code examined.
 sub test_mlinks {
     my @flist = @_;
- 
+
     foreach(@flist) {
 	# Merge the arguments into a single command, or else `system' won't
 	# provide us with a shell, disabling the use of redirection operators.
@@ -80,4 +78,3 @@ sub test_mlinks {
 	}
     }
 }
-
