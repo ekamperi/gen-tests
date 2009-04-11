@@ -29,21 +29,10 @@ int main(int argc, char *argv[])
 	size_t len;
 	bool syn, desc;
 	FILE *fp;
-	const char *fname;
 
 	/* Check argument count */
 	if (argc != 2)
 		usage();
-
-	/* Extract section number from file extention */
-	/* XXX: not really necessary */
-	fname = argv[1];
-	len = strlen(argv[1]);
-
-	if (isalpha(fname[len - 1]))
-		warnx("isnum");
-	else
-		section = strtoul(&fname[len - 1], 0, 10);
 
 	/* Open file */
 	fp = fopen(argv[1], "r");
