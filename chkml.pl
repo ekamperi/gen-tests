@@ -5,7 +5,7 @@ use strict;
 use constant MANPATH => "/usr/bin/man";	# man(1) path
 use constant VERBOSE => 0;		# verbose level
 
-# Predeclare subs
+# Predeclare subs.
 sub extract_functions;
 sub test_mlinks;
 
@@ -15,10 +15,10 @@ test_mlinks(@functions);
 sub extract_functions {
     my $fname = @_[0];
 
-    # Open file for parsing
+    # Open file for parsing.
     open(FILE, "<", $fname) or die "Can't open $fname";
 
-    # Parse file
+    # Parse file.
     my $syn = 0;
     my $desc = 0;
     my @functions;
@@ -34,8 +34,11 @@ sub extract_functions {
 	}
 
 	if ($syn == 1 && $desc == 0) {
-	    # We are inside a SYNOPSIS-DESCRIPTION block, which is the only part
-	    # of the file we care about.
+	    # We are inside a SYNOPSIS - DESCRIPTION block, which is the
+	    # only part of the file we care about. Here are the function
+	    # definitions, starting with the .Fn macro. Rarely, functions
+	    # with a lot parameters, start with an .Fo macro, so we must
+	    # catch those as well.
 	    if ($line =~ m/^(.Fn|.Fo)/) {
 		my @tokens = split(" ", $line);
 		push(@functions, $tokens[1]);
@@ -47,7 +50,7 @@ sub extract_functions {
     }
     close(FILE);
 
-    # Return the list of cross referenced functions
+    # Return the list of cross referenced functions.
     return @functions;
 }
 
