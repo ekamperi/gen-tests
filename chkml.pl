@@ -36,7 +36,7 @@ sub extract_functions {
 	if ($syn == 1 && $desc == 0) {
 	    # We are inside a SYNOPSIS-DESCRIPTION block, which is the only part
 	    # of the file we care about.
-	    if ($line =~ m/^.Fn/) {
+	    if ($line =~ m/^(.Fn|.Fo)/) {
 		my @tokens = split(" ", $line);
 		push(@functions, $tokens[1]);
 	    }
