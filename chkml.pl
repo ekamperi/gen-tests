@@ -6,7 +6,8 @@ use constant MANPATH => "/usr/bin/man";	# man(1) path
 use constant VERBOSE => 0;		# verbose level
 
 # Predeclare subs
-use subs qw(extract_functions);
+sub extract_functions;
+sub test_mlinks;
 
 extract_functions $ARGV[0];
 
