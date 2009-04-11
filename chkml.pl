@@ -6,11 +6,11 @@ use constant MANPATH => "/usr/bin/man";	# man(1) path
 use constant VERBOSE => 0;		# verbose level
 
 # Predeclare subs
-use subs qw(extract_function);
+use subs qw(extract_functions);
 
-extract_function $ARGV[0];
+extract_functions $ARGV[0];
 
-sub extract_function {
+sub extract_functions {
     my $fname = @_[0];
 
     # Open file for parsing
@@ -44,7 +44,7 @@ sub extract_function {
 	    last if $desc == 1;
 	}
 
-	# Traverse the list of cross referenced functions and check if there exist
+	# Traverse the list of cross referenced functions and check if there exists
 	# an MLINK to it.
 	test_mlinks(@functions);
     }
