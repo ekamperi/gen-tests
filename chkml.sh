@@ -1,19 +1,18 @@
 #!/bin/sh
 
+# Default values
+start=1    # section number to start from (1-9)
+end=9      # section number to end to (1-9)
+verbose=   # verbose level
+srcdir=    # directory where then man pages reside
+validator= # path to the actual program that does the validation
+
 usage()
 {
-    printf "Usage: %s: [-s start] [-e end] [-v] [-h] src-dir validator\n" $(basename $0) >&2
+    printf "Usage: %s: [-s start] [-e end] [-v] [-h] src-dir validator\n" \
+	$(basename $0) >&2
     exit 1
 }
-
-
-# Default values
-start=1		# section number to start from (1-9)
-end=9		# section number to end to (1-9)
-verbose=	# verbose level
-srcdir=		# directory where then man pages reside
-validator=	# path to the actual program that does the validation
-
 
 # Parse user supplied arguments
 while getopts "s:e:vh" f
@@ -42,13 +41,13 @@ srcdir=$1
 validator=$2
 
 # Validate user input
-if [ $start -lt 1 ] || [ $end -gt 9 ] || [ $start -gt $end ] || [ -z "$srcdir" ]
-then
-    usage
-fi
+[ $start -lt 1    ] && usage
+[ $end   -gt 9    ] && usage
+[ $start -gt $end ] && usage
+[ -z "$srcdir"    ] && usage
+[ -z "$validator" ] && usage
 
-
-# For every section, check the respective man pages
+# For every section, validate the associated man pages
 for i in `seq $start $end`;
 do
     echo "--- Scanning section $i ---"
