@@ -25,7 +25,6 @@ static void usage(void);
 int main(int argc, char *argv[])
 {
 	char cmd[1000], line[1000];
-	unsigned int section;
 	bool syn, desc;
 	FILE *fp;
 
