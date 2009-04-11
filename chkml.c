@@ -25,7 +25,7 @@ static void usage(void);
 int main(int argc, char *argv[])
 {
 	char cmd[1000], line[1000];
-	bool syn, desc;
+	bool syn;
 	FILE *fp;
 
 	/* Check argument count */
@@ -39,7 +39,6 @@ int main(int argc, char *argv[])
 
 	/* Parse file and extract function cross references */
 	syn = 0;
-	desc = 0;
 	SLIST_INIT(&head);
 
 	while(!feof(fp)) {
@@ -53,20 +52,15 @@ int main(int argc, char *argv[])
 				syn = 1;
 
 			if (strstr(line, ".Sh DESCRIPTION") != NULL)
-				desc = 1;
+				break;
 
-			if (syn == 1 && desc == 0) {
+			if (syn == 1) {
 				/*
 				 * We are between the SYNOPSIS and DESCRIPTION
 				 * sections of the man page, which is the only
 				 * part of the file we care about.
 				 */
 				parseline(line);
-			} else {
-				if (desc == 1) {
-					/* We passed beyond the DESCRIPTION */
-					break;
-				}
 			}
 		}
 	}
