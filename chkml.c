@@ -114,13 +114,14 @@ parseline(char *line)
 	found = 0;
 	for (token = strtok_r(line, " \n", &last); token;
 	     token = strtok_r(NULL, " \n", &last)) {
-		if (strcmp(token, ".Fn") == 0) {
+		if ((strcmp(token, ".Fn") == 0) ||
+		    (strcmp(token, ".Fo") == 0)) {
 			/* We found a function reference */
 			found = 1;
 		} else {
 			if (found) {
-				/* The second token after an .Fn macro, is the
-				 * function name. The precise syntax is:
+				/* The second token after an .Fn (or .Fo) macro,
+				 * is the function name. The precise syntax is:
 				 * .Fn <function> [<parameters>]
 				 */
 				mp = malloc(sizeof(*mp));
