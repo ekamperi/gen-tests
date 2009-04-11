@@ -10,7 +10,7 @@ sub extract_functions;
 sub test_mlinks;
 
 my @functions = extract_functions($ARGV[0]);
-test_mlinks(@functions);
+test_mlinks(($ARGV[0], @functions));
 
 sub extract_functions {
     my $fname = @_[0];
@@ -57,7 +57,8 @@ sub extract_functions {
 # For every function, a specially crafted man(1) invocation
 # is constructed, ran and has its return code examined.
 sub test_mlinks {
-    my @flist = @_;
+    my $fname = @_[0];
+    my @flist = @_[1..$#_];
 
     foreach(@flist) {
 	# Merge the arguments into a single command, or else `system' won't
@@ -77,7 +78,7 @@ sub test_mlinks {
 	    ($? & 127), ($? & 128) ? 'with' : 'without';
 	}
 	elsif ($? != 0) {
-	    print "Possibly missing MLINK for $_\n";
+	    print "Possibly missing MLINK for $_ ($fname)\n";
 	}
     }
 }
