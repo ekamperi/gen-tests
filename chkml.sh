@@ -1,4 +1,4 @@
-#/bin/sh
+#!/bin/sh
 
 for i in `seq 1 9`; do
     echo "--- Scanning section $i ---"
