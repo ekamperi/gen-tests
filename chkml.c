@@ -26,7 +26,6 @@ int main(int argc, char *argv[])
 {
 	char cmd[1000], line[1000];
 	unsigned int section;
-	size_t len;
 	bool syn, desc;
 	FILE *fp;
 
