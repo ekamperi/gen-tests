@@ -20,7 +20,6 @@ sub extract_functions {
 
     # Parse file.
     my $syn = 0;
-    my $desc = 0;
     my @functions;
     while (my $line = <FILE>) {
 	# Mark the beginning of the SYNOPSIS section.
@@ -28,12 +27,10 @@ sub extract_functions {
 	    $syn = 1;
 	}
 
-	# Mark the beginning of the DESCRIPTION section.
-	if ($line =~ m/.Sh DESCRIPTION/) {
-	    $desc = 1;
-	}
+	# We've reached the DESCRIPTION section, therefore done.
+	last if ($line =~ m/.Sh DESCRIPTION/);
 
-	if ($syn == 1 && $desc == 0) {
+	if ($syn == 1) {
 	    # We are inside a SYNOPSIS - DESCRIPTION block, which is the
 	    # only part of the file we care about. Here are the function
 	    # definitions, starting with the .Fn macro. Rarely, functions
@@ -43,9 +40,6 @@ sub extract_functions {
 		my @tokens = split(" ", $line);
 		push(@functions, $tokens[1]);
 	    }
-	} else {
-	    # We reached beyond the DESCRIPTION section.
-	    last if $desc == 1;
 	}
     }
     close(FILE);
