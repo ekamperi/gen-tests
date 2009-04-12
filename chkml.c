@@ -1,3 +1,9 @@
+/*
+ * The following code extracts all function names that are mentioned in the
+ * SYNOPSIS section of an mdoc file, and for each one of them it calls man(1)
+ * to (indirectly) check whether there is an MLINK to them.
+ */
+
 #include <ctype.h>
 #include <err.h>
 #include <stdbool.h>

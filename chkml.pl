@@ -1,5 +1,9 @@
 #!/usr/pkg/bin/perl
 
+# The following code extracts all function names that are mentioned in the
+# SYNOPSIS section of an mdoc file, and for each one of them it calls man(1)
+# to (indirectly) check whether there is an MLINK to them.
+
 use strict;
 
 use constant MANPATH => "/usr/bin/man";	# man(1) path
