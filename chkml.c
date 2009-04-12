@@ -106,6 +106,8 @@ int main(int argc, char *argv[])
 	return (EXIT_SUCCESS);
 }
 
+#define VALID_FUNCTION(x) ((*x) != '*' && (*x) != '\\' && (*x) != '(')
+
 static int
 parseline(char *line)
 {
@@ -122,7 +124,7 @@ parseline(char *line)
 			 * precise syntax is: .Fn <function> [<parameters>]
 			 */
 			token = strtok_r(NULL, " \n", &last);
-			if (token) {
+			if (token && VALID_FUNCTION(token)) {
 				mp = malloc(sizeof(*mp));
 				strncpy(mp->m_fname, token, sizeof(mp->m_fname));
 				SLIST_INSERT_HEAD(&head, mp, m_entries);
