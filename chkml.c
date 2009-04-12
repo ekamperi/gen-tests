@@ -54,17 +54,19 @@ int main(int argc, char *argv[])
 				err(EXIT_FAILURE, "fread");
 			}
 		} else {
-			if (strstr(line, ".Sh SYNOPSIS") != NULL)
+			if (strstr(line, ".Sh SYNOPSIS") != NULL) {
 				syn = 1;
+				continue;
+			}
 
-			if (strstr(line, ".Sh DESCRIPTION") != NULL)
+			if (syn == 1 && strstr(line, ".Sh") != NULL)
 				break;
 
 			if (syn == 1) {
 				/*
-				 * We are between the SYNOPSIS and DESCRIPTION
-				 * sections of the man page, which is the only
-				 * part of the file we care about.
+				 * We are inside the SYNOPSIS section the man
+				 * page, which is the only part of the file we
+				 * care about anyway.
 				 */
 				parseline(line);
 			}
