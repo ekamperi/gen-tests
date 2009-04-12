@@ -29,17 +29,18 @@ sub extract_functions {
 	# Mark the beginning of the SYNOPSIS section.
 	if ($line =~ m/.Sh SYNOPSIS/) {
 	    $syn = 1;
+	    next;
 	}
 
-	# We've reached the DESCRIPTION section, therefore done.
-	last if ($line =~ m/.Sh DESCRIPTION/);
+	# We are beyond the SYNOPSIS section, therefore done.
+	last if ($syn == 1 && $line =~ m/.Sh/);
 
 	if ($syn == 1) {
-	    # We are inside a SYNOPSIS - DESCRIPTION block, which is the
-	    # only part of the file we care about. Here are the function
-	    # definitions, starting with the .Fn macro. Rarely, functions
-	    # with a lot parameters, start with an .Fo macro, so we must
-	    # catch those as well.
+	    # We are inside the SYNOPSIS section of the man page, which
+	    # is the only part of the file we care about. Here are the
+	    # function definitions, starting with the .Fn macro. Rarely,
+	    # functions  with a lot parameters, start with an .Fo macro,
+	    # so we must catch those as well.
 	    if ($line =~ m/^(.Fn|.Fo)/) {
 		my @tokens = split(" ", $line);
 		push(@functions, $tokens[1]);
