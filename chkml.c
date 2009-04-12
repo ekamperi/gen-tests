@@ -103,21 +103,18 @@ parseline(char *line)
 {
 	struct m_entry *mp;
 	char *token, *last;
-	bool found;
 
-	found = 0;
-	for (token = strtok_r(line, " \n", &last); token;
-	     token = strtok_r(NULL, " \n", &last)) {
+	token = strtok_r(line, " \n", &last);
+	if (token) {
 		if ((strcmp(token, ".Fn") == 0) ||
 		    (strcmp(token, ".Fo") == 0)) {
-			/* We found a function reference */
-			found = 1;
-		} else {
-			if (found) {
-				/* The second token after an .Fn (or .Fo) macro,
-				 * is the function name. The precise syntax is:
-				 * .Fn <function> [<parameters>]
-				 */
+			/*
+			 * We found a function reference. The second token after
+			 * an .Fn or .Fo macro, is the function name itself. The
+			 * precise syntax is: .Fn <function> [<parameters>]
+			 */
+			token = strtok_r(NULL, " \n", &last);
+			if (token) {
 				mp = malloc(sizeof(*mp));
 				strncpy(mp->m_fname, token, sizeof(mp->m_fname));
 				SLIST_INSERT_HEAD(&head, mp, m_entries);
@@ -126,9 +123,7 @@ parseline(char *line)
 		}
 	}
 
-	/* Really, we shouldn't get here */
-	if (verbose)
-		warnx("mismatch during line parsing");
+	/* No function reference */
 	return (-1);
 }
 
