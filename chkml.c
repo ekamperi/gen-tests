@@ -74,9 +74,10 @@ int main(int argc, char *argv[])
 	}
 
 	/*
-	 * For every function referenced in the manpage, check if there is an
-	 * MLINK to it. We do so by issuing a specially crafted man(1) invocation
-	 * and then checking its return code.
+	 * For every function referenced in the manpage, check if there is
+	 * an MLINK to it. We do so, by issuing a specially crafted man(1)
+	 * invocation and then checking its return code. Mind that system(3)
+	 * invokes the /bin/sh shell.
 	 */
 	struct m_entry *mp;
 	int ret;
@@ -97,7 +98,7 @@ int main(int argc, char *argv[])
 			printf("Possibly missing MLINK for %s (%s)\n",
 			    mp->m_fname, argv[1]);
 
-		/* We don't need the function node any more in the linked list */
+		/* We don't need the function node any more */
 		SLIST_REMOVE(&head, mp, m_entry, m_entries);
 		free(mp);
 	}

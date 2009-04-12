@@ -38,9 +38,7 @@ sub extract_functions {
 	if ($syn == 1) {
 	    # We are inside the SYNOPSIS section of the man page, which
 	    # is the only part of the file we care about. Here are the
-	    # function definitions, starting with the .Fn macro. Rarely,
-	    # functions  with a lot parameters, start with an .Fo macro,
-	    # so we must catch those as well.
+	    # function definitions, starting with the .Fn (or .Fo) macro.
 	    if ($line =~ m/^(\.F[no]) (?!\*|\\|\()/) {
 		my @tokens = split(" ", $line);
 		push(@functions, $tokens[1]);
@@ -62,6 +60,7 @@ sub test_mlinks {
     foreach(@flist) {
 	# Merge the arguments into a single command, or else `system' won't
 	# provide us with a shell, disabling the use of redirection operators.
+	# Mind that system command invokes the /bin/sh shell.
 	my $cmd = join (' ', MANPATH, "-w", $_, "1>&-", "2>&-");
 
 	# Run the command and check its return status.
