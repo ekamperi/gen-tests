@@ -41,7 +41,7 @@ sub extract_functions {
 	    # function definitions, starting with the .Fn macro. Rarely,
 	    # functions  with a lot parameters, start with an .Fo macro,
 	    # so we must catch those as well.
-	    if ($line =~ m/^(.Fn|.Fo)/) {
+	    if ($line =~ m/^(\.F[no]) (?!\*|\\|\()/) {
 		my @tokens = split(" ", $line);
 		push(@functions, $tokens[1]);
 	    }
