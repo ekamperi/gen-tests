@@ -103,7 +103,7 @@ parseline(char *line)
 {
 	struct m_entry *mp;
 	char *token, *last;
-	bool found ;
+	bool found;
 
 	found = 0;
 	for (token = strtok_r(line, " \n", &last); token;
