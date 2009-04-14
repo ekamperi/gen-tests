@@ -10,9 +10,9 @@ validate_file()
     SECTION=`basename $1 | awk -F '.' '{ print $(NF-1) }'`
     MANPAGE=`basename $1 | awk -F '.' '{ sub(/\.[^.]*\.[^.]*$/, ""); print }'`
 
-    ISREFD=`man $SECTION $MANPAGE | col -b | grep $MANPAGE`
+    man $SECTION $MANPAGE | col -b | grep -q $MANPAGE
     #echo "man $SECTION $MANPAGE | col -b | grep $MANPAGE"
-    if [ ! -z "$ISREFD" ];
+    if [ $? -eq 0 ];
     then
 	return
     fi
