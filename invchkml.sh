@@ -23,10 +23,10 @@ validate_file()
 # Scan a directory hierarchy and validate all man page files in it.
 scan_path()
 {
-    for i in `seq $START $END`
+    for i in `seq $2 $3`
     do
 	echo "--- Scanning section  $i ---"
-	for j in `find "$MANDIR" -name "*.$i.gz"`
+	for j in `find "$1" -name "*.$i.gz"`
 	do
 	    #echo "Validating $j"
 	    validate_file "$j"
@@ -69,3 +69,6 @@ shift `expr $OPTIND - 1`
 [ $END   -gt 9    ] && usage
 [ $START -gt $END ] && usage
 [ -z "$MANDIR"    ] && usage
+
+# Fire!
+scan_path "$MANDIR" $START $END
