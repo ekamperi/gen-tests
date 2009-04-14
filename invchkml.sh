@@ -1,8 +1,8 @@
 #!/bin/sh
 
-START=1
-END=9
-MANDIR=/usr/share/man
+START=1	# Section to start from (1-9)
+END=9	# Section to end to (1-9)
+MANDIR=/usr/share/man	# Path to directory where man page files reside
 
 # MLINK is valid, if man page references the caller.
 validate_file()
