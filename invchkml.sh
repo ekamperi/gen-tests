@@ -10,7 +10,7 @@ validate_file()
     SECTION=`basename $1 | awk -F '.' '{ print $(NF-1) }'`
     MANPAGE=`basename $1 | awk -F '.' '{ sub(/\.[^.]*\.[^.]*$/, ""); print }'`
 
-    man $SECTION $MANPAGE | col -b | grep -q $MANPAGE
+    man $SECTION $MANPAGE 2>&- | col -b | grep -q "$MANPAGE"
     #echo "man $SECTION $MANPAGE | col -b | grep -q $MANPAGE"
     if [ $? -eq 0 ];
     then
