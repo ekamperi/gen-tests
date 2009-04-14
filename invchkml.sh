@@ -11,7 +11,7 @@ validate_file()
     MANPAGE=`basename $1 | awk -F '.' '{ sub(/\.[^.]*\.[^.]*$/, ""); print }'`
 
     man $SECTION $MANPAGE | col -b | grep -q $MANPAGE
-    #echo "man $SECTION $MANPAGE | col -b | grep $MANPAGE"
+    #echo "man $SECTION $MANPAGE | col -b | grep -q $MANPAGE"
     if [ $? -eq 0 ];
     then
 	return
@@ -63,10 +63,6 @@ do
     esac
 done
 shift `expr $OPTIND - 1`
-
-# Make sure user input is not valid.
-[ $START -lt 1    ] && usage
-[ $END   -gt 9    ] && usage
 
 # Fire!
 scan_path "$MANDIR" $START $END
