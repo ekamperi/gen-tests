@@ -37,7 +37,7 @@ scan_path()
 # Print usage information.
 usage()
 {
-    echo "usage: `basename $0` [-s start] [-e end] [-v] [-h] man-dir\n"
+    echo "usage: `basename $0` [-s start] [-e end] [-v] [-h] [man-dir]\n"
     exit 1
 }
 
@@ -64,11 +64,9 @@ do
 done
 shift `expr $OPTIND - 1`
 
-# Make sure user input is valid.
+# Make sure user input is not valid.
 [ $START -lt 1    ] && usage
 [ $END   -gt 9    ] && usage
-[ $START -gt $END ] && usage
-[ -z "$MANDIR"    ] && usage
 
 # Fire!
 scan_path "$MANDIR" $START $END
