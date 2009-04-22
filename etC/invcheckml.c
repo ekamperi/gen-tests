@@ -39,7 +39,8 @@ int main(int argc, char *argv[])
 	}
 
 	/* Construct a man(1) invocation */
-	snprintf(cmd, sizeof(cmd), "%s %s %s 2>&- | col -b", MAN_PATH, section, manpage);
+	snprintf(cmd, sizeof(cmd), "%s %s %s 2>&- | col -b",
+	    MAN_PATH, section, manpage);
 
 	/* Open a pipe to man(1) */
 	fp = popen(cmd, "r");
