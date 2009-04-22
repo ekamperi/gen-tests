@@ -39,7 +39,7 @@ sub extract_functions {
 	    # We are inside the SYNOPSIS section of the man page, which
 	    # is the only part of the file we care about. Here are the
 	    # function definitions, starting with the .Fn (or .Fo) macro.
-	    if ($line =~ m/^(\.F[no]) (?!\*|\\|\(|\")/) {
+	    if ($line =~ m/^(\.F[no] [a-zA-Z])/) {
 		my @tokens = split(" ", $line);
 		push(@functions, $tokens[1]);
 	    }
