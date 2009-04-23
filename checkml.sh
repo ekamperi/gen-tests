@@ -47,6 +47,8 @@ validator=$2
 [ -z "$srcdir"    ] && usage
 [ -z "$validator" ] && usage
 
+echo "Blacklist = $blacklist"
+
 # Escape blacklist, so that grep(1) can process it.
 blacklist=`echo "$blacklist" | sed 's/^/\\\(/g'`  # prepend \(
 blacklist=`echo "$blacklist" | sed 's/$/\\\)/g'`  # append  \)
