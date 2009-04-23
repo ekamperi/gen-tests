@@ -41,9 +41,6 @@ srcdir=$1
 validator=$2
 
 # Validate user input
-[ $start -lt 1    ] && usage
-[ $end   -gt 9    ] && usage
-[ $start -gt $end ] && usage
 [ -z "$srcdir"    ] && usage
 [ -z "$validator" ] && usage
 
