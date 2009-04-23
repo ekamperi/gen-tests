@@ -11,7 +11,7 @@ static void usage();
 
 int main(int argc, char *argv[])
 {
-	char buf[100000];
+	char buf[1000];
 	char cmd[100];
 	char manpage[100];
 	char section[2];
