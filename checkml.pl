@@ -62,11 +62,11 @@ sub test_mlinks {
 	# provide us with a shell, disabling the use of redirection operators.
 	# Mind that system command invokes the /bin/sh shell.
 	my $cmd = join (' ', MANPATH, "-w", $_, "1>&-", "2>&-");
-
-	# Run the command and check its return status.
 	if (VERBOSE) {
 	    print "Executing command: " . $cmd . "\n";
 	}
+
+	# Run the command and check its return status.
 	system($cmd);
 	if ($? == -1) {
 	    print "Failed to execute: $!\n";
