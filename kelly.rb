@@ -79,6 +79,11 @@ class IrcConnection
 			# So that we know where to respond to Her.
 			receiver = (msg.params[0] == @nick) ? msg.name : msg.params[0]
 			# send_msg("PRIVMSG " + receiver + " :Beket stfu")
+			begin
+				send_msg("PRIVMSG " + receiver + " :" + eval(msg.params[1..-1].join(' ')).to_s())
+			rescue Exception => exc
+				send_msg("PRIVMSG " + receiver + " : Syntax error (rescued)")
+			end
 		end
 
 		puts ">>>  #{msg.name} talked to #{msg.params[0]}"
