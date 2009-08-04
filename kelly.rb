@@ -167,5 +167,15 @@ class IrcStatistics
 	end
 end
 
-conn = IrcConnection.new('kelly^', ['asdf', 'hellas'], 'fm1.irc.gr', 6667)
-conn.start_connection
+threads = []
+nicks = ['kelly^', 'stathis']
+
+for nick in nicks
+    threads << Thread.new(nick) { |aNick|
+
+    conn = IrcConnection.new(aNick, ['asdf'], 'fm1.irc.gr', 6667)
+    conn.start_connection
+end
+
+# Wait for threads to complete.
+threads.each { |aThread|  aThread.join }
