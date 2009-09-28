@@ -1,0 +1,138 @@
+\documentclass[margin,line]{res}
+
+\makeatletter
+\renewenvironment{thebibliography}[1]
+     {%\section*{\refname}% <--- outcommented
+      \@mkboth{\MakeUppercase\refname}{\MakeUppercase\refname}%
+      \list{\@biblabel{\@arabic\c@enumiv}}%
+           {\settowidth\labelwidth{\@biblabel{#1}}%
+            \leftmargin\labelwidth
+            \advance\leftmargin\labelsep
+            \@openbib@code
+            \usecounter{enumiv}%
+            \let\p@enumiv\@empty
+            \renewcommand\theenumiv{\@arabic\c@enumiv}}%
+      \sloppy
+      \clubpenalty4000
+      \@clubpenalty \clubpenalty
+      \widowpenalty4000%
+      \sfcode`\.\@m}
+     {\def\@noitemerr
+       {\@latex@warning{Empty `thebibliography' environment}}%
+      \endlist}
+\makeatother
+
+\oddsidemargin -.5in
+\evensidemargin -.5in
+\textwidth=6.0in
+\itemsep=0in
+\parsep=0in
+
+\newenvironment{list1}{
+  \begin{list}{\ding{113}}{
+      \setlength{\itemsep}{0in}
+      \setlength{\parsep}{0in} \setlength{\parskip}{0in}
+      \setlength{\topsep}{0in} \setlength{\partopsep}{0in}
+      \setlength{\leftmargin}{0.17in}}}{\end{list}}
+\newenvironment{list2}{
+  \begin{list}{$\bullet$}{%
+      \setlength{\itemsep}{0in}
+      \setlength{\parsep}{0in} \setlength{\parskip}{0in}
+      \setlength{\topsep}{0in} \setlength{\partopsep}{0in}
+      \setlength{\leftmargin}{0.2in}}}{\end{list}}
+
+\begin{document}
+
+\name{Efstathios Ch. Kamperis \vspace*{.1in}}
+
+\begin{resume}
+\section{\sc Contact Information}
+\vspace{.05in}
+\begin{tabular}{@{}p{2in}p{4in}}
+Doiranis 23 Street           & {\it Voice:}   (+30) 2310 848593 \\
+Thessaloniki, 54638 Greece   & {\it Mobile:}  (+30) 6976 761308 \\
+                             & {\it E-mail:}  ekamperi@gmail.com\\
+                             & {\it www:} http://stathisk.ath.cx\\
+\end{tabular}
+
+\section{\sc Desired employment}
+Specialty of Radiotherapy Oncology
+
+%_______________________________________________________________________________
+\section{\sc Education}
+{\bf Aristotle University}, Thessaloniki, Greece\\
+{\em Faculty of Sciences, School of Physics}\\
+Undergraduate student \hfill {\bf Sep, 2008 - }\\
+
+{\bf Aristotle University}, Thessaloniki, Greece\\
+{\em Department of Medicine}\\
+Graduate Student (Grade: 7.71/10) \hfill {\bf Sep, 2000 - Jun 2007}\\
+
+{\bf High School}, Thessaloniki, Greece\\
+Graduate Student (Grade: 19.67/20) \hfill {\bf Sep, 2000}\\
+
+%_______________________________________________________________________________
+\section{\sc Working experience}
+{\bf Google Summer of Code 2009 Student}\\
+{\em Funded by Google to audit DragonFly BSD operating system\\ against the POSIX and C99 standards.}
+\hfill {\bf May, 2009 - Aug, 2009}\\
+
+{\bf Military serice}\\
+{\em Served my mandatory military service as a doctor\\in 490 Communications Battalion of NDC-GR}
+\hfill {\bf Jan, 2008 - Nov, 2008}\\
+
+{\bf Gennimatas Hospital}, Thessaloniki, Greece\\
+{\em Technician in the Gastric Motility \& Manometry Lab} \hfill {\bf Sep, 2000 - Nov, 2007}\\
+Working in 24-h oesophageal pH-metry, oesophageal manometry\\
+and anorectal manometry.
+
+%_______________________________________________________________________________
+\section{\sc Languages}
+\begin{list2}
+\item English (FCE 1997, CAE 2003, CPE 2004, Michigan Proficiency 2004)
+\item Italian (Diploma di lingua Italiana 1995)
+\item Greek (Mother language)
+\end{list2}
+
+%_______________________________________________________________________________
+\section{\sc Computer Skills}
+\small (Sorted descendingly from proficient to basic level of knowledge)
+\normalsize
+\begin{list2}
+\item Operating Systems: Linux, \{Net, DragonFly\}BSD, OpenSolaris, Windows
+\item Programming languages: C, Java, POSIX shell scripting, Ruby, C++, Lisp
+\item Applications: \LaTeX, MS Office
+\item Statistical Packages: SPSS, R
+\item Computer Algebra Systems: Mathematica, Matlab, Maxima
+\item Hardware: Basic embedded development with AVR 8bit microcontrollers
+\item Web development: php/SQL
+\end{list2}
+
+%_______________________________________________________________________________
+\section{\sc Honors and Awards}
+First prize at Hellenic Mathematic Society (HMS) Competition, Thessaloniki, 2000\\
+First prize at Hellenic Mathematic Society (HMS) Competition, Thessaloniki, 2001
+
+%_______________________________________________________________________________
+\section{\sc Volunteering}
+\begin{list2}
+\item DragonFly BSD developer with commit access\\(http://www.dragonflybsd.org/team/)
+\item Participated in GNOME Internationalization project for Greek language\\(http://www.gnome.org/i18n/)
+\item Participated in NetBSD wiki documentation project\\(http://wiki.netbsd.se)
+\item Maintainer in pkgsrc-wip project\\(http://pkgsrc-wip.sourceforge.net/)
+\item Various contributions to free/open source projects\\(bug reports, patches, etc)
+\end{list2}
+
+%_______________________________________________________________________________
+\section{\sc Certificates and recommendations}
+Available upon request
+
+%_______________________________________________________________________________
+\section{\sc Publications}
+\renewcommand\refname{}
+\nocite{*}
+\bibliographystyle{unsrt}
+\bibliography{mycv}
+\end{resume}
+
+\end{document}
