@@ -187,43 +187,49 @@ bloom_get_maxbits(const bloom_t *p)
 static void *
 querythread(void *arg)
 {
+        char buf[NSTRINGS][STRINGSIZE];
+
 	/* Do NOT be tempted to dereference the bloom pointer */
 	bloom_t *p = arg;
 
-	size_t i, j;
+        size_t i, j;
+        for (i = 0; i < NSTRINGS; i++) {
+		/* Zero out buffer. */
+		memset(buf[i], 0, STRINGSIZE);
+		for (j = 0; j < 1 + rand() % (STRINGSIZE-1); j++) {
+			buf[i][j] = 'a' + rand() % ('z' - 'a');
+		}
+		/* printf("%s\n", buf[i]); */
+	}
+
+	for (i = 0; i < NSTRINGS; i++) {
+		bloom_add(p, buf[i]);
+	}
+
 	for (i = 0; i < 1000; i++) {
-		printf("---Querying bloom filter--- %u/%u\r", i, 1000);
-		fflush(stdout);
 		for (j = 0; j < NSTRINGS; j++)
-			assert(bloom_query(&b, buf[j]));
+			assert(bloom_query(p, buf[j]));
 	}
 
 	pthread_exit(NULL);
 }
 
+static void
+diep(const char *s)
+{
+	perror(s);
+	exit(EXIT_FAILURE);
+}
+
 int
 main(void)
 {
-        char buf[NSTRINGS][STRINGSIZE];
+	bloom_t b;
 
         /* Initialize random number generator. */
         srand(time(NULL));
 
-        /* Generate some random strings. */
-	printf("---Generating random strings---\n");
-
-	size_t i, j;
-        for (i = 0; i < NSTRINGS; i++) {
-                /* Zero out buffer. */
-                memset(buf[i], 0, STRINGSIZE);
-                for (j = 0; j < 1 + rand() % (STRINGSIZE-1); j++) {
-                        buf[i][j] = 'a' + rand() % ('z' - 'a');
-                }
-                /* printf("%s\n", buf[i]); */
-        }
-
 	/* Create the bloom filter */
-	bloom_t b;
 	size_t (*h[])(const void *obj) = { hash1, hash2 };
 
 	if (bloom_init(&b, 10000000, h, 2) == -1)
@@ -231,12 +237,23 @@ main(void)
 
 	bloom_print_hashf(&b);
 
-	/* Populate bloom filter */
-	printf("---Populating bloom filter---\n");
+	/* Create the threads */
+#define NTHREADS 10
 
-	for (i = 0; i < NSTRINGS; i++) {
-		bloom_add(&b, buf[i]);
-		assert(bloom_query(&b, buf[i]));
+	pthread_t tid[NTHREADS];
+	int i, rv;
+
+	for (i = 0; i < NTHREADS; i++) {
+		rv = pthread_create(&tid[i], NULL, querythread, &b);
+		if (rv != 0)
+			diep("pthread_create()");
+	}
+
+	/* Wait for threads to complete */
+	for (i = 0; i < NTHREADS; i++) {
+		rv = pthread_join(tid[i], NULL);
+		if (rv != 0)
+			diep("pthread_join()");
 	}
 
 	/* Print some usage statistics */
