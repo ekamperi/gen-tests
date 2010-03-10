@@ -23,7 +23,7 @@ typedef struct bloom {
 		offset = bit - CHAR_BIT * index;	\
 	} while(0)
 
-#define NSTRINGS	 500000
+#define NSTRINGS	 100000
 #define STRINGSIZE	     20
 
 /* -------------------------------------------------------------------------- */
@@ -101,9 +101,9 @@ bloom_fini(bloom_t *p)
 	assert(p);
 
 	pthread_rwlock_destroy(&p->bl_rwlock);
-
 	free(p->bl_bitarray);
 	free(p->bl_hashf);
+
 	p = NULL;
 }
 
@@ -118,12 +118,15 @@ bloom_add(bloom_t *p, const void *obj)
 		bit = (*p->bl_hashf[i])(obj) % p->bl_maxbits;
 
 		BLOOM_SPOT_BIT(bit, idx, ofs);
+
+		pthread_rwlock_wrlock(&p->bl_rwlock);
 		p->bl_bitarray[idx] |= (1 << ofs);
+		pthread_rwlock_unlock(&p->bl_rwlock);
 	}
 }
 
 int
-bloom_query(const bloom_t *p, const void *obj)
+bloom_query(bloom_t *p, const void *obj)
 {
 	assert(p);
 	assert(obj);
@@ -134,7 +137,11 @@ bloom_query(const bloom_t *p, const void *obj)
 
 		BLOOM_SPOT_BIT(bit, idx, ofs);
 
-		if ((p->bl_bitarray[idx] & (1 << ofs)) == 0) {
+		pthread_rwlock_rdlock(&p->bl_rwlock);
+		int rv = p->bl_bitarray[idx] & (1 << ofs);
+		pthread_rwlock_unlock(&p->bl_rwlock);
+
+		if (rv == 0) {
 			/* Object does NOT belong to set */
 			return (0);
 		}
@@ -177,6 +184,23 @@ bloom_get_maxbits(const bloom_t *p)
 	return (p->bl_maxbits);
 }
 
+static void *
+querythread(void *arg)
+{
+	/* Do NOT be tempted to dereference the bloom pointer */
+	bloom_t *p = arg;
+
+	size_t i, j;
+	for (i = 0; i < 1000; i++) {
+		printf("---Querying bloom filter--- %u/%u\r", i, 1000);
+		fflush(stdout);
+		for (j = 0; j < NSTRINGS; j++)
+			assert(bloom_query(&b, buf[j]));
+	}
+
+	pthread_exit(NULL);
+}
+
 int
 main(void)
 {
@@ -215,14 +239,7 @@ main(void)
 		assert(bloom_query(&b, buf[i]));
 	}
 
-	/* */
-	for (i = 0; i < 1000; i++) {
-		printf("---Querying bloom filter--- %u/%u\r", i, 1000);
-		fflush(stdout);
-		for (j = 0; j < NSTRINGS; j++)
-			assert(bloom_query(&b, buf[j]));
-	}
-
+	/* Print some usage statistics */
 	printf("usedbits = %u\n", bloom_get_usedbits(&b));
 	printf("maxbits = %u\n", bloom_get_maxbits(&b));
 
@@ -231,3 +248,4 @@ main(void)
 
 	return (EXIT_SUCCESS);
 }
+
