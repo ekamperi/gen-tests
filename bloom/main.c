@@ -45,6 +45,9 @@ querythread(void *arg)
 	/* Do NOT be tempted to dereference the bloom pointer */
 	bloom_t *p = arg;
 
+	printf("[%p] Generating random strings\n", pthread_self());
+	fflush(NULL);
+
         size_t i, j;
         for (i = 0; i < NSTRINGS; i++) {
 		/* Zero out buffer. */
@@ -55,10 +58,14 @@ querythread(void *arg)
 		/* printf("%s\n", buf[i]); */
 	}
 
+        printf("[%p] Populating bloom filter\n", pthread_self());
+        fflush(NULL);
 	for (i = 0; i < NSTRINGS; i++) {
 		bloom_add(p, buf[i]);
 	}
 
+        printf("[%p] Querying bloom filter\n", pthread_self());
+        fflush(NULL);
 	for (i = 0; i < 1000; i++) {
 		for (j = 0; j < NSTRINGS; j++)
 			assert(bloom_query(p, buf[j]));
@@ -91,7 +98,7 @@ main(void)
 	bloom_print_hashf(&b);
 
 	/* Create the threads */
-#define NTHREADS 10
+#define NTHREADS 2
 
 	pthread_t tid[NTHREADS];
 	int i, rv;
