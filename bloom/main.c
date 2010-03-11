@@ -84,13 +84,20 @@ diep(const char *s)
 int
 main(void)
 {
-	bloom_t b;
+	bloom_t a, b, c;
 
         /* Initialize random number generator. */
         srand(time(NULL));
 
 	/* Create the bloom filter */
 	size_t (*h[])(const void *obj) = { hash1, hash2 };
+	size_t (*e[])(const void *obj) = { hash1, hash1 };
+
+	bloom_init(&a, 1000, h, 2);
+	bloom_init(&b, 1000, e, 2);
+
+	printf("%d\n", bloom_unite(&a, &b, &c));
+	exit(1);
 
 	if (bloom_init(&b, 10000000, h, 2) == -1)
 		exit(1);

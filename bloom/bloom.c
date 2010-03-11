@@ -28,10 +28,8 @@ bloom_init(bloom_t *p, size_t maxbits,
     size_t (*hashf[])(const void *obj), size_t nhashf)
 {
 	assert(p);
-
-	/* Validate input */
-	if (nhashf == 0)
-		return (-1);
+	assert(hashf);
+	assert(nhashf > 0);
 
 	/* Allocate memory for the bits array */
 	p->bl_bitarray = malloc(1 + (maxbits / CHAR_BIT));
@@ -150,3 +148,38 @@ bloom_get_maxbits(const bloom_t *p)
 {
 	return (p->bl_maxbits);
 }
+
+int
+bloom_unite(const bloom_t *p1, const bloom_t *p2, bloom_t *u)
+{
+	assert(p1);
+	assert(p2);
+
+	/* The size of two bloom filters must be the same */
+	if (p1->bl_maxbits != p2->bl_maxbits)
+		return (-1);
+
+	/* The number of hashing functions must be the same */
+	if (p1->bl_nhashf != p2->bl_nhashf)
+		return (-1);
+
+	/* Hash functions must be the same */
+	size_t i;
+	for (i = 0; i < p1->bl_nhashf; i++) {
+		if (p1->bl_hashf[i] != p2->bl_hashf[i]) {
+			fprintf(stderr,
+			    "WARNING: Hashing functionsd may differ. "
+			    "Proceeding but results may be spurious\n.");
+			break;
+		}
+	}
+
+	return (0);
+}
+
+int
+bloom_intersect(const bloom_t *p1, const bloom_t *p2)
+{
+	return (0);
+}
+
