@@ -23,6 +23,9 @@ typedef struct bloom {
 		offset = bit - CHAR_BIT * index;	\
 	} while(0)
 
+#define BLOOM_GET_BIT(p, index, offset)			\
+	(p)->bl_bitarray[idx] & (1 << ofs)
+
 int
 bloom_init(bloom_t *p, size_t maxbits,
     size_t (*hashf[])(const void *obj), size_t nhashf)
@@ -164,14 +167,24 @@ bloom_unite(const bloom_t *p1, const bloom_t *p2, bloom_t *u)
 		return (-1);
 
 	/* Hash functions must be the same */
-	size_t i;
+	size_t i, idx, offs;
 	for (i = 0; i < p1->bl_nhashf; i++) {
 		if (p1->bl_hashf[i] != p2->bl_hashf[i]) {
 			fprintf(stderr,
 			    "WARNING: Hashing functionsd may differ. "
-			    "Proceeding but results may be spurious\n.");
+			    "Proceeding, but results may be spurious\n.");
 			break;
 		}
+	}
+
+	size_t bit1, bit2, idx, ofs;
+	for (bit = 0; bit < p1->bl_maxbits; bit++) {
+                BLOOM_SPOT_BIT(bit, idx, ofs);
+
+		bit1 = BLOOM_GET_BIT(p1, idx, ofs);
+		bit2 = BLOOM_GET_BIT(p2, idx, ofs);
+
+		BLOOM_SET_BIT(u, idx, ofs, bit1 | bit2);
 	}
 
 	return (0);
