@@ -8,23 +8,31 @@
 
 typedef struct bloom {
 	char *bl_bitarray;
-
 	size_t (**bl_hashf)(const void *obj);
 	size_t bl_nhashf;
-
 	size_t bl_maxbits;
-
 	pthread_rwlock_t bl_rwlock;
 } bloom_t;
 
-#define BLOOM_SPOT_BIT(bit, index, offset)		\
+#define BLOOM_BIT_SPOT(bit, index, offset)		\
 	do {						\
 		index  = bit / CHAR_BIT;		\
 		offset = bit - CHAR_BIT * index;	\
 	} while(0)
 
-#define BLOOM_GET_BIT(p, index, offset)			\
-	(p)->bl_bitarray[idx] & (1 << ofs)
+#define BLOOM_BIT_GET(p, index, offset)			\
+	(p)->bl_bitarray[index] & (1 << offset)
+
+#define BLOOM_BIT_SET(p, index, offset)			\
+	(p)->bl_bitarray[index] |= (1 << offset)
+
+#define BLOOM_BIT_UNSET(p, index, offset)		\
+	(p)->bl_bitarray[index] &= ~(1 << offset)
+
+typedef enum {
+	BLOOM_UNION		= 1,
+	BLOOM_INTERSECTION	= 2
+} bloom_operation_t;
 
 int
 bloom_init(bloom_t *p, size_t maxbits,
@@ -85,7 +93,7 @@ bloom_add(bloom_t *p, const void *obj)
 	for (i = 0; i < p->bl_nhashf; i++) {
 		bit = (*p->bl_hashf[i])(obj) % p->bl_maxbits;
 
-		BLOOM_SPOT_BIT(bit, idx, ofs);
+		BLOOM_BIT_SPOT(bit, idx, ofs);
 
 		pthread_rwlock_wrlock(&p->bl_rwlock);
 		p->bl_bitarray[idx] |= (1 << ofs);
@@ -103,7 +111,7 @@ bloom_query(bloom_t *p, const void *obj)
 	for (i = 0; i < p->bl_nhashf; i++) {
 		bit = (*p->bl_hashf[i])(obj) % p->bl_maxbits;
 
-		BLOOM_SPOT_BIT(bit, idx, ofs);
+		BLOOM_BIT_SPOT(bit, idx, ofs);
 
 		pthread_rwlock_rdlock(&p->bl_rwlock);
 		int rv = p->bl_bitarray[idx] & (1 << ofs);
@@ -152,8 +160,9 @@ bloom_get_maxbits(const bloom_t *p)
 	return (p->bl_maxbits);
 }
 
-int
-bloom_unite(const bloom_t *p1, const bloom_t *p2, bloom_t *u)
+static int
+bloom_common(const bloom_t *p1, const bloom_t *p2, bloom_t *u,
+    bloom_operation_t operation)
 {
 	assert(p1);
 	assert(p2);
@@ -167,7 +176,7 @@ bloom_unite(const bloom_t *p1, const bloom_t *p2, bloom_t *u)
 		return (-1);
 
 	/* Hash functions must be the same */
-	size_t i, idx, offs;
+	size_t i;
 	for (i = 0; i < p1->bl_nhashf; i++) {
 		if (p1->bl_hashf[i] != p2->bl_hashf[i]) {
 			fprintf(stderr,
@@ -177,22 +186,48 @@ bloom_unite(const bloom_t *p1, const bloom_t *p2, bloom_t *u)
 		}
 	}
 
-	size_t bit1, bit2, idx, ofs;
-	for (bit = 0; bit < p1->bl_maxbits; bit++) {
+
+	char byte;
+	int rv;
+	for (byte = 0; byte < (1 + (maxbits / CHAR_BIT); byte++) {
+		/* Find the position of the bit in the array */
                 BLOOM_SPOT_BIT(bit, idx, ofs);
 
 		bit1 = BLOOM_GET_BIT(p1, idx, ofs);
 		bit2 = BLOOM_GET_BIT(p2, idx, ofs);
 
-		BLOOM_SET_BIT(u, idx, ofs, bit1 | bit2);
+		if (operation == BLOOM_UNION) {
+			rv = bit1 | bit2;
+			if (rv)
+				BLOOM_BIT_SET(u, idx, ofs);
+			else
+				BLOOM_BIT_UNSET(u, idx, ofs);
+		} else if (operation == BLOOM_INTERSECTION) {
+			rv = bit1 & bit2;
+			if (rv)
+				BLOOM_BIT_SET(u, idx, ofs);
+			else
+				BLOOM_BIT_UNSET(u, idx, ofs);
+		} else {
+			/* Unknown operation */
+			return (-1);
+		}
 	}
 
 	return (0);
 }
 
 int
-bloom_intersect(const bloom_t *p1, const bloom_t *p2)
+bloom_unite(const bloom_t *p1, const bloom_t *p2, bloom_t *u)
 {
+	bloom_common(p1, p2, u, BLOOM_UNION);
+}
+
+int
+bloom_intersect(const bloom_t *p1, const bloom_t *p2, bloom_t *i)
+{
+	bloom_common(p1, p2, i, BLOOM_INTERSECTION);
+
 	return (0);
 }
 
