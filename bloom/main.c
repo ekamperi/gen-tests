@@ -93,10 +93,21 @@ main(void)
 	size_t (*h[])(const void *obj) = { hash1, hash2 };
 	size_t (*e[])(const void *obj) = { hash1, hash1 };
 
-	bloom_init(&a, 1000, h, 2);
-	bloom_init(&b, 1000, e, 2);
+	bloom_init(&a, 12, h, 2);
+	bloom_init(&b, 12, h, 2);
+	bloom_init(&c, 12, h, 2);
+	
+	bloom_add(&a, "test");
+	bloom_add(&a, "testme");
+	bloom_add(&a, "xyzs");
+	bloom_add(&a, "hisd");
+	bloom_add(&a, "hisdsd");
+	bloom_add(&b, "hisdsd");
 
+	bloom_print_bits(&a);
+	bloom_print_bits(&b);
 	printf("%d\n", bloom_unite(&a, &b, &c));
+	bloom_print_bits(&c);
 	exit(1);
 
 	if (bloom_init(&b, 10000000, h, 2) == -1)
