@@ -8,7 +8,7 @@
 
 #include "bloom.h"
 
-#define NSTRINGS	 100000
+#define NSTRINGS	 1000
 #define STRINGSIZE	     20
 
 size_t
@@ -66,7 +66,7 @@ querythread(void *arg)
 
         printf("[%p] Querying bloom filter\n", pthread_self());
         fflush(NULL);
-	for (i = 0; i < 1000; i++) {
+	for (i = 0; i < 100; i++) {
 		for (j = 0; j < NSTRINGS; j++)
 			assert(bloom_query(p, buf[j]));
 	}
@@ -84,40 +84,17 @@ diep(const char *s)
 int
 main(void)
 {
-	bloom_t a, b, c;
+#define NTHREADS 10
+	bloom_t b;
 
         /* Initialize random number generator. */
         srand(time(NULL));
 
-	/* Create the bloom filter */
+	/* Initialize the bloom filter */
 	size_t (*h[])(const void *obj) = { hash1, hash2 };
-	size_t (*e[])(const void *obj) = { hash1, hash1 };
-
-	bloom_init(&a, 12, h, 2);
-	bloom_init(&b, 12, h, 2);
-	bloom_init(&c, 12, h, 2);
-	
-	bloom_add(&a, "test");
-	bloom_add(&a, "testme");
-	bloom_add(&a, "xyzs");
-	bloom_add(&a, "hisd");
-	bloom_add(&a, "hisdsd");
-	bloom_add(&b, "hisdsd");
-
-	bloom_print_bits(&a);
-	bloom_print_bits(&b);
-	printf("%d\n", bloom_unite(&a, &b, &c));
-	bloom_print_bits(&c);
-	exit(1);
-
-	if (bloom_init(&b, 10000000, h, 2) == -1)
-		exit(1);
-
-	bloom_print_hashf(&b);
+	bloom_init(&b, 100000, h, 2);
 
 	/* Create the threads */
-#define NTHREADS 2
-
 	pthread_t tid[NTHREADS];
 	int i, rv;
 
@@ -138,7 +115,6 @@ main(void)
 	printf("usedbits = %u\n", bloom_get_usedbits(&b));
 	printf("maxbits = %u\n", bloom_get_maxbits(&b));
 
-	/* We are done -- cleanup */
 	bloom_fini(&b);
 
 	return (EXIT_SUCCESS);

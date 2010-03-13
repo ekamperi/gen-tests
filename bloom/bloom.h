@@ -21,7 +21,7 @@ size_t bloom_get_usedbits(const bloom_t *p);
 size_t bloom_get_maxbits(const bloom_t *p);
 void bloom_print_hashf(const bloom_t *p);
 
-int bloom_unite(const bloom_t *p1, const bloom_t *p2, bloom_t *u);
-int bloom_intersect(const bloom_t *p1, const bloom_t *p2, bloom_t *i);
+int bloom_unite(bloom_t *p1, bloom_t *p2, bloom_t *u);
+int bloom_intersect(bloom_t *p1, bloom_t *p2, bloom_t *i);
 
 #endif	/* __BLOOM_H_ */

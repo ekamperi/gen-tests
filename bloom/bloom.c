@@ -49,6 +49,9 @@ bloom_init(bloom_t *p, size_t maxbits,
 	if (p->bl_bitarray == NULL)
 		return (-1);
 
+	/* Initialize all positions to 0 */
+	memset(p->bl_bitarray, 0, 1 + (maxbits / CHAR_BIT));
+
 	/* Allocate memory for the hash function vector */
 	p->bl_hashf = malloc(nhashf * sizeof(*p->bl_hashf));
 	if (p->bl_hashf == NULL) {
@@ -93,7 +96,7 @@ bloom_add(bloom_t *p, const void *obj)
 
 	size_t bit, i, idx, ofs;
 	for (i = 0; i < p->bl_nhashf; i++) {
-		bit = (*p->bl_hashf[i])(obj) % p->bl_maxbits;
+	bit = (*p->bl_hashf[i])(obj) % p->bl_maxbits;
 
 		BLOOM_BIT_SPOT(bit, idx, ofs);
 
@@ -196,9 +199,6 @@ static int
 bloom_common(const bloom_t *p1, const bloom_t *p2, bloom_t *res,
     bloom_operation_t operation)
 {
-	assert(p1);
-	assert(p2);
-
 	/* The size of two bloom filters must be the same */
 	if (p1->bl_maxbits != p2->bl_maxbits)
 		return (-1);
@@ -232,21 +232,54 @@ bloom_common(const bloom_t *p1, const bloom_t *p2, bloom_t *res,
 		}
 	}
 
+	/* Success */
 	return (0);
 }
 
 int
-bloom_unite(const bloom_t *p1, const bloom_t *p2, bloom_t *u)
+bloom_unite(bloom_t *p1, bloom_t *p2, bloom_t *u)
 {
-	bloom_common(p1, p2, u, BLOOM_UNION);
+	int rv;
 
-	return (0);
+	assert(p1);
+	assert(p2);
+	assert(u);
+
+	/* Acquire locks -- we will be reading from p1, p2 and writing to u. */
+	pthread_rwlock_rdlock(&p1->bl_rwlock);
+	pthread_rwlock_rdlock(&p2->bl_rwlock);
+	pthread_rwlock_wrlock(&u->bl_rwlock);
+
+	rv = bloom_common(p1, p2, u, BLOOM_UNION);
+
+	/* Release locks */
+	pthread_rwlock_unlock(&p1->bl_rwlock);
+	pthread_rwlock_unlock(&p2->bl_rwlock);
+	pthread_rwlock_unlock(&u->bl_rwlock);
+	    
+	return (rv);
 }
 
 int
-bloom_intersect(const bloom_t *p1, const bloom_t *p2, bloom_t *i)
+bloom_intersect(bloom_t *p1, bloom_t *p2, bloom_t *i)
 {
-	bloom_common(p1, p2, i, BLOOM_INTERSECTION);
+	int rv;
 
-	return (0);
+	assert(p1);
+	assert(p2);
+	assert(i);
+
+        /* Acquire locks -- we will be reading from p1, p2 and writing to i. */
+	pthread_rwlock_rdlock(&p1->bl_rwlock);
+        pthread_rwlock_rdlock(&p2->bl_rwlock);
+        pthread_rwlock_wrlock(&i->bl_rwlock);
+
+	rv = bloom_common(p1, p2, i, BLOOM_INTERSECTION);
+
+	/* Release locks */
+	pthread_rwlock_rdlock(&p1->bl_rwlock);
+        pthread_rwlock_rdlock(&p2->bl_rwlock);
+        pthread_rwlock_wrlock(&i->bl_rwlock);
+
+	return (rv);
 }
