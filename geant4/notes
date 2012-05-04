@@ -20,3 +20,5 @@ cmake -DCMAKE_INSTALL_PREFIX=/opt/geant4.9.5.p01	\
             /tmp/geant4.9.5.p01
 make -j5
 sudo make install
+
+--- HOW TO BUILD AND RUN EXAMPLES ---
