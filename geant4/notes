@@ -4,7 +4,7 @@
 --- HOW TO INSTALL OPENGROK ---
 http://hub.opensolaris.org/bin/view/Project+opengrok/installdescription
 
---- HOW TO INSTALL GEANT4---
+--- HOW TO INSTALL GEANT4 in Fedora 16 ---
 cp ~/Downloads/geant4.9.5.p01.tar.gz /tmp
 cd /tmp && tar xzfv geant4.9.5.p01.tar.gz
 mkdir geant4.9.5.p01-build
@@ -23,8 +23,13 @@ make -j5
 sudo make install
 
 -- HOW TO INSTALL GEANT4 IN SOLARIS 11 ---
-* cmake 2.8 is needed, but as of the time of writing, solaris 11 comes with cmake 2.6
-* one needs to install cmake 2.6 and use that to bootstrap cmake 2.8
-* then user cmake 2.8 to build geant4 as previously
+* cmake 2.8 is needed but, as of the time of writing, Solaris 11 bundles cmake 2.6
+* one needs to install cmake 2.6 and then use that to bootstrap cmake 2.8
+* finally use cmake 2.8 to build geant4 as previously advised
 
 --- HOW TO BUILD AND RUN EXAMPLES ---
+
+--- LINKS ---
+https://twiki.cern.ch/twiki/bin/view/Main/JohnApGuideToG4Tracking
+https://twiki.cern.ch/twiki/bin/view/Geant4/G4CPT
+https://twiki.cern.ch/twiki/bin/view/Geant4/Geant4PerformanceTips
