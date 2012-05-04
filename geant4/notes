@@ -1,6 +1,9 @@
 - patch geant4 to compile under solaris 11 (+examples -> +socket nls)
 - http://hub.opensolaris.org/bin/view/Project+opengrok/installdescription
 
+
+--- HOW TO INSTALL GEANT4---
+
 cp ~/Downloads/geant4.9.5.p01.tar.gz /tmp
 cd /tmp && tar xzfv geant4.9.5.p01.tar.gz
 mkdir geant4.9.5.p01-build
