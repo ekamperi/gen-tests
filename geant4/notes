@@ -10,7 +10,7 @@ cd /tmp && tar xzfv geant4.9.5.p01.tar.gz
 mkdir geant4.9.5.p01-build
 cd geant4.9.5.p01-build
 
-sudo yum groupinstall "X Software Development"
+sudo yum groupinstall "X Software Development"		# Needed for visualisation
 sudo yum install xerces-c-devel				# Needed for GDML
 
 cmake -DCMAKE_INSTALL_PREFIX=/opt/geant4.9.5.p01	\
