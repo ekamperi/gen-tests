@@ -53,10 +53,27 @@ wget http://geant4.cern.ch/support/source/G4PII.1.3.tar.gz
 # Data files for measured optical surface reflectance - version 1.0
 wget http://geant4.cern.ch/support/source/RealSurface.1.0.tar.gz
 
-mkdir -p /opt/geant4.9.5.p01/physicsdata
-cp *.tar.gz /opt/geant4.9.5.p01/physicsdata
+sudo mkdir -p /opt/geant4.9.5.p01/physicsdata
+sudo cp *.tar.gz /opt/geant4.9.5.p01/physicsdata
 cd /opt/geant4.9.5.p01/physicsdata
-for f in *.tar.gz; do tar xzfv $f; done
+for f in *.tar.gz; do sudo tar xzfv $f; done
+
+PHYSICSDATAPATH=/opt/geant4.9.5.p01/physicsdata
+
+export $NeutronHPCrossSections
+#Path to external data set for Neutron Scattering processes.
+
+export $G4LEDATA
+Path to external data set for low energy electromagnetic processes.
+
+export $G4LEVELGAMMADATA
+Path to the data set for Photon Evaporation.
+
+export $G4RADIOACTIVEDATA
+Path to the data set for Radiative Decay processes.
+
+$G4ELASTICDATA
+Path to the data set for Elastic Scattering processes.
 
 -- HOW TO INSTALL GEANT4 IN SOLARIS 11 ---
 * cmake 2.8 is needed but, as of the time of writing, Solaris 11 bundles cmake 2.6
