@@ -1,5 +1,5 @@
 - patch geant4 to compile under solaris 11 (+examples -> +socket nls)
-- 
+- http://hub.opensolaris.org/bin/view/Project+opengrok/installdescription
 
 cp ~/Downloads/geant4.9.5.p01.tar.gz /tmp
 cd /tmp && tar xzfv geant4.9.5.p01.tar.gz
@@ -14,4 +14,5 @@ cmake -DCMAKE_INSTALL_PREFIX=/opt/geant4.9.5.p01	\
       -DGEANT4_USE_GDML=ON				\
       -GEANT4_USE_OPENGL_X11=ON				\
             /tmp/geant4.9.5.p01
-
+make -j5
+sudo make install
