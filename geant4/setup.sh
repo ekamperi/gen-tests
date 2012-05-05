@@ -11,7 +11,7 @@ BUILDDIR="./${GEANT4TARBALL%.tar.gz}-build"
 PHYSICSDATA="physicsdata"
 NUMBEROFJOBS="3"
 
-usage()
+function usage()
 {
     cat <<EOF
 usage: `basename`
@@ -34,6 +34,20 @@ function print_globals()
     echo "------------------------------------------------------------"
 }
 
+# $1 is the filename, $2 is the expected sha1 sum
+function sha1sum_matches()
+{
+    expectedsum=$2
+    computedsum=$(sha1sum $1)
+
+    if [ "$computedsum" == "$expectedsum" ];
+    then
+	return 0
+    else
+	return 1
+    fi
+}
+
 function download_source()
 {
     echo "-> Downloading source"
@@ -43,37 +57,40 @@ function download_source()
 
 function download_physicsdata()
 {
-    local -a datafiles=(
+    # We declare 'datafiles' as an associative array, with keys being the
+    # filenames and values being the sha1 checksums of the files.
+    local -A datafiles=(
 	# Neutron data files WITH thermal cross sections
-	'G4NDL.4.0.tar.gz'
+	[G4NDL.4.0.tar.gz]=889e8ee3b348c649427725b8e12212bdca48b78e
 	# Neutron data files WITHOUT thermal cross sections
-	'G4NDL.0.2.tar.gz'
+	[G4NDL.0.2.tar.gz]=67d2d39a73cb175967d5299b9d6d8c26c2979639
 	# Data files for low energy electromagnetic processes	
-	'G4EMLOW.6.23.tar.gz'			
+	[G4EMLOW.6.23.tar.gz]=asdasd
 	# Data files for photon evaporation	
-	'G4PhotonEvaporation.2.2.tar.gz'
+	[G4PhotonEvaporation.2.2.tar.gz]=asdasd
 	# Data files for radioactive decay hadronic processes	
-	'G4RadioactiveDecay.3.4.tar.gz'		
+	[G4RadioactiveDecay.3.4.tar.gz]=asdasd
 	# Data files for nuclear shell effects in INCL/ABLA hadronic model	
-	'G4ABLA.3.0.tar.gz'
+	[G4ABLA.3.0.tar.gz]=asdasd
 	# Data files for evaluated neutron cross sections on natural composition of elements	
-	'G4NEUTRONXS.1.1.tar.gz'
+	[G4NEUTRONXS.1.1.tar.gz]=asdasd
 	# Data files for shell ionisation cross sections	
-	'G4PII.1.3.tar.gz'
+	[G4PII.1.3.tar.gz]=asdasd
 	# Data files for measured optical surface reflectance
-	'RealSurface.1.0.tar.gz'
+	[RealSurface.1.0.tar.gz]=asdasd
     );
 
-    # Download physics data files, if and only if they don't exist
-    # already in the current working directory.
-    for file in ${datafiles[@]}
+    # Download physics data files, if they don't already exist in the current
+    # working directory or if they do exist but their SHA1 sum is wrong (e.g.
+    # partial download, corrupted file, etc.)
+    for file in ${!datafiles[@]}
     do
 	echo "-> Downloading ${file}"
-	if [ ! -f "${file}" ];
+	if [[ -f "${file}" ]] && sha1sum_matches "$file" "${datafiles[$file]}";
 	then
-	    curl -o ${file} "${BASEURL}/${file}"
+            echo "File already exists. Skipping the download."
 	else
-	    echo "File already exists. Skipping the download."
+	    curl -o ${file} "${BASEURL}/${file}"
 	fi
     done
 
@@ -99,6 +116,9 @@ function install_prereqs()
 {
     apt-get install cmake
     apt-get install libxerces-c-dev
+
+#    yum install cmake
+#    yum install xerces-c
 }
 
 function build()
@@ -141,4 +161,4 @@ print_globals
 #build
 download_physicsdata
 #install
-print_exports
+#print_exports
