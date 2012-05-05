@@ -146,6 +146,7 @@ function build()
 	      -DGEANT4_USE_GDML=ON			\
 	      -DGEANT4_USE_OPENGL_X11=ON		\
 	      -DGEANT4_INSTALL_EXAMPLES=ON		\
+#	      -DGEANT4_INSTALL_DATA=ON			\
 	    "../${SOURCEDIR}"
 	make -j ${NUMBEROFJOBS}
     )
@@ -164,9 +165,12 @@ function print_exports()
     echo "------------------------------------------------------------"
     echo "Don't forget to add the following exports in your bash "
     echo "configuration file:"
-    echo "export NeutronHPCrossSections=${INSTALLDIR}/${PHYSICSDATA}"
+    echo "export G4ABLADATA=${INSTALLDIR}/${PHYSICSDATA}"
     echo "export G4LEDATA=${INSTALLDIR}/${PHYSICSDATA}"
     echo "export G4LEVELGAMMADATA=${INSTALLDIR}/${PHYSICSDATA}"
+    echo "export G4NEUTRONHPDATA=${INSTALLDIR}/${PHYSICSDATA}"
+    echo "export G4NEUTRONXSDATA=${INSTALLDIR}/${PHYSICSDATA}"
+    echo "export G4PIIDATA=${INSTALLDIR}/${PHYSICSDATA}"
     echo "export G4RADIOACTIVEDATA=${INSTALLDIR}/${PHYSICSDATA}"
     echo "export G4ELASTICDATA=${INSTALLDIR}/${PHYSICSDATA}"
     echo "------------------------------------------------------------"    
@@ -175,6 +179,7 @@ function print_exports()
 print_globals
 download_source
 build
-download_physicsdata
+download_physicsdata		# not needed if -DGEANT4_INSTALL_DATA=ON
 install
-print_exports
+print_exports			# not needed if -DGEANT4_INSTALL_DATA=ON
+
