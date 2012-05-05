@@ -169,9 +169,9 @@ function build_example()
     pathtoGeant4=$(find "${INSTALLDIR}" -name "Geant4Config.cmake")
     pathtoGeant4=${pathtoGeant4%/Geant4Config.cmake}
 
-    example=$(find "${INSTALLDIR}" -name "$1")
+    pathtoExample=$(find "${INSTALLDIR}/share" -name "$1")
 
-    cp -R "${example}" .
+    cp -R "${pathtoExample}" .
     mkdir -p "$1-build"
     (
 	cd "$1-build"
@@ -203,4 +203,5 @@ function print_exports()
 #install
 #print_exports			# not needed if -DGEANT4_INSTALL_DATA=ON
 
-build_example "N01"
+build_example "$1"
+
