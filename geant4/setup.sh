@@ -22,7 +22,7 @@ EOF
 function print_globals()
 {
     echo "------------------------------------------------------------"
-    echo "RUNNING AS USER  = `who am i`"
+    echo "RUNNING AS USER  = $(id -nu)"
     echo "BASE URL         = ${BASEURL}"
     echo "GEANT4 TARBALL   = ${GEANT4TARBALL}"
     echo "BASE INSTALL DIR = ${BASEINSTALLDIR}"
@@ -117,8 +117,22 @@ function install()
     )
 }
 
+function print_exports()
+{
+    echo "------------------------------------------------------------"
+    echo "Don't forget to add the following exports in your bash "
+    echo "configuration file:"
+    echo "export NeutronHPCrossSections=${INSTALLDIR}/${PHYSICSDATA}"
+    echo "export G4LEDATA=${INSTALLDIR}/${PHYSICSDATA}"
+    echo "export G4LEVELGAMMADATA=${INSTALLDIR}/${PHYSICSDATA}"
+    echo "export G4RADIOACTIVEDATA=${INSTALLDIR}/${PHYSICSDATA}"
+    echo "export G4ELASTICDATA=${INSTALLDIR}/${PHYSICSDATA}"
+    echo "------------------------------------------------------------"    
+}
+
 print_globals
 #download_source
 #build
 #download_physicsdata
-install
+#install
+print_exports
