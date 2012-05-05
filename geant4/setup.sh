@@ -64,11 +64,15 @@ function download_physicsdata()
 #	'RealSurface.1.0.tar.gz'
     );
 
-    # Download physics data files
+    # Download physics data files, if and only if they don't exist
+    # already in the current working directory.
     for file in ${datafiles[@]}
     do
 	echo "-> Downloading ${file}"
-	curl -o ${file} "${BASEURL}/${file}"
+	if [ ! -f "${file}" ];
+	then
+	    curl -o ${file} "${BASEURL}/${file}"
+	fi
     done
 
     # Copy physics data files to the installation directory
