@@ -183,14 +183,14 @@ function build_example()
 function print_exports()
 {
     local -A envvars=(
-	[G4ABLADATA]=G4ABLA.3.0
-	[G4LEDATA]=G4EMLOW.6.23
-	[G4LEVELGAMMADATA]=G4PhotonEvaporation
-	[G4NEUTRONHPDATA]=G4NDL.4.0
-	[G4NEUTRONXSDATA]=G4NEUTRONXS
-	[G4PIIDATA]=G4PII
-	[G4RADIOACTIVEDATA]=G4RadioactiveDecay
-	[G4REALSURFACEDATA]=RealSurface
+	[G4ABLADATA]=G4ABLA3.0
+	[G4LEDATA]=G4EMLOW6.23
+	[G4LEVELGAMMADATA]=G4PhotonEvaporation2.2
+	[G4NEUTRONHPDATA]=G4NDL4.0
+	[G4NEUTRONXSDATA]=G4NEUTRONXS1.1
+	[G4PIIDATA]=G4PII1.3
+	[G4RADIOACTIVEDATA]=G4RadioactiveDecay3.4
+	[G4REALSURFACEDATA]=RealSurface1.0
     );
 
     echo "------------------------------------------------------------"
