@@ -39,7 +39,7 @@ function print_globals()
 function sha1sum_matches()
 {
     expectedsum=$2
-    computedsum=$(sha1sum $1)
+    computedsum=$(sha1sum $1 | cut -f1 -d' ')
 
     if [ "$computedsum" == "$expectedsum" ];
     then
@@ -62,7 +62,7 @@ function download_physicsdata()
     # filenames and values being the sha1 checksums of the files.
     local -A datafiles=(
 	# Neutron data files WITH thermal cross sections
-	[G4NDL.4.0.tar.gz]=889e8ee3b348c649427725b8e12212bdca48b78e
+#	[G4NDL.4.0.tar.gz]=889e8ee3b348c649427725b8e12212bdca48b78e
 
 	# Neutron data files WITHOUT thermal cross sections
 	[G4NDL.0.2.tar.gz]=67d2d39a73cb175967d5299b9d6d8c26c2979639
@@ -79,7 +79,7 @@ function download_physicsdata()
 	# Data files for nuclear shell effects in INCL/ABLA hadronic model	
 	[G4ABLA.3.0.tar.gz]=503621fd99150ca2623299031d2df0d3d1d0cf81
 
-	# Data files for evaluated neutron cross sections on natural composition of elements	
+	# Data files for evaluated neutron cross sections on natural composition of elements
 	[G4NEUTRONXS.1.1.tar.gz]=58b9a22584962cfc935e60d34b3b920b1bcd10df
 
 	# Data files for shell ionisation cross sections	
