@@ -36,6 +36,7 @@ function print_globals()
 
 # $1 is the filename, $2 is the expected sha1 sum
 # return 0 for true (match), 1 for false (mismatch)
+
 function sha1sum_matches()
 {
     expectedsum=$2
@@ -60,9 +61,10 @@ function download_physicsdata()
 {
     # We declare 'datafiles' as an associative array, with keys being the
     # filenames and values being the sha1 checksums of the files.
+
     local -A datafiles=(
 	# Neutron data files WITH thermal cross sections
-#	[G4NDL.4.0.tar.gz]=889e8ee3b348c649427725b8e12212bdca48b78e
+	[G4NDL.4.0.tar.gz]=889e8ee3b348c649427725b8e12212bdca48b78e
 
 	# Neutron data files WITHOUT thermal cross sections
 	[G4NDL.0.2.tar.gz]=67d2d39a73cb175967d5299b9d6d8c26c2979639
@@ -92,6 +94,7 @@ function download_physicsdata()
     # Download physics data files, if they don't already exist in the current
     # working directory or if they do exist but their SHA1 sum is wrong (e.g.
     # partial download, corrupted file, etc.)
+
     for file in ${!datafiles[@]}
     do
 	echo "-> Downloading ${file}"
@@ -104,6 +107,7 @@ function download_physicsdata()
     done
 
     # Copy physics data files to the installation directory
+
     mkdir -p "${INSTALLDIR}/${PHYSICSDATA}"
     for file in ${datafiles[@]}
     do
@@ -112,6 +116,7 @@ function download_physicsdata()
     done
 
     # Extract the tarballs
+
     (
 	cd "${INSTALLDIR}/${PHYSICSDATA}"
 	for file in ${datafiles[@]}
