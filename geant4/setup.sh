@@ -43,25 +43,25 @@ function download_source()
 
 function download_physicsdata()
 {
-	# Neutron data files WITH thermal cross sections
-	# Neutron data files WITHOUT thermal cross sections
-	# Data files for low energy electromagnetic processes
-	# Data files for photon evaporation
-	# Data files for radioactive decay hadronic processes
-	# Data files for nuclear shell effects in INCL/ABLA hadronic model
-	# Data files for evaluated neutron cross sections on natural composition of elements
-	# Data files for shell ionisation cross sections
-	# Data files for measured optical surface reflectance
     local -a datafiles=(
-#	'G4NDL.4.0.tar.gz'			
-#	'G4NDL.0.2.tar.gz'			
-#	'G4EMLOW.6.23.tar.gz'			
-	'G4PhotonEvaporation.2.2.tar.gz'	
-#	'G4RadioactiveDecay.3.4.tar.gz'		
-#	'G4ABLA.3.0.tar.gz'			
-#	'G4NEUTRONXS.1.1.tar.gz'		
-#	'G4PII.1.3.tar.gz'			
-#	'RealSurface.1.0.tar.gz'
+	# Neutron data files WITH thermal cross sections
+	'G4NDL.4.0.tar.gz'
+	# Neutron data files WITHOUT thermal cross sections
+	'G4NDL.0.2.tar.gz'
+	# Data files for low energy electromagnetic processes	
+	'G4EMLOW.6.23.tar.gz'			
+	# Data files for photon evaporation	
+	'G4PhotonEvaporation.2.2.tar.gz'
+	# Data files for radioactive decay hadronic processes	
+	'G4RadioactiveDecay.3.4.tar.gz'		
+	# Data files for nuclear shell effects in INCL/ABLA hadronic model	
+	'G4ABLA.3.0.tar.gz'
+	# Data files for evaluated neutron cross sections on natural composition of elements	
+	'G4NEUTRONXS.1.1.tar.gz'
+	# Data files for shell ionisation cross sections	
+	'G4PII.1.3.tar.gz'
+	# Data files for measured optical surface reflectance
+	'RealSurface.1.0.tar.gz'
     );
 
     # Download physics data files, if and only if they don't exist
@@ -72,6 +72,8 @@ function download_physicsdata()
 	if [ ! -f "${file}" ];
 	then
 	    curl -o ${file} "${BASEURL}/${file}"
+	else
+	    echo "File already exists. Skipping the download."
 	fi
     done
 
@@ -137,6 +139,6 @@ function print_exports()
 print_globals
 #download_source
 #build
-#download_physicsdata
+download_physicsdata
 #install
 print_exports
