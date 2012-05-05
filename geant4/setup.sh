@@ -145,6 +145,7 @@ function build()
 	      -DCMAKE_BUILD_TYPE=Debug			\
 	      -DGEANT4_USE_GDML=ON			\
 	      -DGEANT4_USE_OPENGL_X11=ON		\
+	      -DGEANT4_INSTALL_EXAMPLES=ON		\
 	    "../${SOURCEDIR}"
 	make -j ${NUMBEROFJOBS}
     )
@@ -172,8 +173,8 @@ function print_exports()
 }
 
 print_globals
-#download_source
-#build
+download_source
+build
 download_physicsdata
-#install
-#print_exports
+install
+print_exports
