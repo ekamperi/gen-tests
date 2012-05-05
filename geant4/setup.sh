@@ -160,6 +160,21 @@ function install()
     )
 }
 
+# $1 is the example name,
+# e.g. N02 for 2nd example in examples/novice/N02
+
+function build_example()
+{
+    pathto=$(find "${INSTALLDIR}" -name "Gean4Config.cmake")
+
+#    cp -R "${INSTALLDIR}/examples/$1" .
+#    mkdir -p "$1-build"
+#    (
+#	cd "$1-build"
+#	cmake -DGeant4_DIR="${pathto}" ../$1
+#    )
+}
+
 function print_exports()
 {
     echo "------------------------------------------------------------"
@@ -176,10 +191,11 @@ function print_exports()
     echo "------------------------------------------------------------"    
 }
 
-print_globals
-download_source
-build
-download_physicsdata		# not needed if -DGEANT4_INSTALL_DATA=ON
-install
-print_exports			# not needed if -DGEANT4_INSTALL_DATA=ON
+#print_globals
+#download_source
+#build
+#download_physicsdata		# not needed if -DGEANT4_INSTALL_DATA=ON
+#install
+#print_exports			# not needed if -DGEANT4_INSTALL_DATA=ON
 
+build_example "N01"
