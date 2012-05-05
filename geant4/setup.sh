@@ -133,6 +133,7 @@ function install_prereqs()
 
 #    yum install cmake
 #    yum install xerces-c
+#    yum groupinstall "X Software Development"
 }
 
 function build()
