@@ -109,7 +109,7 @@ function download_physicsdata()
     # Copy physics data files to the installation directory
 
     mkdir -p "${INSTALLDIR}/${PHYSICSDATA}"
-    for file in ${datafiles[@]}
+    for file in ${!datafiles[@]}
     do
 	echo "-> Copying ${file}"
 	cp $file "${INSTALLDIR}/${PHYSICSDATA}"
@@ -119,7 +119,7 @@ function download_physicsdata()
 
     (
 	cd "${INSTALLDIR}/${PHYSICSDATA}"
-	for file in ${datafiles[@]}
+	for file in ${!datafiles[@]}
 	do
 	    tar xzf $file
 	done
