@@ -35,6 +35,7 @@ function print_globals()
 }
 
 # $1 is the filename, $2 is the expected sha1 sum
+# return 0 for true (match), 1 for false (mismatch)
 function sha1sum_matches()
 {
     expectedsum=$2
@@ -62,22 +63,30 @@ function download_physicsdata()
     local -A datafiles=(
 	# Neutron data files WITH thermal cross sections
 	[G4NDL.4.0.tar.gz]=889e8ee3b348c649427725b8e12212bdca48b78e
+
 	# Neutron data files WITHOUT thermal cross sections
 	[G4NDL.0.2.tar.gz]=67d2d39a73cb175967d5299b9d6d8c26c2979639
+
 	# Data files for low energy electromagnetic processes	
-	[G4EMLOW.6.23.tar.gz]=asdasd
+	[G4EMLOW.6.23.tar.gz]=25c65e6e42b7e259f739bf6e1689e67509a346c2
+
 	# Data files for photon evaporation	
-	[G4PhotonEvaporation.2.2.tar.gz]=asdasd
+	[G4PhotonEvaporation.2.2.tar.gz]=9f598fed6c53f18a5525d38d8ec0c5bec8009aa4
+
 	# Data files for radioactive decay hadronic processes	
-	[G4RadioactiveDecay.3.4.tar.gz]=asdasd
+	[G4RadioactiveDecay.3.4.tar.gz]=8c6ec693fe1e145d6c55bae28e7fd9da748c8e87
+
 	# Data files for nuclear shell effects in INCL/ABLA hadronic model	
-	[G4ABLA.3.0.tar.gz]=asdasd
+	[G4ABLA.3.0.tar.gz]=503621fd99150ca2623299031d2df0d3d1d0cf81
+
 	# Data files for evaluated neutron cross sections on natural composition of elements	
-	[G4NEUTRONXS.1.1.tar.gz]=asdasd
+	[G4NEUTRONXS.1.1.tar.gz]=58b9a22584962cfc935e60d34b3b920b1bcd10df
+
 	# Data files for shell ionisation cross sections	
-	[G4PII.1.3.tar.gz]=asdasd
+	[G4PII.1.3.tar.gz]=020fb5abb8dc9d4dfc073c22025b998de1482738
+
 	# Data files for measured optical surface reflectance
-	[RealSurface.1.0.tar.gz]=asdasd
+	[RealSurface.1.0.tar.gz]=9b4bd95c647dc702458eeaf89ebf62c5885e2ece
     );
 
     # Download physics data files, if they don't already exist in the current
