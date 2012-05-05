@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-set -x
+#set -x
 
 BASEURL="http://geant4.cern.ch/support/source"
 GEANT4TARBALL="geant4.9.5.p01.tar.gz"
@@ -182,26 +182,32 @@ function build_example()
 
 function print_exports()
 {
+    local -A envvars=(
+	[G4ABLADATA]=G4ABLA.3.0
+	[G4LEDATA]=G4EMLOW.6.23
+	[G4LEVELGAMMADATA]=G4PhotonEvaporation
+	[G4NEUTRONHPDATA]=G4NDL.4.0
+	[G4NEUTRONXSDATA]=G4NEUTRONXS
+	[G4PIIDATA]=G4PII
+	[G4RADIOACTIVEDATA]=G4RadioactiveDecay
+	[G4REALSURFACEDATA]=RealSurface
+    );
+
     echo "------------------------------------------------------------"
     echo "Don't forget to add the following exports in your bash "
     echo "configuration file:"
-    echo "export G4ABLADATA=${INSTALLDIR}/${PHYSICSDATA}"
-    echo "export G4LEDATA=${INSTALLDIR}/${PHYSICSDATA}"
-    echo "export G4LEVELGAMMADATA=${INSTALLDIR}/${PHYSICSDATA}"
-    echo "export G4NEUTRONHPDATA=${INSTALLDIR}/${PHYSICSDATA}"
-    echo "export G4NEUTRONXSDATA=${INSTALLDIR}/${PHYSICSDATA}"
-    echo "export G4PIIDATA=${INSTALLDIR}/${PHYSICSDATA}"
-    echo "export G4RADIOACTIVEDATA=${INSTALLDIR}/${PHYSICSDATA}"
-    echo "export G4ELASTICDATA=${INSTALLDIR}/${PHYSICSDATA}"
+    for var in ${!envvars[@]};
+    do
+	echo "export ${var}=${INSTALLDIR}/${PHYSICSDATA}/${envvars[$var]}"
+    done
     echo "------------------------------------------------------------"
 }
 
-#print_globals
-#download_source
-#build
-#download_physicsdata		# not needed if -DGEANT4_INSTALL_DATA=ON
-#install
-#print_exports			# not needed if -DGEANT4_INSTALL_DATA=ON
+print_globals
+download_source
+build
+download_physicsdata		# not needed if -DGEANT4_INSTALL_DATA=ON
+install
+print_exports			# not needed if -DGEANT4_INSTALL_DATA=ON
 
 build_example "$1"
-
