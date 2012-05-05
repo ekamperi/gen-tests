@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+set -x
 
 BASEURL="http://geant4.cern.ch/support/source"
 GEANT4TARBALL="geant4.9.5.p01.tar.gz"
@@ -69,22 +70,22 @@ function download_physicsdata()
 	# Neutron data files WITHOUT thermal cross sections
 	[G4NDL.0.2.tar.gz]=67d2d39a73cb175967d5299b9d6d8c26c2979639
 
-	# Data files for low energy electromagnetic processes	
+	# Data files for low energy electromagnetic processes
 	[G4EMLOW.6.23.tar.gz]=25c65e6e42b7e259f739bf6e1689e67509a346c2
 
-	# Data files for photon evaporation	
+	# Data files for photon evaporation
 	[G4PhotonEvaporation.2.2.tar.gz]=9f598fed6c53f18a5525d38d8ec0c5bec8009aa4
 
-	# Data files for radioactive decay hadronic processes	
+	# Data files for radioactive decay hadronic processes
 	[G4RadioactiveDecay.3.4.tar.gz]=8c6ec693fe1e145d6c55bae28e7fd9da748c8e87
 
-	# Data files for nuclear shell effects in INCL/ABLA hadronic model	
+	# Data files for nuclear shell effects in INCL/ABLA hadronic model
 	[G4ABLA.3.0.tar.gz]=503621fd99150ca2623299031d2df0d3d1d0cf81
 
 	# Data files for evaluated neutron cross sections on natural composition of elements
 	[G4NEUTRONXS.1.1.tar.gz]=58b9a22584962cfc935e60d34b3b920b1bcd10df
 
-	# Data files for shell ionisation cross sections	
+	# Data files for shell ionisation cross sections
 	[G4PII.1.3.tar.gz]=020fb5abb8dc9d4dfc073c22025b998de1482738
 
 	# Data files for measured optical surface reflectance
@@ -100,7 +101,7 @@ function download_physicsdata()
 	echo "-> Downloading ${file}"
 	if [[ -f "${file}" ]] && sha1sum_matches "$file" "${datafiles[$file]}";
 	then
-            echo "File already exists. Skipping the download."
+	    echo "File already exists. Skipping the download."
 	else
 	    curl -o ${file} "${BASEURL}/${file}"
 	fi
@@ -165,14 +166,18 @@ function install()
 
 function build_example()
 {
-    pathto=$(find "${INSTALLDIR}" -name "Gean4Config.cmake")
+    pathtoGeant4=$(find "${INSTALLDIR}" -name "Geant4Config.cmake")
+    pathtoGeant4=${pathtoGeant4%/Geant4Config.cmake}
 
-#    cp -R "${INSTALLDIR}/examples/$1" .
-#    mkdir -p "$1-build"
-#    (
-#	cd "$1-build"
-#	cmake -DGeant4_DIR="${pathto}" ../$1
-#    )
+    example=$(find "${INSTALLDIR}" -name "$1")
+
+    cp -R "${example}" .
+    mkdir -p "$1-build"
+    (
+	cd "$1-build"
+	cmake -DGeant4_DIR="${pathtoGeant4}" ../$1
+	make -j ${NUMBEROFJOBS}
+    )
 }
 
 function print_exports()
@@ -188,7 +193,7 @@ function print_exports()
     echo "export G4PIIDATA=${INSTALLDIR}/${PHYSICSDATA}"
     echo "export G4RADIOACTIVEDATA=${INSTALLDIR}/${PHYSICSDATA}"
     echo "export G4ELASTICDATA=${INSTALLDIR}/${PHYSICSDATA}"
-    echo "------------------------------------------------------------"    
+    echo "------------------------------------------------------------"
 }
 
 #print_globals
