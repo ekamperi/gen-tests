@@ -147,6 +147,7 @@ function build()
 	      -DGEANT4_USE_GDML=ON			\
 	      -DGEANT4_USE_OPENGL_X11=ON		\
 	      -DGEANT4_INSTALL_EXAMPLES=ON		\
+
 	    "../${SOURCEDIR}"
 	make -j ${NUMBEROFJOBS}
     )
@@ -209,6 +210,7 @@ function print_exports()
 
     export G4INSTALL=/opt/geant4.9.5.p01/share/Geant4-9.5.1/geant4make
     export G4SYSTEM=Linux-g++
+    export G4LIB=/home/stathis/gen-tests/geant4/geant4.9.5.p01-build/outputs/library
 }
 
 #print_globals
