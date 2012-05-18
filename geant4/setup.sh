@@ -147,7 +147,6 @@ function build()
 	      -DGEANT4_USE_GDML=ON			\
 	      -DGEANT4_USE_OPENGL_X11=ON		\
 	      -DGEANT4_INSTALL_EXAMPLES=ON		\
-#	      -DGEANT4_INSTALL_DATA=ON			\
 	    "../${SOURCEDIR}"
 	make -j ${NUMBEROFJOBS}
     )
@@ -201,13 +200,22 @@ function print_exports()
 	echo "export ${var}=${INSTALLDIR}/${PHYSICSDATA}/${envvars[$var]}"
     done
     echo "------------------------------------------------------------"
+
+    export G4LIB_BUILD_GDML=1
+    export G4LIB_USE_GDML=1
+
+    export G4INSTALL=/opt/geant4.9.5.p01/share/Geant4-9.5.1/geant4make
+    export G4INCLUDE=/opt/geant4.9.5.p01/include/Geant4
+
+    export G4INSTALL=/opt/geant4.9.5.p01/share/Geant4-9.5.1/geant4make
+    export G4SYSTEM=Linux-g++
 }
 
-print_globals
-download_source
-build
-download_physicsdata		# not needed if -DGEANT4_INSTALL_DATA=ON
-install
+#print_globals
+#download_source
+#build
+#download_physicsdata		# not needed if -DGEANT4_INSTALL_DATA=ON
+#install
 print_exports			# not needed if -DGEANT4_INSTALL_DATA=ON
 
-build_example "$1"
+#build_example "$1"
