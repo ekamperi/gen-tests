@@ -11,6 +11,7 @@ SOURCEDIR="./${GEANT4TARBALL%.tar.gz}"
 BUILDDIR="./${GEANT4TARBALL%.tar.gz}-build"
 PHYSICSDATA="physicsdata"
 NUMBEROFJOBS="3"
+SOLARIS11DIFFURL="http://leaf.dragonflybsd.org/~beket/solaris11.diff"
 
 function usage()
 {
@@ -32,6 +33,7 @@ function print_globals()
     echo "BUILD DIR        = ${BUILDDIR}"
     echo "PHYSICS DATA DIR = ${PHYSICSDATA}"
     echo "NUMBER OF JOBS   = ${NUMBEROFJOBS}"
+    echo "SOLARIS11DIFFURL = ${SOLARIS11DIFFURL}"
     echo "------------------------------------------------------------"
 }
 
@@ -137,6 +139,15 @@ function install_prereqs()
 #    yum groupinstall "X Software Development"
 }
 
+function pre_build()
+{
+    if [ $(uname -s) == "SunOS" ];
+    then
+	rm   -f solaris11.diff
+	curl -o solaris11.diff ${SOLARIS11DIFFURL}
+    fi
+}
+
 function build()
 {
     mkdir -p ${BUILDDIR}
@@ -147,7 +158,6 @@ function build()
 	      -DGEANT4_USE_GDML=ON			\
 	      -DGEANT4_USE_OPENGL_X11=ON		\
 	      -DGEANT4_INSTALL_EXAMPLES=ON		\
-
 	    "../${SOURCEDIR}"
 	make -j ${NUMBEROFJOBS}
     )
@@ -215,9 +225,10 @@ function print_exports()
 
 #print_globals
 #download_source
+pre_build
 #build
 #download_physicsdata		# not needed if -DGEANT4_INSTALL_DATA=ON
 #install
-print_exports			# not needed if -DGEANT4_INSTALL_DATA=ON
+#print_exports			# not needed if -DGEANT4_INSTALL_DATA=ON
 
 #build_example "$1"
