@@ -1,0 +1,135 @@
+diff -p -N -r -u geant4.9.5.p01/source/global/sol11fix.hh geant4.9.5.p01-orig/source/global/sol11fix.hh
+--- geant4.9.5.p01/source/global/sol11fix.hh	1970-01-01 02:00:00.000000000 +0200
++++ geant4.9.5.p01-orig/source/global/sol11fix.hh	2012-05-21 20:07:48.386351236 +0300
+@@ -0,0 +1,21 @@
++#undef  E
++
++#undef SS
++#undef UESP
++#undef EFL
++#undef CS
++#undef EIP
++#undef ERR
++#undef TRAPNO
++#undef EAX
++#undef ECX
++#undef EDX
++#undef EBX
++#undef ESP
++#undef EBP
++#undef ESI
++#undef EDI
++#undef DS
++#undef ES
++#undef FS
++#undef GS
+diff -p -N -r -u geant4.9.5.p01/source/materials/src/G4NistElementBuilder.cc geant4.9.5.p01-orig/source/materials/src/G4NistElementBuilder.cc
+--- geant4.9.5.p01/source/materials/src/G4NistElementBuilder.cc	2012-05-21 23:21:42.122245229 +0300
++++ geant4.9.5.p01-orig/source/materials/src/G4NistElementBuilder.cc	2012-05-21 21:49:43.553291260 +0300
+@@ -58,6 +58,7 @@
+ #include "G4NistElementBuilder.hh"
+ #include "G4Element.hh"
+ #include <sstream>
++#include "../../global/sol11fix.hh"
+ 
+ 
+ //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+diff -p -N -r -u geant4.9.5.p01/source/processes/electromagnetic/adjoint/src/G4AdjointComptonModel.cc geant4.9.5.p01-orig/source/processes/electromagnetic/adjoint/src/G4AdjointComptonModel.cc
+--- geant4.9.5.p01/source/processes/electromagnetic/adjoint/src/G4AdjointComptonModel.cc	2012-05-21 23:21:41.449235120 +0300
++++ geant4.9.5.p01-orig/source/processes/electromagnetic/adjoint/src/G4AdjointComptonModel.cc	2012-05-21 21:42:07.002582949 +0300
+@@ -37,6 +37,7 @@
+ #include "G4AdjointGamma.hh"
+ #include "G4Gamma.hh"
+ #include "G4KleinNishinaCompton.hh"
++#include "../../../../global/sol11fix.hh"
+ 
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+diff -p -N -r -u geant4.9.5.p01/source/processes/electromagnetic/adjoint/src/G4AdjointCSManager.cc geant4.9.5.p01-orig/source/processes/electromagnetic/adjoint/src/G4AdjointCSManager.cc
+--- geant4.9.5.p01/source/processes/electromagnetic/adjoint/src/G4AdjointCSManager.cc	2012-05-21 23:21:41.450511575 +0300
++++ geant4.9.5.p01-orig/source/processes/electromagnetic/adjoint/src/G4AdjointCSManager.cc	2012-05-21 19:51:49.803221749 +0300
+@@ -50,6 +50,7 @@
+ #include "G4ProductionCutsTable.hh"
+ #include <fstream>
+ #include <iomanip>
++#include "../../../../global/sol11fix.hh"
+ 
+ 
+ G4AdjointCSManager* G4AdjointCSManager::theInstance = 0;
+diff -p -N -r -u geant4.9.5.p01/source/processes/electromagnetic/adjoint/src/G4AdjointCSMatrix.cc geant4.9.5.p01-orig/source/processes/electromagnetic/adjoint/src/G4AdjointCSMatrix.cc
+--- geant4.9.5.p01/source/processes/electromagnetic/adjoint/src/G4AdjointCSMatrix.cc	2012-05-21 23:21:41.450704402 +0300
++++ geant4.9.5.p01-orig/source/processes/electromagnetic/adjoint/src/G4AdjointCSMatrix.cc	2012-05-21 19:54:25.031205474 +0300
+@@ -31,6 +31,7 @@
+ #include <iomanip>
+ #include <fstream>
+ #include "G4AdjointInterpolator.hh"
++#include "../../../../global/sol11fix.hh"
+ ///////////////////////////////////////////////////////
+ //
+ G4AdjointCSMatrix::G4AdjointCSMatrix(G4bool aBool){
+diff -p -N -r -u geant4.9.5.p01/source/processes/electromagnetic/adjoint/src/G4AdjointPhotoElectricModel.cc geant4.9.5.p01-orig/source/processes/electromagnetic/adjoint/src/G4AdjointPhotoElectricModel.cc
+--- geant4.9.5.p01/source/processes/electromagnetic/adjoint/src/G4AdjointPhotoElectricModel.cc	2012-05-21 23:21:41.447571630 +0300
++++ geant4.9.5.p01-orig/source/processes/electromagnetic/adjoint/src/G4AdjointPhotoElectricModel.cc	2012-05-21 21:36:57.025046698 +0300
+@@ -36,6 +36,7 @@
+ #include "G4AdjointElectron.hh"
+ #include  "G4Gamma.hh"
+ #include "G4AdjointGamma.hh"
++#include "../../../../global/sol11fix.hh"
+ 
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+diff -p -N -r -u geant4.9.5.p01/source/processes/hadronic/models/cascade/cascade/src/G4NonEquilibriumEvaporator.cc geant4.9.5.p01-orig/source/processes/hadronic/models/cascade/cascade/src/G4NonEquilibriumEvaporator.cc
+--- geant4.9.5.p01/source/processes/hadronic/models/cascade/cascade/src/G4NonEquilibriumEvaporator.cc	2012-05-21 23:21:41.718766846 +0300
++++ geant4.9.5.p01-orig/source/processes/hadronic/models/cascade/cascade/src/G4NonEquilibriumEvaporator.cc	2012-05-21 20:05:18.569883356 +0300
+@@ -52,6 +52,7 @@
+ #include "G4InuclSpecialFunctions.hh"
+ #include "G4LorentzConvertor.hh"
+ #include <cmath>
++#include "../../../../../global/sol11fix.hh"
+ 
+ using namespace G4InuclSpecialFunctions;
+ 
+diff -p -N -r -u geant4.9.5.p01/source/processes/hadronic/models/chiral_inv_phase_space/body/src/G4QEnvironment.cc geant4.9.5.p01-orig/source/processes/hadronic/models/chiral_inv_phase_space/body/src/G4QEnvironment.cc
+--- geant4.9.5.p01/source/processes/hadronic/models/chiral_inv_phase_space/body/src/G4QEnvironment.cc	2012-05-21 23:21:41.640943185 +0300
++++ geant4.9.5.p01-orig/source/processes/hadronic/models/chiral_inv_phase_space/body/src/G4QEnvironment.cc	2012-05-21 20:09:21.663989220 +0300
+@@ -61,6 +61,7 @@
+ #include "G4QEnvironment.hh" 
+ #include <cmath>
+ #include <cstdlib>
++#include "../../../../../global/sol11fix.hh"
+ using namespace std;
+ 
+ G4QEnvironment::G4QEnvironment(const G4QNucleus& theEnv)
+diff -p -N -r -u geant4.9.5.p01/source/processes/hadronic/models/chiral_inv_phase_space/cross_sections/include/G4VQCrossSection.hh geant4.9.5.p01-orig/source/processes/hadronic/models/chiral_inv_phase_space/cross_sections/include/G4VQCrossSection.hh
+--- geant4.9.5.p01/source/processes/hadronic/models/chiral_inv_phase_space/cross_sections/include/G4VQCrossSection.hh	2012-05-21 23:21:41.665401582 +0300
++++ geant4.9.5.p01-orig/source/processes/hadronic/models/chiral_inv_phase_space/cross_sections/include/G4VQCrossSection.hh	2012-05-21 20:11:17.515269596 +0300
+@@ -82,6 +82,7 @@
+ #include "G4NucleiProperties.hh"
+ #include <vector>
+ #include "Randomize.hh"
++#include "../../../../../global/sol11fix.hh"
+ 
+ class G4VQCrossSection
+ {
+diff -p -N -r -u geant4.9.5.p01/source/processes/hadronic/models/de_excitation/multifragmentation/src/G4StatMFMacroMultiNucleon.cc geant4.9.5.p01-orig/source/processes/hadronic/models/de_excitation/multifragmentation/src/G4StatMFMacroMultiNucleon.cc
+--- geant4.9.5.p01/source/processes/hadronic/models/de_excitation/multifragmentation/src/G4StatMFMacroMultiNucleon.cc	2012-05-21 23:21:41.821154759 +0300
++++ geant4.9.5.p01-orig/source/processes/hadronic/models/de_excitation/multifragmentation/src/G4StatMFMacroMultiNucleon.cc	2012-05-21 20:15:10.706700442 +0300
+@@ -37,6 +37,7 @@
+ //          symmetry energy 
+ 
+ #include "G4StatMFMacroMultiNucleon.hh"
++#include "../../../../../global/sol11fix.hh"
+ 
+ // Default constructor
+ G4StatMFMacroMultiNucleon::
+diff -p -N -r -u geant4.9.5.p01/source/processes/hadronic/models/quasi_elastic/include/G4VCrossSection.hh geant4.9.5.p01-orig/source/processes/hadronic/models/quasi_elastic/include/G4VCrossSection.hh
+--- geant4.9.5.p01/source/processes/hadronic/models/quasi_elastic/include/G4VCrossSection.hh	2012-05-21 23:21:41.928065926 +0300
++++ geant4.9.5.p01-orig/source/processes/hadronic/models/quasi_elastic/include/G4VCrossSection.hh	2012-05-21 20:19:13.425704061 +0300
+@@ -82,6 +82,7 @@
+ #include "G4NucleiProperties.hh"
+ #include <vector>
+ #include "Randomize.hh"
++#include "../../../../global/sol11fix.hh"
+ 
+ class G4VCrossSection
+ {
