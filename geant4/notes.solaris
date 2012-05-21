@@ -1,8 +1,20 @@
+-- HOW TO INSTALL GEANT4 IN SOLARIS 11 ---
+
+cmake-2.8 is needed but, as of the time of writing, Solaris 11 bundles
+cmake-2.6. Therefore, one needs to install cmake-2.6 with:
+pkg install developer/build/cmake
+and then use that to bootstrap cmake-2.8. Finally we use cmake-2.8 to
+build Geant4 as per the docs.
+
+In order to build Geant4 with GDML support (which in turn is needed
+if one wants to run the fullCMS experiment), the xerces-c library
+must be installed. xerces-c doesn't exist as binary package at all.
+Therefore, we need to build it from sources:
+
 sudo pkg install library/icu		# needed as a dependency for xerces-c
 sudo pkg install x11/library/mesa 	# needed by geant4
 
-There is no binary package for xerces-c, therefore we need to build it
-from source. xerces-2.8 doesn't seem to build out of the box, but 3.1.1 does.
+xerces-2.8 doesn't seem to build out of the box, but 3.1.1 does.
 
 curl ...
 
@@ -12,33 +24,30 @@ cd xerces && ./configure --prefix=... && gmake && gmake install
 XERCESC_ROOT_DIR is a -DOPTION= not an env variable!
 
 
-
-
-
-
-
-
-
+Solaris 11 seems to leak some symbols in /usr/include/sys/regset.h, around
+line 78.
+Later on, while compiling legitimate code in Geant4, such as:
 
   G4double CA[15] =
   {8.03768, 9.03104, 10.0169, 11.0114, 12. , 13.0034, 14.0032, 15.0106,
    16.0147, 17.0226, 18.0268, 19.0353, 20.0403, 21.0493, 22.0565};
 
+  AddElement("C", 6, 15, *CN , *CA , *CS , *CW);
+
+the build fails, because 'CS' is substituded, during the preprocessing
+statge, with the following:
+
   G4double 15[15] =
   {25, 23, 4, 10, 0, 10, 4, 9, 4, 19, 30, 12, 22, 54, 97};
 
-  G4double CW[15] =
-  {0, 0, 0, 0, 98.93, 1.07, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
   AddElement("C", 6, 15, *CN , *CA , *15 , *CW);
 
+resulting in all kinds of weird errors.
 
-  G4int NN[15] =
-  {10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
-stathis:materials/src% g++ -E -I../../materials/include -I../../global/management/include -I../../externals/clhep/include G4NistElementBuilder.cc | grep CS
-
-problem is in sys/regset.h around LINE 78
-
+stathis:materials/src% g++ -E -I../../materials/include		\
+		       	      -I../../global/management/include \
+			      -I../../externals/clhep/include 	\
+			   G4NistElementBuilder.cc | grep CS
 
 #define SS              18      /* only stored on a privilege transition */
 #define UESP            17      /* only stored on a privilege transition */
