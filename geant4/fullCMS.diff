@@ -1,0 +1,13 @@
+diff -pruN Geant4-orig/benchmarks/calorimeter/FullCMS/src/MyDetectorConstruction.cc Geant4/benchmarks/calorimeter/FullCMS/src/MyDetectorConstruction.cc
+--- Geant4-orig/benchmarks/calorimeter/FullCMS/src/MyDetectorConstruction.cc	2008-04-23 10:32:11.000000000 +0300
++++ Geant4/benchmarks/calorimeter/FullCMS/src/MyDetectorConstruction.cc	2012-05-18 23:20:24.177221226 +0300
+@@ -38,7 +38,8 @@ G4VPhysicalVolume* MyDetectorConstructio
+   
+   if( fWorld == 0 ) {
+     G4Exception(
+-      "World volume not set properly check your setup selection criteria or GDML input!"
++		"World volume not set properly check your setup selection criteria or GDML input!",
++		"InvalidSetup", FatalException, "fWorld == 0"
+       );
+   }
+ 
