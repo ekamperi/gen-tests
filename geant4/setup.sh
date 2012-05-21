@@ -145,6 +145,7 @@ function pre_build()
     then
 	rm   -f solaris11.diff
 	curl -o solaris11.diff ${SOLARIS11DIFFURL}
+	patch -p0 < solaris11.diff
     fi
 }
 
