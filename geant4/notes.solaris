@@ -1,32 +1,32 @@
--- HOW TO INSTALL GEANT4 IN SOLARIS 11 ---
+-- HOW TO INSTALL GEANT4 IN SOLARIS 11/x86 ---
 
 cmake-2.8 is needed but, as of the time of writing, Solaris 11 bundles
 cmake-2.6. Therefore, one needs to install cmake-2.6 with:
-pkg install developer/build/cmake
+
+    pkg install developer/build/cmake
+
 and then use that to bootstrap cmake-2.8. Finally we use cmake-2.8 to
-build Geant4 as per the docs.
+build Geant4 as per the docs instructions.
 
 In order to build Geant4 with GDML support (which in turn is needed
 if one wants to run the fullCMS experiment), the xerces-c library
 must be installed. xerces-c doesn't exist as binary package at all.
 Therefore, we need to build it from sources:
 
-sudo pkg install library/icu		# needed as a dependency for xerces-c
-sudo pkg install x11/library/mesa 	# needed by geant4
+    pkg install library/icu		# needed as a dependency for xerces-c
+    pkg install x11/library/mesa 	# needed by geant4
 
 xerces-2.8 doesn't seem to build out of the box, but 3.1.1 does.
 
-curl ...
+    wget http://apache.cc.uoc.gr//xerces/c/3/sources/xerces-c-3.1.1.tar.gz
 
-export ICUROOT="/usr"	  # assuming libicu is in /usr/lib/libicu.so
-cd xerces && ./configure --prefix=... && gmake && gmake install
+    export ICUROOT="/usr"		# assuming libicu is in /usr/lib/libicu.so
+    cd xerces && ./configure --prefix=... && gmake && gmake install
 
-XERCESC_ROOT_DIR is a -DOPTION= not an env variable!
-
+XERCESC_ROOT_DIR is a -D...=... cmake option; not an env variable!
 
 Solaris 11 seems to leak some symbols in /usr/include/sys/regset.h, around
-line 78.
-Later on, while compiling legitimate code in Geant4, such as:
+line 78. Later on, while compiling legitimate code in Geant4, such as:
 
   G4double CA[15] =
   {8.03768, 9.03104, 10.0169, 11.0114, 12. , 13.0034, 14.0032, 15.0106,
@@ -47,7 +47,9 @@ resulting in all kinds of weird errors.
 stathis:materials/src% g++ -E -I../../materials/include		\
 		       	      -I../../global/management/include \
 			      -I../../externals/clhep/include 	\
-			   G4NistElementBuilder.cc | grep CS
+			   G4NistElementBuilder.cc
+
+Symbols most likely to clash with geant4's:
 
 #define SS              18      /* only stored on a privilege transition */
 #define UESP            17      /* only stored on a privilege transition */
@@ -68,4 +70,10 @@ stathis:materials/src% g++ -E -I../../materials/include		\
 #define ES              2
 #define FS              1
 #define GS              0
+
+Patch to workaround the issue:
+http://leaf.dragonflybsd.org/~beket/geant4/solaris11.diff
+
+The sol11fix.h must be included after the inclusion of every other header file
+(in the problematic .cc files).
 
