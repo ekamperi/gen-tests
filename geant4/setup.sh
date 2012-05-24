@@ -17,7 +17,12 @@ SOLARIS11DIFFURL="http://leaf.dragonflybsd.org/~beket/geant4/solaris11.diff"
 function usage()
 {
     cat <<EOF
-usage: `basename`
+usage: $(basename $0) -bdegi
+-b    Build Geant4
+-d    Download source and physics data
+-e    Print exports
+-g    Print globals
+-i    Install Geant4
 EOF
     exit 1
 }
@@ -167,7 +172,7 @@ function pre_build()
 	echo "Applying solaris11.diff patch to source tree"
 	rm   -f solaris11.diff
 	curl -o solaris11.diff ${SOLARIS11DIFFURL}
-	patch -p0 < solaris11.diff
+	patch -N -p0 < solaris11.diff || true    # ignore, if already applied
     fi
 }
 
@@ -249,12 +254,61 @@ function print_exports()
     echo "------------------------------------------------------------"
 }
 
-print_globals
-download_source
-pre_build
-build
-download_physicsdata		# not needed if -DGEANT4_INSTALL_DATA=ON
-install
-print_exports			# not needed if -DGEANT4_INSTALL_DATA=ON
+#print_globals
+#download_source
+#pre_build
+#build
+#download_physicsdata		# not needed if -DGEANT4_INSTALL_DATA=ON
+#install
+#print_exports			# not needed if -DGEANT4_INSTALL_DATA=ON
 
 #build_example "$1"
+
+# Parse user supplied arguments
+
+while getopts "bdegi" f
+do
+    case $f in
+	b)
+	    # build
+	    build=$f
+	    ;;
+	d)
+	    # download source and physics data
+	    download=$f
+	    ;;
+	e)
+	    # print exports
+	    exports=$f
+	    ;;
+	g)
+	    # print globals
+	    globals=$f
+	    ;;
+	i)
+	    # install
+	    install=$f
+	    ;;
+	\?)
+	    # print usage
+	    usage
+	    ;;
+    esac
+done
+shift $(expr $OPTIND - 1)
+
+# At least one of the -bdegi options must be set
+
+[ -z "$build"   ] && [ -z "$download" ] && [ -z "$exports" ] &&
+[ -z "$globals" ] && [ -z "$install"  ] && usage
+
+
+[ -z "$globals"  ] && print_globals
+[ -z "$download" ] && download_source
+[ -z "$build"    ] && pre_build
+[ -z "$build"    ] && build
+[ -z "$download" ] && download_physicsdata # not needed if -DGEANT4_INSTALL_DATA=ON
+[ -z "$install"  ] && install
+[ -z "$exports"  ] && print_exports
+
+#build_example "$1"   
