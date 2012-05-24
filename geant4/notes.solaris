@@ -101,3 +101,16 @@ gmake
 
 and the libraries should reside at:
 
+---
+
+After the installation of benchmarks/calorimeters/FullCMS and 
+for no apparent reason, geant4 programs started to hang. A pstack on
+example N01 (which has been previously working fine) returns:
+
+curl http://leaf.dragonflybsd.org/~beket/geant4/pstack.exampleN01 |\
+     /usr/gnu/bin/c++filt
+
+Part of the problem is __cxa_guard_acquire() guard, which is used internally
+by g++ to protect local static variable constructions. It seems that
+__cxa_guard_release() is never get called and the program waits indefinitely.
+
