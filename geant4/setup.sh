@@ -9,6 +9,7 @@ BASEINSTALLDIR="/opt"
 INSTALLDIR="$BASEINSTALLDIR/${GEANT4TARBALL%.tar.gz}"	# remove the .tar.gz part
 SOURCEDIR="./${GEANT4TARBALL%.tar.gz}"
 BUILDDIR="./${GEANT4TARBALL%.tar.gz}-build"
+XERCESC_ROOT_DIR="/opt/xerces-c-3.1.1"
 PHYSICSDATA="physicsdata"
 NUMBEROFJOBS="3"
 SOLARIS11DIFFURL="http://leaf.dragonflybsd.org/~beket/geant4/solaris11.diff"
@@ -31,6 +32,7 @@ function print_globals()
     echo "INSTALL DIR      = ${INSTALLDIR}"
     echo "SOURCE DIR       = ${SOURCEDIR}"
     echo "BUILD DIR        = ${BUILDDIR}"
+    echo "XERCESC_ROOT_DIR = ${XERCESC_ROOT_DIR}"
     echo "PHYSICS DATA DIR = ${PHYSICSDATA}"
     echo "NUMBER OF JOBS   = ${NUMBEROFJOBS}"
     echo "SOLARIS11DIFFURL = ${SOLARIS11DIFFURL}"
@@ -53,10 +55,28 @@ function sha1sum_matches()
     fi
 }
 
+# $1 is the filename, $2 is the expected sha1 sum
+# return 0 for true (exists), 1 for false (does not exist)
+
+function file_exists()
+{
+    if [[ -f "$1" ]] && sha1sum_matches "$1" "$2";
+    then
+	return 0
+    else
+	return 1
+    fi
+}
+
 function download_source()
 {
     echo "-> Downloading source"
-    curl -o $GEANT4TARBALL "${BASEURL}/${GEANT4TARBALL}"
+    if file_exists "${GEANT4TARBALL}" "b1b938f735a8b966621704cc77448c786777dd01"
+    then
+        echo "File already exists. Skipping the download."
+    else
+	curl -o $GEANT4TARBALL "${BASEURL}/${GEANT4TARBALL}"
+    fi
     tar xzf ${GEANT4TARBALL}
 }
 
@@ -131,6 +151,7 @@ function download_physicsdata()
 
 function install_prereqs()
 {
+    true
 #    apt-get install cmake
 #    apt-get install libxerces-c-dev
 
@@ -160,6 +181,7 @@ function build()
 	      -DGEANT4_USE_GDML=ON			\
 	      -DGEANT4_USE_OPENGL_X11=ON		\
 	      -DGEANT4_INSTALL_EXAMPLES=ON		\
+	      -DXERCESC_ROOT_DIR=${XERCESC_ROOT_DIR}	\
 	    "../${SOURCEDIR}"
 	make -j ${NUMBEROFJOBS}
     )
@@ -227,12 +249,12 @@ function print_exports()
     echo "------------------------------------------------------------"
 }
 
-#print_globals
-#download_source
+print_globals
+download_source
 pre_build
-#build
-#download_physicsdata		# not needed if -DGEANT4_INSTALL_DATA=ON
-#install
-#print_exports			# not needed if -DGEANT4_INSTALL_DATA=ON
+build
+download_physicsdata		# not needed if -DGEANT4_INSTALL_DATA=ON
+install
+print_exports			# not needed if -DGEANT4_INSTALL_DATA=ON
 
 #build_example "$1"
