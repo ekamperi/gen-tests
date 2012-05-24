@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-#set -x
+set -x
 
 BASEURL="http://geant4.cern.ch/support/source"
 GEANT4TARBALL="geant4.9.5.p01.tar.gz"
@@ -11,7 +11,7 @@ SOURCEDIR="./${GEANT4TARBALL%.tar.gz}"
 BUILDDIR="./${GEANT4TARBALL%.tar.gz}-build"
 PHYSICSDATA="physicsdata"
 NUMBEROFJOBS="3"
-SOLARIS11DIFFURL="http://leaf.dragonflybsd.org/~beket/solaris11.diff"
+SOLARIS11DIFFURL="http://leaf.dragonflybsd.org/~beket/geant4/solaris11.diff"
 
 function usage()
 {
@@ -131,8 +131,8 @@ function download_physicsdata()
 
 function install_prereqs()
 {
-    apt-get install cmake
-    apt-get install libxerces-c-dev
+#    apt-get install cmake
+#    apt-get install libxerces-c-dev
 
 #    yum install cmake
 #    yum install xerces-c
@@ -143,6 +143,7 @@ function pre_build()
 {
     if [ $(uname -s) == "SunOS" ];
     then
+	echo "Applying solaris11.diff patch to source tree"
 	rm   -f solaris11.diff
 	curl -o solaris11.diff ${SOLARIS11DIFFURL}
 	patch -p0 < solaris11.diff
@@ -213,15 +214,17 @@ function print_exports()
     done
     echo "------------------------------------------------------------"
 
-    export G4LIB_BUILD_GDML=1
-    export G4LIB_USE_GDML=1
+    echo "export G4LIB_BUILD_GDML=1"
+    echo "export G4LIB_USE_GDML=1"
 
-    export G4INSTALL=/opt/geant4.9.5.p01/share/Geant4-9.5.1/geant4make
-    export G4INCLUDE=/opt/geant4.9.5.p01/include/Geant4
+    echo "export G4INSTALL=/opt/geant4.9.5.p01/share/Geant4-9.5.1/geant4make"
+    echo "export G4INCLUDE=/opt/geant4.9.5.p01/include/Geant4"
 
-    export G4INSTALL=/opt/geant4.9.5.p01/share/Geant4-9.5.1/geant4make
-    export G4SYSTEM=Linux-g++
-    export G4LIB=/home/stathis/gen-tests/geant4/geant4.9.5.p01-build/outputs/library
+    echo "export G4INSTALL=/opt/geant4.9.5.p01/share/Geant4-9.5.1/geant4make"
+    echo "export G4SYSTEM=Linux-g++"
+    echo "export G4LIB=/home/stathis/gen-tests/geant4/geant4.9.5.p01-build/outputs/library"
+
+    echo "------------------------------------------------------------"
 }
 
 #print_globals
