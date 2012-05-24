@@ -16,7 +16,11 @@ Therefore, we need to build it from sources:
     pkg install library/icu		# needed as a dependency for xerces-c
     pkg install x11/library/mesa 	# needed by geant4
 
-xerces-2.8 doesn't seem to build out of the box, but 3.1.1 does.
+In the bechmarks/calorimeters/FullCMS/README file, it is stated that
+the version of xerces must be the same as the one used to produce
+the cms.gdml (which is 2.8). xerces-2.8 though, doesn't seem to build
+out of the box, but 3.1.1 does and it appears to be able to parse
+the gdml file fine (backwards compatible?).
 
     wget http://apache.cc.uoc.gr//xerces/c/3/sources/xerces-c-3.1.1.tar.gz
 
@@ -76,4 +80,24 @@ http://leaf.dragonflybsd.org/~beket/geant4/solaris11.diff
 
 The sol11fix.h must be included after the inclusion of every other header file
 (in the problematic .cc files).
+
+I had to bisect the problem space by inserting #undef CS before and after
+of every other header inclusion.
+
+--- FullCMS ---
+
+...
+
+One needs to apply the patch from:
+
+setup the environmental variables ...
+apply http://leaf.dragonflybsd.org/~beket/geant4/fullCMS.diff
+build granular libraries 
+QUESTION: does GEANT4_BUILD_GRANULAR_LIBRARIES=ON builds ONLY granular
+libraries or does it build them along with non-granular ?
+
+cd $G4INSTALL/source
+gmake
+
+and the libraries should reside at:
 
