@@ -303,12 +303,12 @@ shift $(expr $OPTIND - 1)
 [ -z "$globals" ] && [ -z "$install"  ] && usage
 
 
-[ -z "$globals"  ] && print_globals
-[ -z "$download" ] && download_source
-[ -z "$build"    ] && pre_build
-[ -z "$build"    ] && build
-[ -z "$download" ] && download_physicsdata # not needed if -DGEANT4_INSTALL_DATA=ON
-[ -z "$install"  ] && install
-[ -z "$exports"  ] && print_exports
+[ ! -z "$globals"  ] && print_globals
+[ ! -z "$download" ] && download_source
+[ ! -z "$build"    ] && pre_build
+[ ! -z "$build"    ] && build
+[ ! -z "$download" ] && download_physicsdata # not needed if -DGEANT4_INSTALL_DATA=ON
+[ ! -z "$install"  ] && install
+[ ! -z "$exports"  ] && print_exports
 
 #build_example "$1"   
