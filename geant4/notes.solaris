@@ -108,9 +108,16 @@ for no apparent reason, geant4 programs started to hang. A pstack on
 example N01 (which has been previously working fine) returns:
 
 curl http://leaf.dragonflybsd.org/~beket/geant4/pstack.exampleN01 |\
-     /usr/gnu/bin/c++filt
+     /usr/gnu/bin/c++filt | less
 
 Part of the problem is __cxa_guard_acquire() guard, which is used internally
 by g++ to protect local static variable constructions. It seems that
 __cxa_guard_release() is never get called and the program waits indefinitely.
+Perhaps the initialisation code is threaf-safe, but not reentrant-safe and
+there is indeed a 2nd call from the same context ?
 
+UPDATE: It seems that this problem is exhibited when =Debug is set in
+cmake +/- gdml,etc. A workaround is to either disable debug or add the
+following line in $G4SOURCE/CMakeLists.txt:
+
+set(CMAKE_CXX_FLAGS "-fno-threadsafe-statics")
