@@ -139,13 +139,16 @@ UPDATE: It appears that this problem is exhibited when the Debug option
 workaround is to either disable debug or add the following line in
 $G4SOURCE/CMakeLists.txt:
 
-set(CMAKE_CXX_FLAGS "-fno-threadsafe-statics")
+    set(CMAKE_CXX_FLAGS "-fno-threadsafe-statics")
 
 There is also a patch in http://leaf.dragonflybsd.org/~beket/CMakeLists.txt.diff
+that applies the above change. Since we are interested in the sequential
+code path efficiency, we chose to disable thread safe statics instead
+of debugging symbols.
 
 When building granular libraries, one needs to set $PATH like:
 
-export PATH=/usr/gnu/bin:$PATH
+    export PATH=/usr/gnu/bin:$PATH
 
 so that the gnu toolchain takes precedence over the native,
 otherwise some commands will fail (e.g., @$(GREP), etc).
