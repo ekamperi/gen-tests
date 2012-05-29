@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-set -x
+#set -x
 
 BASEURL="http://geant4.cern.ch/support/source"
 GEANT4TARBALL="geant4.9.5.p01.tar.gz"
@@ -243,6 +243,9 @@ function print_exports()
 
     echo "export G4LIB_BUILD_GDML=1"
     echo "export G4LIB_USE_GDML=1"
+    echo "export XERCESCROOT=$XERCESC_ROOT_DIR"
+    echo "export LD_LIBRARY_PATH=$XERCESROOT/lib:$LD_LIBRARY_PATH"
+
 
     echo "export G4INSTALL=/opt/geant4.9.5.p01/share/Geant4-9.5.1/geant4make"
     echo "export G4INCLUDE=/opt/geant4.9.5.p01/include/Geant4"
@@ -253,16 +256,6 @@ function print_exports()
 
     echo "------------------------------------------------------------"
 }
-
-#print_globals
-#download_source
-#pre_build
-#build
-#download_physicsdata		# not needed if -DGEANT4_INSTALL_DATA=ON
-#install
-#print_exports			# not needed if -DGEANT4_INSTALL_DATA=ON
-
-#build_example "$1"
 
 # Parse user supplied arguments
 
