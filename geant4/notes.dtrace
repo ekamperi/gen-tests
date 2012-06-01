@@ -1,0 +1,28 @@
+What should be the entry point for our profiling ?
+We would like to skip the whole initialization part of full_cms, therefore one
+shoule trace from BeamOn() or even better from the EventManager::DoEventLoop().
+
+Trying to calculate the time that each functions consumes is troublesome. DTrace matches around
+30,000 probes and the execution is slowed down considerably. If that option is chosen though,
+use vtimestamp instead of timestamp, so that the results are less affected by the DTrace itself.
+
+g++ generates mangled symbols during the compilation. So, we use *globs* inside the DTrace script,
+if we don't want to nm(1) the executable and copy the exact (mangled) name from there. I looked
+for a way to generate mangled names for g++, but their abi:: exported interface has only __cxa_demangle().
+
+How to get sample stack traces. The profile target does NOT fire in thread context, therefore
+using self->tracing as a predicate will not work. Use a global variable instead.
+
+
+solaris# dtrace -x ustackframes=100								  \
+	 	-x strsize=5000									  \
+		-n 'BEGIN { tracing = 0; }							  \
+		    pid$target::*DoEventLoop*:entry { tracing = 1; }				  \
+		    pid$target::*DoEventLoop*:return { exit(0); }				  \
+		    profile-97/tracing != 0/ { @[ustack()] = count(); }'			  \
+		 -c "/home/stathis/geant4/geant4.9.5.p01/bin/Linux-g++/full_cms ./bench_10.g4" 	  \
+		 -o stack
+
+
+For 10 events the above invocation produces approximately 3MB of profiling data.
+
