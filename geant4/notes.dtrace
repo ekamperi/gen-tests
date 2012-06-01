@@ -26,3 +26,9 @@ solaris# dtrace -x ustackframes=100								  \
 
 For 10 events the above invocation produces approximately 3MB of profiling data.
 
+Next steps are:
+1. to pass the output to c++filt to demangle the symbols
+2. generate the folded output with stackcollapse.pl
+3. delete the line corresponding the idle line, which looks like "  4168"
+4. generate the svg file
+
