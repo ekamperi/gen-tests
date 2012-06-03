@@ -1,3 +1,5 @@
+== How to profile with DTrace
+
 .What should be the entry point for our profiling ?
 
 We would like to skip the whole initialization part of +full_cms+, therefore one
@@ -5,15 +7,15 @@ shoule trace from +BeamOn()+ or even better from the +EventManager::DoEventLoop(
 because +BeamOn()+ calls some initialization routines itself. For this purpose,
 we use a predicate as shown in +stack2dtrace.sh+ file.
 
-.Which functions should be profiling ?
+.Which functions should we be profiling ?
 
 Trying to calculate the time that each functions consumes is troublesome. DTrace matches around
-30,000 probes and the execution is slowed down considerably. If that option is chosen though,
++30,000+ probes and the execution is slowed down considerably. If that option is chosen though,
 use +vtimestamp+ instead of +timestamp+, so that the results are less affected by the DTrace itself.
 
-Another, more realistic approach, is to identify those functions that contribute most in the overall
+Another, more pragmatic approach, is to identify those functions that contribute most in the overall
 execution time and focus the profiling on them only. This can be done by taking sample stack traces,
-while +full_cms+ is runnng. Then, we examine those stack traces and deduce which functions are the 
+while +full_cms+ is running. Then, we examine those stack traces and deduce which functions are the 
 "hottest" (a function that is taking a lot time to execute, is more likely to get sampled, since we
 are sampling at a fixed rate).
 
@@ -36,14 +38,15 @@ as a predicate will not work. Use a global variable instead.
 For 10 events the above invocation produces approximately 3MB of profiling data.
 
 .Next steps are:
+
 * pass the output to +cxxfilt+ to demangle the c++ symbols (optional)
 * generate the folded output with +stackcollapse.pl+
 * delete the line corresponding the idle line, which looks like +"  4168"+
 * generate the svg file with +flamegraph.pl+
 
 http://leaf.dragonflybsd.org/~beket/geant4/flamegraph.svg[This] is an example of the svg output
-file, and http://leaf.dragonflybsd.org/~beket/geant4/flamegraph-demangled.svg[this] is the same,
-but with demangled names.
+file, and http://leaf.dragonflybsd.org/~beket/geant4/flamegraph-demangled.svg[this] is with
+demangled names.
 
 .Generate the targeted DTrace script
 
