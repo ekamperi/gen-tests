@@ -47,6 +47,12 @@ uniq.awk > test.d
 Example of DTrace script:
 curl -o test.d http://leaf.dragonflybsd.org/~beket/test.d
 
+The script should be called with -Z (for not failing on unmathced probes) and with
+-x dynvarsize=8m (for not dropping dynamic variables). E.g.,
+
+solaris# ./test.d -Z -x dynvarsize=8m \
+	 -c "/home/stathis/gen-tests/geant4/geant4.9.5.p01/bin/Linux-g++/full_cms ./bench1_10.g4"
+
 Example of DTrace output:
 curl -o http://leaf.dragonflybsd.org/~beket/geant4/test.d.out1 \
      c++filt -n -p
