@@ -1,64 +1,81 @@
--- HOW TO INSTALL GEANT4 IN SOLARIS 11/x86 ---
+== HOW TO INSTALL GEANT4 IN SOLARIS 11
 
-cmake-2.8 is needed but, as of the time of writing, Solaris 11 bundles
-cmake-2.6. Therefore, one needs to install cmake-2.6 with:
+=== Dependencies
++cmake-2.8+ is needed but, as of the time of writing, Solaris 11 bundles
++cmake-2.6+. Therefore, one needs to install +cmake-2.6+ with:
 
+----
     pkg install developer/build/cmake
+----
 
-and then use that to bootstrap cmake-2.8. Finally we use cmake-2.8 to
-build Geant4 as per the docs instructions.
+and then use that to bootstrap +cmake-2.8+. Finally we use +cmake-2.8+ to
+build +Geant4+ as per the docs instructions.
 
     export PATH=$PATH:/opt/cmake-2.8/bin     
 
-In order to build Geant4 with GDML support (which in turn is needed
-if one wants to run the FullCMS experiment), the xerces-c library
-must be installed. xerces-c doesn't exist as binary package at all.
+In order to build +Geant4+ with GDML support (which in turn is needed
+if one wants to run the +FullCMS+ experiment), the +xerces-c+ library
+must be installed. +xerces-c+ doesn't exist as binary package at all.
 Therefore, we need to build it from sources:
 
+----
     pkg install library/icu		# needed as a dependency for xerces-c
     pkg install x11/library/mesa 	# needed by geant4
+----
 
-In the bechmarks/calorimeters/FullCMS/README file, it is stated that
-the version of xerces must be the same as the one used to produce
-the cms.gdml (which is 2.8). xerces-2.8 though, doesn't seem to build
-out of the box, but 3.1.1 does and it is able to parse the gdml file
+In the +bechmarks/calorimeters/FullCMS/README+ file, it is stated that
+the version of +xerces-c+ must be the same as the one used to produce
+the +cms.gdml+ (which is 2.8). +xerces-2.8+ though, doesn't seem to build
+out of the box, but +3.1.1+ does and it is able to parse the gdml file
 fine (backwards compatible?).
 
+----
     wget http://apache.cc.uoc.gr//xerces/c/3/sources/xerces-c-3.1.1.tar.gz
 
     export ICUROOT="/usr"		# assuming libicu is in /usr/lib/libicu.so
     cd xerces-c-3.1.1 && ./configure --prefix=/opt/xerces-c-3.1.1 \
        		       && gmake && gmake install
+----
 
 Note: XERCESC_ROOT_DIR is a -D...=... cmake option; not an environmental variable!
 
-Solaris 11 seems to leak some symbols in /usr/include/sys/regset.h, around
-line 78. Later on, while compiling legitimate code in Geant4, such as:
 
+=== Patch needed for Solaris
+
+Solaris 11 seems to leak some symbols in +/usr/include/sys/regset.h+, around
++line 78+. Later on, while compiling legitimate code in +Geant4+, such as:
+
+----
     G4double CA[15] =
     { 8.03768, 9.03104, 10.0169, 11.0114, 12. , 13.0034, 14.0032, 15.0106,
       16.0147, 17.0226, 18.0268, 19.0353, 20.0403, 21.0493, 22.0565 };
 
     AddElement("C", 6, 15, *CN , *CA , *CS , *CW);
+----
 
-the build fails, because 'CS' is substituded, during the preprocessing
+the build fails, because +'CS'+ is substituded, during the preprocessing
 stage, with the following:
 
+----
     G4double 15[15] =
     { 25, 23, 4, 10, 0, 10, 4, 9, 4, 19, 30, 12, 22, 54, 97 };
 
     AddElement("C", 6, 15, *CN , *CA , *15 , *CW);
+----
 
 resulting in all kinds of weird errors. How to get the preprocessed
 source code:
 
+----
 stathis:materials/src% g++ -E -I../../materials/include		\
 		       	      -I../../global/management/include \
 			      -I../../externals/clhep/include 	\
 			   G4NistElementBuilder.cc
+----
 
 Symbols most likely to clash with geant4's, directly taken from sys/regset.h:
 
+----
 #define SS              18      /* only stored on a privilege transition */
 #define UESP            17      /* only stored on a privilege transition */
 #define EFL             16
@@ -78,28 +95,30 @@ Symbols most likely to clash with geant4's, directly taken from sys/regset.h:
 #define ES              2
 #define FS              1
 #define GS              0
+----
 
-This is a transitive patch to workaround the issue:
-http://leaf.dragonflybsd.org/~beket/geant4/solaris11.diff
+http://leaf.dragonflybsd.org/~beket/geant4/solaris11.diff[This] is a transitive
+patch to workaround the issue. The +sol11fix.h+ must be included *after* the
+inclusion of every other header file (in the problematic .cc files), i.e.,
+be the last header file to be included. Otherwise, the inclusion of some other
+header may cause the redefinition of the symbols.
 
-The sol11fix.h must be included after the inclusion of every other header file
-(in the problematic .cc files), i.e., be the last header file to be included.
-
-I had to bisect the problem space by inserting #undef CS before and after
-the inclusion of various header files, starting from the geant4 specific and
+I had to bisect the problem space by inserting +#undef CS+ before and after
+the inclusion of various header files, starting from the +Geant4+ specific and
 going as far as the system header files.
 
 NOTE: I need to properly integrate the patch to not use hardcoded include
-paths, e.g., #include "../../../../../global/sol11fix.hh". Otherwise it
+paths, e.g., +#include "../../../../../global/sol11fix.hh"+. Otherwise it
 will not work out of the box if one -say- tries to build granular libraries,
-by invoking make in $G4INSTALL/source, rather than $G4INSTALL.
+by invoking make in +$G4INSTALL/source+, rather than +$G4INSTALL+.
 
---- FullCMS ---
-
+==== FullCMS
 ... fast notes ...
 
+----
 export XERCESROOT=/opt/xerces-c...
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:...
+----
 
 setup the environmental variables ...
 
@@ -120,13 +139,14 @@ benchmarks/calorimeters/FullCMS and for no apparent reason, geant4 programs
 started to hang. A pstack(1) on exampleN01 (which has been previously 
 working fine) returned:
 
-    
+----    
     curl http://leaf.dragonflybsd.org/~beket/geant4/pstack.exampleN01 |\
          /usr/gnu/bin/c++filt | less
+----
 
-Part of the problem is the call to __cxa_guard_acquire(), which is used
-internally by g++ to protect the construction of local static variables.
-It seems though that __cxa_guard_release() is never get called and the
+Part of the problem is the call to +__cxa_guard_acquire()+, which is used
+internally by +g\++ to protect the construction of local static variables.
+It seems though that +__cxa_guard_release()+ is never get called and the
 program just waits indefinetely. I hypothesize that 1) the initialisation
 code is thread-safe, but not reentrant-safe and 2) there is a 2nd call
 from the same context, possibly due to the construction of some complex
@@ -135,16 +155,19 @@ variables doesn't pose a problem, as it takes place before any function
 of the translation unit gets executed.
 
 UPDATE: It appears that this problem is exhibited when the Debug option
--DCMAKE_BUILD_TYPE=Debug is set, along with GEANT4_USE_GDML, etc. A
++-DCMAKE_BUILD_TYPE=Debug+ is set, along with +GEANT4_USE_GDML, etc+. A
 workaround is to either disable debug or add the following line in
-$G4SOURCE/CMakeLists.txt:
++$G4SOURCE/CMakeLists.txt+:
 
+----
     set(CMAKE_CXX_FLAGS "-fno-threadsafe-statics")
+----
 
 There is also a patch in http://leaf.dragonflybsd.org/~beket/CMakeLists.txt.diff
 that applies the above change. Since we are interested in the sequential
 code path efficiency, we chose to disable thread safe statics instead
-of debugging symbols.
+of debugging symbols. Question: what about the impact on performance due to lack
+of optimizations ?
 
 When building granular libraries, one needs to set $PATH like:
 
@@ -155,21 +178,22 @@ otherwise some commands will fail (e.g., @$(GREP), etc).
 
 Use Linux-g++ as G4System
 
----
+The +GNUmakefile+ couldn't generate the +libname.map+ file. It would flood
+with errors from +grep(1)+, of the form:
 
-The GNUmakefile couldn't generate the libname.map file. It would flood
-with errors from grep(1), of the form:
-
+----
 grep: error: missing argument for operation -- e
+----
 
 The modified file that works ok is this:
 the http://leaf.dragonflybsd.org/~beket/geant4/GNUmakefile2 . Soon,
 I'll have a unified diff against the original and integrate it with
-setup.sh.
++setup.sh+.
 
 After the granular libraries have been built by running gmake in
-$G4INSTALL/source, trying to build FullCMS results to this:
++$G4INSTALL/source+, trying to build +FullCMS+ results to this:
 
+----
 stathis:calorimeter/FullCMS% sudo -E gmake
 Using granular libraries ...
 Linking full_cms
@@ -184,9 +208,10 @@ G4UIcmdWithADoubleAndUnit::SetDefaultValue(double)
 CLHEP::HepRandom::setTheSeed(long, int)
 /home/stathis/gen-tests/geant4/geant4.9.5.p01/tmp/Linux-g++/full_cms/exe/full_cms.o
 ... lots of similar errors ...
+----
 
-
+----
 stathis:calorimeter/FullCMS% nm $G4LIB/$G4SYSTEM/libG4globman.a \ 
 			     | grep GetSurface | /usr/gnu/bin/c++filt
 000000e0 T G4GeometryTolerance::GetSurfaceTolerance() const
-
+----
