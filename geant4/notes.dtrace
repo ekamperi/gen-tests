@@ -1,19 +1,25 @@
-What should be the entry point for our profiling ?
-We would like to skip the whole initialization part of full_cms, therefore one
-shoule trace from BeamOn() or even better from the EventManager::DoEventLoop().
+.What should be the entry point for our profiling ?
+
+We would like to skip the whole initialization part of +full_cms+, therefore one
+shoule trace from +BeamOn()+ or even better from the +EventManager::DoEventLoop()+,
+because +BeamOn()+ calls some initialization routines itself. For this purpose,
+we use a predicate as shown in +stack2dtrace.sh+ file.
+
+.Which functions should be profiling ?
 
 Trying to calculate the time that each functions consumes is troublesome. DTrace matches around
 30,000 probes and the execution is slowed down considerably. If that option is chosen though,
-use vtimestamp instead of timestamp, so that the results are less affected by the DTrace itself.
+use +vtimestamp+ instead of +timestamp+, so that the results are less affected by the DTrace itself.
 
-g++ generates mangled symbols during the compilation. So, we use *globs* inside the DTrace script,
-if we don't want to nm(1) the executable and copy the exact (mangled) name from there. I looked
-for a way to generate mangled names for g++, but their abi:: exported interface has only __cxa_demangle().
+Another, more realistic approach, is to identify those functions that contribute most in the overall
+execution time and focus the profiling on them only. This can be done by taking sample stack traces,
+while +full_cms+ is runnng. Then, we examine those stack traces and deduce which functions are the 
+"hottest" (a function that is taking a lot time to execute, is more likely to get sampled, since we
+are sampling at a fixed rate).
 
-How to get sample stack traces. The profile target does NOT fire in thread context, therefore
-using self->tracing as a predicate will not work. Use a global variable instead.
-
-
+More information can be found https://github.com/brendangregg/FlameGraph[here]. E.g.,
+ 
+----
 solaris# dtrace -x ustackframes=100								  \
 	 	-x strsize=5000									  \
 		-n 'BEGIN { tracing = 0; }							  \
@@ -22,40 +28,53 @@ solaris# dtrace -x ustackframes=100								  \
 		    profile-97/tracing != 0/ { @[ustack()] = count(); }'			  \
 		 -c "/home/stathis/geant4/geant4.9.5.p01/bin/Linux-g++/full_cms ./bench_10.g4" 	  \
 		 -o stack
+----
 
+IMPORTANT: The profile target does NOT fire in thread context, therefore using +self->tracing+
+as a predicate will not work. Use a global variable instead.
 
 For 10 events the above invocation produces approximately 3MB of profiling data.
 
-Next steps are:
-1. to pass the output to c++filt to demangle the symbols
-2. generate the folded output with stackcollapse.pl
-3. delete the line corresponding the idle line, which looks like "  4168"
-4. generate the svg file
+.Next steps are:
+* pass the output to +cxxfilt+ to demangle the c++ symbols (optional)
+* generate the folded output with +stackcollapse.pl+
+* delete the line corresponding the idle line, which looks like +"  4168"+
+* generate the svg file with +flamegraph.pl+
 
-Example output of the flamegraph:
-http://leaf.dragonflybsd.org/~beket/geant4/flamegraph.svg
-http://leaf.dragonflybsd.org/~beket/geant4/flamegraph-demangled.svg
+http://leaf.dragonflybsd.org/~beket/geant4/flamegraph.svg[This] is an example of the svg output
+file, and http://leaf.dragonflybsd.org/~beket/geant4/flamegraph-demangled.svg[this] is the same,
+but with demangled names.
 
+.Generate the targeted DTrace script
 
-After having identified the "hot" functions, we run a script that generates a dtrace
-script that focus on profiling these functions only.
+After having identified the "hot" functions, we run a shell script that generates a DTrace
+script that focuses on profiling these functions only.
 
-curl -o uniq.awk http://leaf.dragonflybsd.org/~geant4/uniq6.awk
-chmod +x uniq.awk
-uniq.awk > test.d
+----
+curl -o stacks2dtrace.sh http://leaf.dragonflybsd.org/~geant4/stack2dtrace.sh
+chmod +x stacks2dtrace.sh
+stacks2dtrace.sh <folded.file> > test.d
+----
 
 Example of DTrace script:
-curl -o test.d http://leaf.dragonflybsd.org/~beket/test.d
+----
+curl -o test.d http://leaf.dragonflybsd.org/~beket/geant4/test.d
+----
 
-The script should be called with -Z (for not failing on unmathced probes) and with
--x dynvarsize=8m (for not dropping dynamic variables). E.g.,
+The script should be called with +-Z+ (for not failing on unmathced probes) and with
++-x dynvarsize=8m+ (for not dropping dynamic variables). E.g.,
 
+----
 solaris# ./test.d -Z -x dynvarsize=8m \
 	 -c "/home/stathis/gen-tests/geant4/geant4.9.5.p01/bin/Linux-g++/full_cms ./bench1_10.g4"
+----
 
 Example of DTrace output:
+----
 curl -o http://leaf.dragonflybsd.org/~beket/geant4/test.d.out1 \
      c++filt -n -p
+----
 
-
-
+NOTE: g\++ generates mangled symbols during the compilation. So, we use \*globs* inside the DTrace script,
+if we don't want to nm(1) the executable and copy the exact (mangled) names from there. I looked
+for a way to generate mangled names for g\++, but their abi:: exported interface has only +__cxa_demangle()+.
