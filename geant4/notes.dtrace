@@ -32,3 +32,24 @@ Next steps are:
 3. delete the line corresponding the idle line, which looks like "  4168"
 4. generate the svg file
 
+Example output of the flamegraph:
+http://leaf.dragonflybsd.org/~beket/geant4/flamegraph.svg
+http://leaf.dragonflybsd.org/~beket/geant4/flamegraph-demangled.svg
+
+
+After having identified the "hot" functions, we run a script that generates a dtrace
+script that focus on profiling these functions only.
+
+curl -o uniq.awk http://leaf.dragonflybsd.org/~geant4/uniq6.awk
+chmod +x uniq.awk
+uniq.awk > test.d
+
+Example of DTrace script:
+curl -o test.d http://leaf.dragonflybsd.org/~beket/test.d
+
+Example of DTrace output:
+curl -o http://leaf.dragonflybsd.org/~beket/geant4/test.d.out1 \
+     c++filt -n -p
+
+
+
