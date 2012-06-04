@@ -23,6 +23,13 @@
 #
 ################################################################################
 
+set -e
+
+if [ ! $# -eq 1 ]; then
+    echo "usage: $(basename $0) file.1"
+    exit 1
+fi
+
 fname="${1%.1}"	# remove the .1 part of the filename
 
 for i in "$fname".? "$fname".??;
