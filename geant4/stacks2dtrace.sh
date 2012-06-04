@@ -66,5 +66,10 @@ awk '
 	 print "\t@[probefunc] = avg( (vtimestamp - self->ts[probefunc])/1000000000 );"
 	 print "\tself->ts[probefunc] = 0;"
 	 printf "}"
+
+	 print "pid$target::*MyEventAction*EndOfEventAction*:entry"
+	 print "{"
+	 print "\tprinta(@_);"
+	 print "}"
      }
 '
