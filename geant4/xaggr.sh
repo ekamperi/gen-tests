@@ -22,7 +22,7 @@
 
 TARGETDIR="aggrresults"
 
-if [ $? -eq 0 ]; then
+if [ ! $# -eq 1 ]; then
     echo "usage: $(basename $0) dtrace.out"
     exit 1
 fi
