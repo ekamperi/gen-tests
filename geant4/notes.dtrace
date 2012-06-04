@@ -54,7 +54,7 @@ After having identified the "hot" functions, we run a shell script that generate
 script that focuses on profiling these functions only.
 
 ----
-curl -o stacks2dtrace.sh http://leaf.dragonflybsd.org/~geant4/stack2dtrace.sh
+curl -o stacks2dtrace.sh http://leaf.dragonflybsd.org/~beket/geant4/stack2dtrace.sh
 chmod +x stacks2dtrace.sh
 stacks2dtrace.sh <folded.file> > test.d
 ----
@@ -81,3 +81,35 @@ curl -o http://leaf.dragonflybsd.org/~beket/geant4/test.d.out1 \
 NOTE: g\++ generates mangled symbols during the compilation. So, we use \*globs* inside the DTrace script,
 if we don't want to nm(1) the executable and copy the exact (mangled) names from there. I looked
 for a way to generate mangled names for g\++, but their abi:: exported interface has only +__cxa_demangle()+.
+
+.How many events should we be simulating ?
+
+We let the +full_cms+ run for +100+ events and every time one such event is processed,
+we print the average time spent on the "hot" functions. The idea is to see past which
+event region the average times enter a steady state.  We do this by enabling a probe,
+like the following:
+
+----
+pid$target::*MyEventAction*EndOfEventAction*:entry
+{
+	printa(@_);
+}
+----
+
+An example can be found http://leaf.dragonflybsd.org/~beket/geant4/stad.out[here]. We, then, use
+a http://leaf.dragonflybsd.org/~beket/geant4/q.awk[script file] to extract the aggregations for
+every event, and http://leaf.dragonflybsd.org/~beket/geant4/rec.sh[another one], to reconstruct
+a time series for every "hot" function.
+
+----
+(echo -n 'set log y; plot '; for f in _Z*; do echo -n "'$f' notitle with lines,"; done) \
+      | gnuplot -persist
+(echo -n 'plot '; for f in _Z*; do echo -n "'$f' notitle smooth csplines,"; done) \
+      | gnuplot -persist
+----
+
+Complementary, we generate separate plots for each one of the traced functions, with the use
+of http://leaf.dragonflybsd.org/~beket/geant4/genpl.sh[this script]. Sample output can be
+found either in the form of a https://plus.google.com/u/0/photos/108524938275387430003/albums/5750217012217829393[picassa web album]
+or as a http://leaf.dragonflybsd.org/~beket/geant4/plots/bench1_100.g4.min30[plain directory listing].
+
