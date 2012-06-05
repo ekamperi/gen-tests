@@ -113,3 +113,34 @@ of http://leaf.dragonflybsd.org/~beket/geant4/genpl.sh[this script]. Sample outp
 found either in the form of a https://plus.google.com/u/0/photos/108524938275387430003/albums/5750217012217829393[picassa web album]
 or as a http://leaf.dragonflybsd.org/~beket/geant4/plots/bench1_100.g4.min30[plain directory listing].
 
+== How to use other metrics, such as cycles per instruction (CPI)
+
+Solaris has two utilities for that: +cpustat+ for overall system monitoring, and +cputrack+ for
+monitoring a process (or a family of them). With the help of http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob/refs/heads/master:/geant4/x64ipc.sh[this script] we can measure
+the cycles per instruction (CPI) of the +full_cms+ experiment. For example:
+
+----
+solaris# ./x64ipc.sh ./full_cms ./bench1_10.g4 
+    Instructions      CPI     %CPU
+        71986399     1.13    65.42
+           69678     2.00     9.69
+         3035697     1.22    17.47
+           21070     3.13     7.21
+         2479098     1.22    18.21
+           21119     3.31     7.09
+         1684096     1.15    18.34
+           21170     3.20     7.05
+         1117784     1.06    18.38
+^C
+----
+
+A file with full results from a simulation of the +bench1_100.g4+ can be found
+http://leaf.dragonflybsd.org/~beket/geant4/bench1_100.g4.cpi.dat[here]. The results can be plotted
+with http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob/refs/heads/master:/geant4/cpiplot.sh[this script]. See also the http://leaf.dragonflybsd.org/~beket/geant4/bench1_100.g4.cpi.dat.png[graphic output] from the previous example.
+
+The part of the plot, where the CPI peaks, is probably contributed by the initialization of +full_cms+. As we enter the actual simulation, CPI stabilizes.
+
+NOTE: Rule of thumb: Low CPI: we are cpu-bounded, High CPI: we are memory-bounded (cache misses?).
+NOTE TO SELF: Also +cputrack+ has -e -f options.
+
+*References*: http://dtrace.org/blogs/brendan/2007/02/27/amd64-pics-cpi/[AMD64 PICs, CPI], by Brendan Gregg
