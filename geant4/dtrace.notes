@@ -1,4 +1,5 @@
 == How to profile with DTrace
+=== How to measure the average time spent by a function ===
 
 .What should be the entry point for our profiling ?
 
@@ -10,11 +11,11 @@ we use a predicate as shown in +stack2dtrace.sh+ file.
 .Which functions should we be profiling ?
 
 Trying to calculate the time that each functions consumes is troublesome. DTrace matches around
-+30,000+ probes and the execution is slowed down considerably. If that option is chosen though,
++40,000+ probes and the execution is slowed down considerably. If that option is chosen though,
 use +vtimestamp+ instead of +timestamp+, so that the results are less affected by the DTrace itself.
 
 Another, more pragmatic approach, is to identify those functions that contribute most in the overall
-execution time and focus the profiling on them only. This can be done by taking sample stack traces,
+execution time and focus on profiling them only. This can be done by taking sample stack traces,
 while +full_cms+ is running. Then, we examine those stack traces and deduce which functions are the 
 "hottest" (a function that is taking a lot time to execute, is more likely to get sampled, since we
 are sampling at a fixed rate).
@@ -29,7 +30,7 @@ solaris# dtrace -x ustackframes=100								  \
 		    pid$target::*DoEventLoop*:return { exit(0); }				  \
 		    profile-97/tracing != 0/ { @[ustack()] = count(); }'			  \
 		 -c "/home/stathis/geant4/geant4.9.5.p01/bin/Linux-g++/full_cms ./bench_10.g4" 	  \
-		 -o stack
+		 -o out.user_stacks
 ----
 
 IMPORTANT: The profile target does NOT fire in thread context, therefore using +self->tracing+
@@ -43,6 +44,14 @@ For 10 events the above invocation produces approximately 3MB of profiling data.
 * generate the folded output with +stackcollapse.pl+
 * delete the line corresponding the idle line, which looks like +"  4168"+
 * generate the svg file with +flamegraph.pl+
+
+----
+./stackcollapse.pl   out.user_stacks    |
+/usr/gnu/bin/c++filt -n -p              |
+grep DoEventLoop			|
+sed 's/full_cms`//g'			|
+./flamegraph.pl > DoEventLoop.demangled.svg
+----
 
 http://leaf.dragonflybsd.org/~beket/geant4/flamegraph.svg[This] is an example of the svg output
 file, and http://leaf.dragonflybsd.org/~beket/geant4/flamegraph-demangled.svg[this] is with
@@ -113,11 +122,10 @@ of http://leaf.dragonflybsd.org/~beket/geant4/genpl.sh[this script]. Sample outp
 found either in the form of a https://plus.google.com/u/0/photos/108524938275387430003/albums/5750217012217829393[picassa web album]
 or as a http://leaf.dragonflybsd.org/~beket/geant4/plots/bench1_100.g4.min30[plain directory listing].
 
-== How to use other metrics, such as cycles per instruction (CPI)
-
-Solaris has two utilities for that: +cpustat+ for overall system monitoring, and +cputrack+ for
-monitoring a process (or a family of them). With the help of http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob/refs/heads/master:/geant4/x64ipc.sh[this script] we can measure
-the cycles per instruction (CPI) of the +full_cms+ experiment. For example:
+== How to use other metrics
+=== Cycles per Instruction (CPI) ===
+==== cpustat(1M) and cputrack(1) ====
+Solaris has two utilities for examining hardware performance counters: +cpustat+ for overall system monitoring, and +cputrack+ for monitoring a process (or a family of them). With the help of http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob/refs/heads/master:/geant4/x64ipc.sh[this script], we can measure the cycles per instruction (CPI) of the +full_cms+ experiment during its lifetime. For example:
 
 ----
 solaris# ./x64ipc.sh ./full_cms ./bench1_10.g4 
@@ -134,13 +142,136 @@ solaris# ./x64ipc.sh ./full_cms ./bench1_10.g4
 ^C
 ----
 
-A file with full results from a simulation of the +bench1_100.g4+ can be found
-http://leaf.dragonflybsd.org/~beket/geant4/bench1_100.g4.cpi.dat[here]. The results can be plotted
-with http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob/refs/heads/master:/geant4/cpiplot.sh[this script]. See also the http://leaf.dragonflybsd.org/~beket/geant4/bench1_100.g4.cpi.dat.png[graphic output] from the previous example.
+A file with the full results from a complete simulation of the +bench1_100.g4+ may be found
+http://leaf.dragonflybsd.org/~beket/geant4/bench1_100.g4.cpi.dat[here]. The data can be then plotted
+with http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob/refs/heads/master:/geant4/cpiplot.sh[this script], and the output image http://leaf.dragonflybsd.org/~beket/geant4/bench1_100.g4.cpi.dat.png[looks like this].
 
-The part of the plot, where the CPI peaks, is probably contributed by the initialization of +full_cms+. As we enter the actual simulation, CPI stabilizes.
+The part of the plot where the CPI peaks is most likely contributed by the initialization of +full_cms+. As we, assumingly, enter the actual simulation and start processing events, CPI drops and stabilizes at +~1.2+. The plot also shows the ideal CPI ratio for a tight cpu-bounded application, which is ~0.3-4 given that +amd64+ tries to execute +3+ instructions per cycle.
 
-NOTE: Rule of thumb: Low CPI: we are cpu-bounded, High CPI: we are memory-bounded (cache misses?).
-NOTE TO SELF: Also +cputrack+ has -e -f options.
+Rule of thumb: Low CPI: we are cpu-bounded, High CPI: we are memory-bounded (cache misses?).
 
 *References*: http://dtrace.org/blogs/brendan/2007/02/27/amd64-pics-cpi/[AMD64 PICs, CPI], by Brendan Gregg
+
+==== The cpc (cpu performance counters) DTrace provider ====
+
+There is a +DTrace+ module that allows us to access the CPU hardware counters from *within* a +DTrace+ script. We could use that to get live stack traces when the CPI goes beyond some threshold, identifying the exact code paths that worth optimizing. Unfortunately, in amd64 CPU architecture one cannot access more than 1 hardware counter, and consequently cannot calculate the CPI ratio. Instead, we resort to this workaround:
+
+----
+dtrace -x ustackframes=100
+       -x strsize=5000
+       -n 'cpc:::PAPI_l2_dcm-all-10000 /execname == "full_cms"/ { @[ustack()] = count(); } tick-1 { printa(@_); }'
+       -c  "/path/to/full_cms ./bench1_10.g4" -o stack.misses
+----
+
+Everytime +full_cms+ hits +10000+ +L2+ cache misses, we acquire the current userspace stack trace. We then proceed as previous to generate a http://leaf.dragonflybsd.org/~beket/geant4/stack.svg[flamegraph] with the greatest offenders in terms of +L2+ cache misses. It is shown that approximately half of the cache misses originate from the initialization code +(GDML + xerces-c)+.
+
+=== Caches hits and misses ===
+==== How to invalidate the CPU caches from userland ====
+
+In order for our measurements to be unbiased we need to flush the CPU caches everytime we start a new profiling cycle. Otherwise, we may get an artificially improved hits/miss ratio. There is an instruction, +wbinvd+, (write back and invalidate cache), that flushes both the +L1+ (internal) and +L2+ (external) caches, but requires to be called from *kernel context*. +DTrace+ cannot be used here, since it was designed to disallow arbitrary code execution in kernel, whereas +SystemTap+ is more liberal in nature and may be an option in Linux systems.
+
+For Solaris, I used the http://leaf.dragonflybsd.org/~beket/geant4/dummy.c[dummy skeleton device driver], to issue
+the +wbinvd+ instruction. How to build:
+
+----
+cc -D_KERNEL -m64 -xarch=sse2a -xmodel=kernel -c dummy.c	# it needs the sunstudio compiler
+/usr/ccs/bin/ld -r -o dummy dummy.o				# gcc from pkg repo is 32 bits
+
+cp dummy /tmp/dummy
+cp dummy.conf /usr/kernel/drv
+ln -s /tmp/dummy /usr/kernel/drv/amd64/dummy
+
+add_drv dummy
+cat /devices/pseudo/dummy@*
+----
+
+==== How to invalidate caches from within a DTrace script ====
+
+There were some concerns whether the combination of the +cpc+ provider and the flamegraph approach for visualizing the CPU cache misses was valid. I.e., whether functions appearing to be causing many cache misses, were indeed causing many cache misses.
+
+To dismiss any doubts, I decided to take some random +Geant4+ function and make it invalidate the CPU caches on purpose, every time it was called. I would then generate a flamegraph and compare it with one from the untainted version of the function.
+
+The +G4PropagatorInField::ComputeStep()+ function did not cause many cache misses (<2% of total), so it seemed like a good candidate.
+
+The first idea was to do something like the following:
+
+----
+dtrace  -q -w
+	-x ustackframes=100
+	-x strsize=5000
+	-n 'cpc:::PAPI_l2_dcm-all-10000 /execname == "full_cms"/ { @[ustack()] = count(); }
+	    pid$target::*G4PropagatorInField*ComputeStep*:entry { system("cat /devices/pseudo/dummy@0:0;"); }'
+	-c "/home/stathis/gen-tests/geant4/geant4.9.5.p01/bin/Linux-g++/full_cms ./bench1_10.g4"
+	-o stack.misses.fake
+----
+
+Everytime the function would get called, it would +cat(1)+ to our dummy device driver and that would cause the CPU caches to get flushed. Unfortunately, all the "+cat(1)+'s" occur once per +switchrate+, which is around 1sec by default. Also, the +cat(1)+ happens in userspace when +dtrace(1M)+ periodically claims its buffers. Therefore this would not give meaningful results, as the function being called and the invalidation of caches would be dissociated in time.
+
+DTrace has a built-in function, named +rand()+ that returns a pseudo-number generator. This is can be used like this:
+----
+pid$target::*G4PropagatorInField*ComputeStep*:entry
+/rand() % 101 == 0/
+{
+	... do stuff ...
+}
+----
+
+What we did was to replace the "genuine" version of +rand()+ with another one that called +wbinvd+, by rewriting kernel instructions with live patching. The +rand()+ function is implemented as:
+----
+regs[rd] = (dtrace_gethrtime() * 2416 + 374441) % 1771875;
+----
+
+So, finding it inside +dtrace_dif_subr+ was easy (0x1b0963 is the hex representation of 1771875):
+----
+> dtrace_dif_subr::dis !grep -C5 0x1b0963
+dtrace_dif_subr+0x25a9:         jmp    +0x32    <dtrace_dif_subr+0x25dd>
+dtrace_dif_subr+0x25ab:         call   +0x3844030       <dtrace_gethrtime>
+dtrace_dif_subr+0x25b0:         imulq  $0x970,%rax,%rax
+dtrace_dif_subr+0x25b7:         addq   $0x5b6a9,%rax
+dtrace_dif_subr+0x25bd:         js     +0x8     <dtrace_dif_subr+0x25c7>
+dtrace_dif_subr+0x25bf:         cmpq   $0x1b0963,%rax
+dtrace_dif_subr+0x25c5:         jl     +0xf     <dtrace_dif_subr+0x25d6>
+dtrace_dif_subr+0x25c7:         cqtd   
+dtrace_dif_subr+0x25c9:         movq   $0x1b0963,%rcx
+dtrace_dif_subr+0x25d0:         idivq  %rcx
+dtrace_dif_subr+0x25d3:         movq   %rdx,%rax
+dtrace_dif_subr+0x25d6:         movl   %r12d,%ecx
+dtrace_dif_subr+0x25d9:         movq   %rax,(%rbx,%rcx,8)
+dtrace_dif_subr+0x25dd:         addq   $0xc8,%rsp
+> 
+----
+
+We then replaced the +idivq+ instruction, which occupied +3+ bytes, with a +nop+ (90) and +wbinvd+ (0F 09):
+
+----
+> dtrace_dif_subr+0x25d0/v 0x90
+> dtrace_dif_subr+0x25d1/v 0x0F
+> dtrace_dif_subr+0x25d2/v 0x09
+>
+----
+
+Disassembling it then just to be sure that everything went as planned:
+
+----
+> dtrace_dif_subr+0x25d0::dis
+> dtrace_dif_subr+0x25c9:         movq   $0x1b0963,%rcx
+> dtrace_dif_subr+0x25d0:         nop    
+> dtrace_dif_subr+0x25d1:         wbinvd 
+> dtrace_dif_subr+0x25d3:         movq   %rdx,%rax
+>
+----
+
+Finally, we ran the profiling normally:
+
+----
+dtrace  -q
+	-w
+	-x ustackframes=100
+	-x strsize=5000
+	-n 'cpc:::PAPI_l2_dcm-all-10000 /execname == "full_cms"/ { @[ustack()] = count(); }
+	    pid$target::*G4PropagatorInField*ComputeStep*:entry/rand()%101 == 0/ {}'
+	-c "/home/stathis/gen-tests/geant4/geant4.9.5.p01/bin/Linux-g++/full_cms ./bench1_10.g4"
+	-o stack.misses.fake
+----
+
+Special thanks to Sean Silva for his insights.
