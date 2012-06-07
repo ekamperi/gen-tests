@@ -10,9 +10,9 @@ we use a predicate as shown in +stack2dtrace.sh+ file.
 
 .Which functions should we be profiling ?
 
-Trying to calculate the time that each functions consumes is troublesome. DTrace matches around
+Trying to calculate the time that each functions consumes is troublesome. +DTrace+ matches around
 +40,000+ probes and the execution is slowed down considerably. If that option is chosen though,
-use +vtimestamp+ instead of +timestamp+, so that the results are less affected by the DTrace itself.
+use +vtimestamp+ instead of +timestamp+, so that the results are less affected by the +DTrace+ itself.
 
 Another, more pragmatic approach, is to identify those functions that contribute most in the overall
 execution time and focus on profiling them only. This can be done by taking sample stack traces,
@@ -59,7 +59,7 @@ demangled names.
 
 .Generate the targeted DTrace script
 
-After having identified the "hot" functions, we run a shell script that generates a DTrace
+After having identified the "hot" functions, we run a shell script that generates a +DTrace+
 script that focuses on profiling these functions only.
 
 ----
@@ -87,7 +87,7 @@ curl -o http://leaf.dragonflybsd.org/~beket/geant4/test.d.out1 \
      c++filt -n -p
 ----
 
-NOTE: g\++ generates mangled symbols during the compilation. So, we use \*globs* inside the DTrace script,
+NOTE: g\++ generates mangled symbols during the compilation. So, we use \*globs* inside the +DTrace+ script,
 if we don't want to nm(1) the executable and copy the exact (mangled) names from there. I looked
 for a way to generate mangled names for g\++, but their abi:: exported interface has only +__cxa_demangle()+.
 
