@@ -187,11 +187,18 @@ cat /devices/pseudo/dummy@*
 
 ==== How to invalidate caches from within a DTrace script ====
 
-There were some concerns whether the combination of the +cpc+ provider and the flamegraph approach for visualizing the CPU cache misses was valid. I.e., whether functions appearing to be causing many cache misses, were indeed causing many cache misses.
+There were some concerns whether the combination of the +cpc+ provider and the
+flamegraph approach for visualizing the CPU cache misses was valid. I.e.,
+whether functions appearing to be causing many cache misses, were indeed
+causing many cache misses.
 
-To dismiss any doubts, I decided to take some random +Geant4+ function and make it invalidate the CPU caches on purpose, every time it was called. I would then generate a flamegraph and compare it with one from the untainted version of the function.
+To dismiss any doubts, I decided to take some random +Geant4+ function and make
+it invalidate the CPU caches on purpose, every time it was called. I would then
+generate a flamegraph and compare it with one from the untainted version of the
+function.
 
-The +G4PropagatorInField::ComputeStep()+ function did not cause many cache misses (<2% of total), so it seemed like a good candidate.
+The +G4PropagatorInField::ComputeStep()+ function did not cause many cache misses
+(<2% of total), so it seemed like a good candidate.
 
 The first idea was to do something like the following:
 
@@ -205,9 +212,16 @@ dtrace  -q -w
 	-o stack.misses.fake
 ----
 
-Everytime the function would get called, it would +cat(1)+ to our dummy device driver and that would cause the CPU caches to get flushed. Unfortunately, all the "+cat(1)+'s" occur once per +switchrate+, which is around 1sec by default. Also, the +cat(1)+ happens in userspace when +dtrace(1M)+ periodically claims its buffers. Therefore this would not give meaningful results, as the function being called and the invalidation of caches would be dissociated in time.
+Everytime the function would get called, it would +cat(1)+ to our dummy device
+driver and that would cause the CPU caches to get flushed. Unfortunately, all
+the "+cat(1)+'s" occur once per +switchrate+, which is around +1+ sec by default.
+Also, the +cat(1)+ happens in userspace when +dtrace(1M)+ periodically claims
+its buffers. Therefore this would not give valid results, since the function
+call and the invalidation of CPU caches would be dissociated timewise.
 
-DTrace has a built-in function, named +rand()+ that returns a pseudo-number generator. This is can be used like this:
+Therefore, we decided to pursue another route. DTrace has a built-in function,
+named +rand()+ that returns a pseudo-number generator. This function can be used
+in constructs like this:
 ----
 pid$target::*G4PropagatorInField*ComputeStep*:entry
 /rand() % 101 == 0/
@@ -216,12 +230,15 @@ pid$target::*G4PropagatorInField*ComputeStep*:entry
 }
 ----
 
-What we did was to replace the "genuine" version of +rand()+ with another one that called +wbinvd+, by rewriting kernel instructions with live patching. The +rand()+ function is implemented as:
+What we did was to replace the "genuine" version of +rand()+ with another one
+that called +wbinvd+. We achieved that  by rewriting kernel instructions with
+live patching. The +rand()+ function is implemented as:
 ----
 regs[rd] = (dtrace_gethrtime() * 2416 + 374441) % 1771875;
 ----
 
-So, finding it inside +dtrace_dif_subr+ was easy (0x1b0963 is the hex representation of 1771875):
+So, locating it inside +dtrace_dif_subr+ was easy (0x1b0963 is the hex
+representation of 1771875):
 ----
 > dtrace_dif_subr::dis !grep -C5 0x1b0963
 dtrace_dif_subr+0x25a9:         jmp    +0x32    <dtrace_dif_subr+0x25dd>
@@ -241,7 +258,8 @@ dtrace_dif_subr+0x25dd:         addq   $0xc8,%rsp
 > 
 ----
 
-We then replaced the +idivq+ instruction, which occupied +3+ bytes, with a +nop+ (90) and +wbinvd+ (0F 09):
+We then replaced the +idivq+ instruction, which occupied +3+ bytes,
+with a +nop+ (90) and +wbinvd+ (0F 09):
 
 ----
 > dtrace_dif_subr+0x25d0/v 0x90
@@ -250,7 +268,8 @@ We then replaced the +idivq+ instruction, which occupied +3+ bytes, with a +nop+
 >
 ----
 
-Disassembling it then just to be sure that everything went as planned:
+We disassembled the result, just to make sure that everything
+went as planned:
 
 ----
 > dtrace_dif_subr+0x25d0::dis
@@ -261,7 +280,7 @@ Disassembling it then just to be sure that everything went as planned:
 >
 ----
 
-Finally, we ran the profiling normally:
+Finally, we ran the profiling as previously:
 
 ----
 dtrace  -q
@@ -273,5 +292,10 @@ dtrace  -q
 	-c "/home/stathis/gen-tests/geant4/geant4.9.5.p01/bin/Linux-g++/full_cms ./bench1_10.g4"
 	-o stack.misses.fake
 ----
+
+We subsequently regenerated the flamegraph and confirmed that +DTrace+
+identified the increase in the CPU cache misses. Here is the graph with
+the unaltered +ComputeStep+ function and this is the regenerated graph
+with the altered function.
 
 Special thanks to Sean Silva for his insights.
