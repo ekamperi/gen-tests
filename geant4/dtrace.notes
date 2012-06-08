@@ -1,3 +1,9 @@
+Main Header
+===========
+:Author:    Stathis Kamperis
+:Email:     ekamperi #at# gmail #dot# com
+:Revision:  version: @@version@@
+
 == How to profile with DTrace
 === How to measure the average time spent by a function ===
 
@@ -194,10 +200,10 @@ causing many cache misses.
 
 To dismiss any doubts, I decided to take some random +Geant4+ function and make
 it invalidate the CPU caches on purpose, every time it was called. I would then
-generate a flamegraph and compare it with one from the untainted version of the
+regenerate the flamegraph and compare it with one from the untainted version of the
 function.
 
-The +G4PropagatorInField::ComputeStep()+ function did not cause many cache misses
+The +G4PropagatorInField::ComputeStep()+ function did not cause many (data) cache misses
 (<2% of total), so it seemed like a good candidate.
 
 The first idea was to do something like the following:
@@ -212,14 +218,14 @@ dtrace  -q -w
 	-o stack.misses.fake
 ----
 
-Everytime the function would get called, it would +cat(1)+ to our dummy device
-driver and that would cause the CPU caches to get flushed. Unfortunately, all
+Everytime the function would get called, it would +cat(1)+ to our specially crafted
+dummy device  driver and that would cause the CPU caches to get flushed. Unfortunately, all
 the "+cat(1)+'s" occur once per +switchrate+, which is around +1+ sec by default.
 Also, the +cat(1)+ happens in userspace when +dtrace(1M)+ periodically claims
 its buffers. Therefore this would not give valid results, since the function
-call and the invalidation of CPU caches would be dissociated timewise.
+call and the invalidation of CPU caches would be significantly dissociated timewise.
 
-Therefore, we decided to pursue another route. DTrace has a built-in function,
+For the above reasons, we decided to pursue another route. DTrace has a built-in function,
 named +rand()+ that returns a pseudo-number generator. This function can be used
 in constructs like this:
 ----
@@ -230,15 +236,20 @@ pid$target::*G4PropagatorInField*ComputeStep*:entry
 }
 ----
 
-What we did was to replace the "genuine" version of +rand()+ with another one
-that called +wbinvd+. We achieved that  by rewriting kernel instructions with
-live patching. The +rand()+ function is implemented as:
+After the +G4PropagatorInField::ComputeStep()+ function is called, +DTrace+
+executes +rand()+ and iff the condition +rand() % 101 == 0+ is met, the code
+that resides inside the block is executed. *Therefore the function call and* +rand()+
+*call happen very close in time. What we did was to replace the "genuine" version
+of* +rand()+ *with another one that called* +wbinvd+. We achieved that  by
+rewriting kernel instructions with live patching. The +rand()+ function is
+http://src.illumos.org/source/xref/illumos-gate/usr/src/uts/common/dtrace/dtrace.c#3234[implemented as]:
+
 ----
 regs[rd] = (dtrace_gethrtime() * 2416 + 374441) % 1771875;
 ----
 
-So, locating it inside +dtrace_dif_subr+ was easy (0x1b0963 is the hex
-representation of 1771875):
+So, locating it inside +dtrace_dif_subr+ was easy (+0x1b0963+ is the hex
+representation of +1771875+):
 ----
 > dtrace_dif_subr::dis !grep -C5 0x1b0963
 dtrace_dif_subr+0x25a9:         jmp    +0x32    <dtrace_dif_subr+0x25dd>
@@ -280,6 +291,14 @@ went as planned:
 >
 ----
 
+To summarize, *the reasons why we chose to hack* +rand()+ are:
+****
+* It exists.
+* It is easy to locate it in the disassembled code, due to the way it is implemented.
+* It is executed very close in time with respect to the function call that we want to instrument.
+* It is orthogonal to the rest of our profiling, so patching it will not affect us.
+****
+
 Finally, we ran the profiling as previously:
 
 ----
@@ -295,7 +314,6 @@ dtrace  -q
 
 We subsequently regenerated the flamegraph and confirmed that +DTrace+
 identified the increase in the CPU cache misses. Here is the graph with
-the unaltered +ComputeStep+ function and this is the regenerated graph
-with the altered function.
+http://leaf.dragonflybsd.org/~beket/geant4/DoEventLoop.computeStep_original.svg[the unaltered +ComputeStep+] function and this is the regenerated graph with http://leaf.dragonflybsd.org/~beket/geant4/DoEventLoop.computeStep_altered.svg[the altered function].
 
 Special thanks to Sean Silva for his insights.
