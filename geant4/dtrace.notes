@@ -1,9 +1,3 @@
-Main Header
-===========
-:Author:    Stathis Kamperis
-:Email:     ekamperi #at# gmail #dot# com
-:Revision:  version: @@version@@
-
 == How to profile with DTrace
 === How to measure the average time spent by a function ===
 
