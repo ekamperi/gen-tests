@@ -310,4 +310,8 @@ We subsequently regenerated the flamegraph and confirmed that +DTrace+
 identified the increase in the CPU cache misses. Here is the graph with
 http://leaf.dragonflybsd.org/~beket/geant4/DoEventLoop.computeStep_original.svg[the unaltered +ComputeStep+] function and this is the regenerated graph with http://leaf.dragonflybsd.org/~beket/geant4/DoEventLoop.computeStep_altered.svg[the altered function].
 
+The same exact analysis have been performed for +G4VoxelNavigation::LocateNextVoxel()+.
+http://leaf.dragonflybsd.org/~beket/geant4/DoEventLoop.locateNextVoxel_original.svg[The unaltered function] and
+the regenerated graph with http://leaf.dragonflybsd.org/~beket/geant4/DoEventLoop.locateNextVoxel_altered.svg[the altered function].
+
 Special thanks to Sean Silva for his insights.
