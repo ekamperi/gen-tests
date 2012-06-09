@@ -41,9 +41,8 @@ as a predicate will not work. Use a global variable instead.
 For 10 events the above invocation produces approximately 3MB of profiling data.
 
 .Next steps are:
-
-* pass the output to +cxxfilt+ to demangle the c++ symbols (optional)
 * generate the folded output with +stackcollapse.pl+
+* pass the output to +cxxfilt+ to demangle the c++ symbols
 * delete the line corresponding the idle line, which looks like +"  4168"+
 * generate the svg file with +flamegraph.pl+
 
@@ -168,7 +167,7 @@ There is a +DTrace+ module that allows us to access the CPU hardware counters fr
 ----
 dtrace -x ustackframes=100
        -x strsize=5000
-       -n 'cpc:::PAPI_l2_dcm-all-10000 /execname == "full_cms"/ { @[ustack()] = count(); } tick-1 { printa(@_); }'
+       -n 'cpc:::PAPI_l2_dcm-all-10000 /execname == "full_cms"/ { @[ustack()] = count(); }'
        -c  "/path/to/full_cms ./bench1_10.g4" -o stack.misses
 ----
 
