@@ -1,3 +1,5 @@
+*version:* @@version@@
+
 == How to profile with DTrace
 === How to measure the average time spent by a function ===
 
@@ -125,7 +127,7 @@ or as a http://leaf.dragonflybsd.org/~beket/geant4/plots/bench1_100.g4.min30[pla
 == How to use other metrics
 === Cycles per Instruction (CPI) ===
 ==== cpustat(1M) and cputrack(1) ====
-Solaris has two utilities for examining hardware performance counters: +cpustat+ for overall system monitoring, and +cputrack+ for monitoring a process (or a family of them). With the help of http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob/refs/heads/master:/geant4/x64ipc.sh[this script], we can measure the cycles per instruction (CPI) of the +full_cms+ experiment during its lifetime. For example:
+Solaris has two utilities for examining hardware performance counters: +cpustat(1M)+ for overall system monitoring, and +cputrack(1)+ for monitoring a process (or a family of them). With the help of http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob/refs/heads/master:/geant4/x64ipc.sh[this script], we can measure the cycles per instruction (CPI) of the +full_cms+ experiment during its lifetime. For example:
 
 ----
 solaris# ./x64ipc.sh ./full_cms ./bench1_10.g4 
@@ -145,6 +147,13 @@ solaris# ./x64ipc.sh ./full_cms ./bench1_10.g4
 A file with the full results from a complete simulation of the +bench1_100.g4+ may be found
 http://leaf.dragonflybsd.org/~beket/geant4/bench1_100.g4.cpi.dat[here]. The data can be then plotted
 with http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob/refs/heads/master:/geant4/cpiplot.sh[this script], and the output image http://leaf.dragonflybsd.org/~beket/geant4/bench1_100.g4.cpi.dat.png[looks like this].
+Putting it all together:
+
+----
+solaris# cat /devices/pseudo/dummy@*	# to invalidate all the CPU caches
+solaris# ./x64ipc.sh -q ./full_cms ./bench1_10.g4 > ./bench1_10.g4.ipc
+solaris# ./cpiplot.sh ./bench1_10.g4.ipc | gnuplot > ./bench1_10.g4.ipc.png
+----
 
 The part of the plot where the CPI peaks is most likely contributed by the initialization of +full_cms+. As we, assumingly, enter the actual simulation and start processing events, CPI drops and stabilizes at +~1.2+. The plot also shows the ideal CPI ratio for a tight cpu-bounded application, which is ~0.3-4 given that +amd64+ tries to execute +3+ instructions per cycle.
 
@@ -166,6 +175,30 @@ dtrace -x ustackframes=100
 Everytime +full_cms+ hits +10000+ +L2+ cache misses, we acquire the current userspace stack trace. We then proceed as previous to generate a http://leaf.dragonflybsd.org/~beket/geant4/stack.svg[flamegraph] with the greatest offenders in terms of +L2+ cache misses. It is shown that approximately half of the cache misses originate from the initialization code +(GDML + xerces-c)+.
 
 === Caches hits and misses ===
+==== How to plot the Data Cache (or Instruction Cache) misses ====
+
+Similar to how we gather and plot CPI statistics, we can do the same with the Data Cache misses and Instruction Cache misses. For *Instruction Cache* misses:
+
+http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/x64l2icmisses.sh[[script]]
+http://leaf.dragonflybsd.org/~beket/geant4/bench1_100.g4.ic.png[[plot]]
+
+----
+solaris# cat /devices/pseudo/dummy@*    # to invalidate all the CPU caches
+solaris# ./x64l2icmisses.sh -q ./full_cms ./bench1_100.g4 > ./bench1_100.g4.ic
+solaris# ./icmissesplot.sh ./bench1_100.g4.ic | gnuplot > ./bench1_100.g4.ic.png
+----
+
+or, for *Data Cache* misses:
+
+http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/x64l2dcmisses.sh[[script]]
+http://leaf.dragonflybsd.org/~beket/geant4/bench1_100.g4.dc.png[[plot]]
+
+----
+solaris# cat /devices/pseudo/dummy@*    # to invalidate all the CPU caches
+solaris# ./x64l2dcmisses.sh -q ./full_cms ./bench1_100.g4 > ./bench1_100.g4.dc
+solaris# ./dcmissesplot.sh ./bench1_100.g4.dc | gnuplot > ./bench1_100.g4.dc.png
+----
+
 ==== How to invalidate the CPU caches from userland ====
 
 In order for our measurements to be unbiased we need to flush the CPU caches everytime we start a new profiling cycle. Otherwise, we may get an artificially improved hits/miss ratio. There is an instruction, +wbinvd+, (write back and invalidate cache), that flushes both the +L1+ (internal) and +L2+ (external) caches, but requires to be called from *kernel context*. +DTrace+ cannot be used here, since it was designed to disallow arbitrary code execution in kernel, whereas +SystemTap+ is more liberal in nature and may be an option in Linux systems.
@@ -183,6 +216,24 @@ ln -s /tmp/dummy /usr/kernel/drv/amd64/dummy
 
 add_drv dummy
 cat /devices/pseudo/dummy@*
+----
+
+How to make sure that the +wbinvd+ instruction has not been optimized out for whatever reason:
+
+----
+solaris# objdump -d /tmp/dummy| /usr/gnu/bin/grep -C5 wbinvd
+0000000000000330 <dummy_open>:
+ 330:   55                      push   %rbp
+ 331:   48 8b ec                mov    %rsp,%rbp
+ 334:   48 83 ec 10             sub    $0x10,%rsp
+ 338:   eb 00                   jmp    33a <dummy_open+0xa>
+ 33a:   0f 09                   wbinvd
+ 33c:   33 c0                   xor    %eax,%eax
+ 33e:   89 45 fc                mov    %eax,-0x4(%rbp)
+ 341:   eb 00                   jmp    343 <dummy_open+0x13>
+ 343:   48 8d 45 fc             lea    -0x4(%rbp),%rax
+ 347:   8b 00                   mov    (%rax),%eax
+solaris# 
 ----
 
 ==== How to invalidate caches from within a DTrace script ====
