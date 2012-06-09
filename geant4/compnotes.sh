@@ -7,8 +7,11 @@ REMOTE_BASE_URL="beket@leaf.dragonflybsd.org:~/public_html/geant4"
 ASCIIDOC=( asciidoc -a data-uri
 		   -a icons
 		   -a toc
+		   -a toclevels=4
+		   -a numbered
 		   -a iconsdir=/usr/share/asciidoc/icons
-		   -a stylesdir=~/adoc-themes/st\ylesheets
+		   -a stylesdir=/usr/share/asciidoc/stylesheets
+		   -a stylesdir=~/adoc-themes/stylesheets
 		   -a theme=handbookish )
 
 GITVERS=$(git rev-list --all | wc -l)
