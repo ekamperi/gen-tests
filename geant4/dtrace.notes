@@ -192,6 +192,8 @@ http://leaf.dragonflybsd.org/~beket/geant4/stack.svg[flamegraph] with the greate
 offenders in terms of +L2+ cache misses. It is shown that approximately half of
 the cache misses originate from the initialization code +(GDML + xerces-c)+.
 
+Similar analysis for http://leaf.dragonflybsd.org/~beket/geant4/stack.icm.demangled.DoEventLoop[Instruction Cache misses].
+
 === Caches hits and misses ===
 ==== How to plot the Data Cache (or Instruction Cache) misses ====
 
