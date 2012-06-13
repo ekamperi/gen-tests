@@ -1,26 +1,30 @@
 == HOW TO INSTALL GEANT4 IN SOLARIS 11
 
 === Dependencies
+==== cmake
 +cmake-2.8+ is needed but, as of the time of writing, Solaris 11 bundles
 +cmake-2.6+. Therefore, one needs to install +cmake-2.6+ with:
 
 ----
-    pkg install developer/build/cmake
+pkg install developer/build/cmake
 ----
 
 and then use that to bootstrap +cmake-2.8+. Finally we use +cmake-2.8+ to
 build +Geant4+ as per the docs instructions.
 
-    export PATH=$PATH:/opt/cmake-2.8/bin     
+----
+export PATH=$PATH:/opt/cmake-2.8/bin     
+----
 
+==== xerces-c
 In order to build +Geant4+ with GDML support (which in turn is needed
 if one wants to run the +FullCMS+ experiment), the +xerces-c+ library
 must be installed. +xerces-c+ doesn't exist as binary package at all.
 Therefore, we need to build it from sources:
 
 ----
-    pkg install library/icu		# needed as a dependency for xerces-c
-    pkg install x11/library/mesa 	# needed by geant4
+pkg install library/icu		# needed as a dependency for xerces-c
+pkg install x11/library/mesa 	# needed by geant4
 ----
 
 In the +bechmarks/calorimeters/FullCMS/README+ file, it is stated that
@@ -30,15 +34,14 @@ out of the box, but +3.1.1+ does and it is able to parse the gdml file
 fine (backwards compatible?).
 
 ----
-    wget http://apache.cc.uoc.gr//xerces/c/3/sources/xerces-c-3.1.1.tar.gz
+wget http://apache.cc.uoc.gr//xerces/c/3/sources/xerces-c-3.1.1.tar.gz
 
-    export ICUROOT="/usr"		# assuming libicu is in /usr/lib/libicu.so
-    cd xerces-c-3.1.1 && ./configure --prefix=/opt/xerces-c-3.1.1 \
-       		       && gmake && gmake install
+export ICUROOT="/usr"		# assuming libicu is in /usr/lib/libicu.so
+cd xerces-c-3.1.1 && ./configure --prefix=/opt/xerces-c-3.1.1 \
+   		  && gmake && gmake install
 ----
 
 Note: XERCESC_ROOT_DIR is a -D...=... cmake option; not an environmental variable!
-
 
 === Patch needed for Solaris
 
@@ -97,15 +100,15 @@ Symbols most likely to clash with geant4's, directly taken from sys/regset.h:
 #define GS              0
 ----
 
+I had to bisect the problem space by inserting +#undef CS+ before and after
+the inclusion of various header files, starting from the +Geant4+ specific and
+going as far as the system header files.
+
 http://leaf.dragonflybsd.org/~beket/geant4/solaris11.diff[This] is a transitive
 patch to workaround the issue. The +sol11fix.h+ must be included *after* the
 inclusion of every other header file (in the problematic .cc files), i.e.,
 be the last header file to be included. Otherwise, the inclusion of some other
 header may cause the redefinition of the symbols.
-
-I had to bisect the problem space by inserting +#undef CS+ before and after
-the inclusion of various header files, starting from the +Geant4+ specific and
-going as far as the system header files.
 
 NOTE: I need to properly integrate the patch to not use hardcoded include
 paths, e.g., +#include "../../../../../global/sol11fix.hh"+. Otherwise it
@@ -116,7 +119,7 @@ Pere suggested that since the inclusion of +sys/wait.h+ in +stdlib.h+ is
 guarded by:
 
 ----
-#if defined(__EXTENSIONS__) || defined(_XPG4)
+#if defined(\__EXTENSIONS__) || defined(_XPG4)
 #include <sys/wait.h>
 #endif
 ----
@@ -124,9 +127,8 @@ guarded by:
 perhaps we could make the issue go away by passing +-U__EXTENSIONS__+
 or +-U_XPG4+ in g++. This is something that I will soon test.
 
-====
-How to enable the SmartTrackStack
-====
+==== How to enable the SmartTrackStack ====
+
 
 Calling +cmake -DG4_USESMARTSTACK ...+ will not work, because that sets
 a CMake cache variable. What we want is to pass a preprocessor macro
@@ -154,21 +156,21 @@ build granular libraries
 QUESTION: does GEANT4_BUILD_GRANULAR_LIBRARIES=ON builds ONLY granular
 libraries or does it build them along with non-granular ?
 
+----
 cd $G4INSTALL/source
 gmake
+----
 
 and the libraries should reside at:
 
----
-
-After rebuilding geant4 with GDML support and the installation of
-benchmarks/calorimeters/FullCMS and for no apparent reason, geant4 programs
-started to hang. A pstack(1) on exampleN01 (which has been previously 
+After rebuilding geant4 with +GDML+ support and the installation of
+benchmarks/calorimeters/FullCMS and for no apparent reason, +Geant4+ programs
+started to hang. A +pstack(1)+ on +exampleN01+ (which has been previously 
 working fine) returned:
 
 ----    
-    curl http://leaf.dragonflybsd.org/~beket/geant4/pstack.exampleN01 |\
-         /usr/gnu/bin/c++filt | less
+curl http://leaf.dragonflybsd.org/~beket/geant4/pstack.exampleN01 |\
+     /usr/gnu/bin/c++filt | less
 ----
 
 Part of the problem is the call to +__cxa_guard_acquire()+, which is used
@@ -187,7 +189,7 @@ workaround is to either disable debug or add the following line in
 +$G4SOURCE/CMakeLists.txt+:
 
 ----
-    set(CMAKE_CXX_FLAGS "-fno-threadsafe-statics")
+set(CMAKE_CXX_FLAGS "-fno-threadsafe-statics")
 ----
 
 There is also a patch in http://leaf.dragonflybsd.org/~beket/CMakeLists.txt.diff
@@ -198,9 +200,11 @@ of optimizations ?
 
 When building granular libraries, one needs to set $PATH like:
 
+----
     export PATH=/usr/gnu/bin:$PATH
+----
 
-so that the gnu toolchain takes precedence over the native,
+so that the GNU toolchain takes precedence over the native,
 otherwise some commands will fail (e.g., @$(GREP), etc).
 
 Use Linux-g++ as G4System
