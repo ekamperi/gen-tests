@@ -112,6 +112,33 @@ paths, e.g., +#include "../../../../../global/sol11fix.hh"+. Otherwise it
 will not work out of the box if one -say- tries to build granular libraries,
 by invoking make in +$G4INSTALL/source+, rather than +$G4INSTALL+.
 
+Pere suggested that since the inclusion of +sys/wait.h+ in +stdlib.h+ is
+guarded by:
+
+----
+#if defined(__EXTENSIONS__) || defined(_XPG4)
+#include <sys/wait.h>
+#endif
+----
+
+perhaps we could make the issue go away by passing +-U__EXTENSIONS__+
+or +-U_XPG4+ in g++. This is something that I will soon test.
+
+====
+How to enable the SmartTrackStack
+====
+
+Calling +cmake -DG4_USESMARTSTACK ...+ will not work, because that sets
+a CMake cache variable. What we want is to pass a preprocessor macro
+in g++. The proper way to do that is to add the following in the +CMakeLists.txt+
+file:
+
+----
+add_definitions(-DG4_USESMARTTRACKSTACK)
+----
+
+or modify the +CMAKE_CXX_FLAGS+ variable, again inside the +CMakeLists.txt+.
+
 ==== FullCMS
 ... fast notes ...
 
