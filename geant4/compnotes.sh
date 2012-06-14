@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-set -x
+#set -x
 
 REMOTE_BASE_URL="beket@leaf.dragonflybsd.org:~/public_html/geant4"
 ASCIIDOC=( asciidoc -a data-uri
@@ -17,11 +17,19 @@ ASCIIDOC=( asciidoc -a data-uri
 GITVERS=$(git rev-list --all | wc -l)
 GITHASH=$(git rev-list --all | head -n1 | cut -c1-5)
 
-sed "s/@@version@@/0.${GITVERS}-${GITHASH}/"  dtrace.notes >  dtrace.notes2
-sed "s/@@version@@/0.${GITVERS}-${GITHASH}/" solaris.notes > solaris.notes2
+FILES=(dtrace solaris smartstack)
 
-"${ASCIIDOC[@]}" dtrace.notes2
-"${ASCIIDOC[@]}" solaris.notes2
+for file in ${FILES[@]}
+do
+    echo "-> Processing document for '${file}'"
 
-scp  dtrace.html "$REMOTE_BASE_URL"/dtrace.html
-scp solaris.html "$REMOTE_BASE_URL"/solaris.html
+    # Add the version number to the documents
+    sed "s/@@version@@/0.${GITVERS}-${GITHASH}/" \
+	"${file}.notes" > "${file}.notes2"
+
+    # Asciidoc-ify them
+    "${ASCIIDOC[@]}" "${file}.notes2"
+
+    # Upload to leaf
+    scp "${file}.html" "$REMOTE_BASE_URL"/
+done
