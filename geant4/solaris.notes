@@ -1,3 +1,5 @@
+*version:* @@version@@
+
 == HOW TO INSTALL GEANT4 IN SOLARIS 11
 
 === Dependencies
@@ -41,7 +43,8 @@ cd xerces-c-3.1.1 && ./configure --prefix=/opt/xerces-c-3.1.1 \
    		  && gmake && gmake install
 ----
 
-Note: XERCESC_ROOT_DIR is a -D...=... cmake option; not an environmental variable!
+NOTE: +XERCESC_ROOT_DIR+ is a +-D...=...+ CMake cache option; *not* an environmental
+variable!
 
 === Patch needed for Solaris
 
@@ -119,12 +122,12 @@ Pere suggested that since the inclusion of +sys/wait.h+ in +stdlib.h+ is
 guarded by:
 
 ----
-#if defined(\__EXTENSIONS__) || defined(_XPG4)
+#if defined(__EXTENSIONS__) || defined(_XPG4)
 #include <sys/wait.h>
 #endif
 ----
 
-perhaps we could make the issue go away by passing +-U__EXTENSIONS__+
+perhaps we could make the issue go away by passing +-U\__EXTENSIONS__+
 or +-U_XPG4+ in g++. This is something that I will soon test.
 
 ==== How to enable the SmartTrackStack ====
@@ -245,4 +248,25 @@ CLHEP::HepRandom::setTheSeed(long, int)
 stathis:calorimeter/FullCMS% nm $G4LIB/$G4SYSTEM/libG4globman.a \ 
 			     | grep GetSurface | /usr/gnu/bin/c++filt
 000000e0 T G4GeometryTolerance::GetSurfaceTolerance() const
+----
+
+
+
+----
+ld: fatal: library -lG4heprandom: not found
+ld: warning: file ../../../../../../outputs/library/SunOS-g++/libG4procman.so: attempted multiple inclusion of file
+ld: warning: file ../../../../../../outputs/library/SunOS-g++/libG4volumes.so: attempted multiple inclusion of file
+ld: warning: file ../../../../../../outputs/library/SunOS-g++/libG4track.so: attempted multiple inclusion of file
+ld: warning: file ../../../../../../outputs/library/SunOS-g++/libG4partman.so: attempted multiple inclusion of file
+ld: warning: file ../../../../../../outputs/library/SunOS-g++/libG4geometrymng.so: attempted multiple inclusion of file
+ld: warning: file ../../../../../../outputs/library/SunOS-g++/libG4materials.so: attempted multiple inclusion of file
+ld: warning: file ../../../../../../outputs/library/SunOS-g++/libG4intercoms.so: attempted multiple inclusion of file
+ld: warning: file ../../../../../../outputs/library/SunOS-g++/libG4globman.so: attempted multiple inclusion of file
+ld: fatal: file processing errors. No output written to ../../../../../../outputs/library/SunOS-g++/libG4emdna-molman.so
+collect2: ld returned 1 exit status
+make[2]: *** [outputs/library/SunOS-g++/libG4emdna-molman.so] Error 1
+make[2]: Leaving directory `/home/stathis/gen-tests/geant4/geant4.9.5.p01-build-smart'
+make[1]: *** [source/processes/electromagnetic/dna/molecules/management/CMakeFiles/G4emdna-molman.dir/all] Error 2
+make[1]: Leaving directory `/home/stathis/gen-tests/geant4/geant4.9.5.p01-build-smart'
+make: *** [all] Error 2
 ----

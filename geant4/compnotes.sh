@@ -17,10 +17,11 @@ ASCIIDOC=( asciidoc -a data-uri
 GITVERS=$(git rev-list --all | wc -l)
 GITHASH=$(git rev-list --all | head -n1 | cut -c1-5)
 
-sed "s/@@version@@/0.${GITVERS}-${GITHASH}/" dtrace.notes > dtrace.notes2
+sed "s/@@version@@/0.${GITVERS}-${GITHASH}/"  dtrace.notes >  dtrace.notes2
+sed "s/@@version@@/0.${GITVERS}-${GITHASH}/" solaris.notes > solaris.notes2
 
 "${ASCIIDOC[@]}" dtrace.notes2
-"${ASCIIDOC[@]}" solaris.notes
+"${ASCIIDOC[@]}" solaris.notes2
 
 scp  dtrace.html "$REMOTE_BASE_URL"/dtrace.html
-scp solaris.html "$REMOTE_BASE_URL"
+scp solaris.html "$REMOTE_BASE_URL"/solaris.html
