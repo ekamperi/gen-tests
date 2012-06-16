@@ -43,7 +43,7 @@ pics=$pics,'IC_itlb_L1_miss_L2_miss'   # IC L2 misses
     NR != 1 {			# skip first line (header)
 	hits   = $4 + 0		# to force arithmetic context
 	misses = $5 + 0
-	
+
 	if (hits == 0 && misses == 0) {
 	    ++skipped
 	} else {
@@ -52,9 +52,10 @@ pics=$pics,'IC_itlb_L1_miss_L2_miss'   # IC L2 misses
 		misses,
 		100 * hits   / (hits + misses),
 		100 * misses / (hits + misses)
-	    fflush();
+	    fflush();   # so that one can tail -f output file and track progress
 	}
     }
     END {
-	printf "skipped = %d\n", skipped
+	if (!quiet)
+	    printf "skipped = %d\n", skipped
     }'

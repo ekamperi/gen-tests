@@ -56,5 +56,6 @@ pics=$pics,'DC_dtlb_L1_miss_L2_miss'   # DC L2 misses
 	}
     }
     END {
-	printf "skipped = %d\n", skipped
+	if (!quiet)
+	    printf "skipped = %d\n", skipped
     }'
