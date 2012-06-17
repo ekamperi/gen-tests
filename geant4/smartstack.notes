@@ -25,13 +25,13 @@ CPPFLAGS += -DG4EVENT_ALLOC_EXPORT -DG4_USESMARTSTACK
 ==== Data Cache misses ====
 
 http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/cmpcmts.sh[[script]]
-http://leaf.dragonflybsd.org/~beket/geant4/dcmisses_smartstack.png[[full-size plot]]
+http://leaf.dragonflybsd.org/~beket/geant4/@@iteration@@/cmpdcmts.png[[full-size plot]]
 
-image:dcmisses_smartstack.png[width="80%",link="dcmisses_smartstack.png"]
+image:cmpdcmts.png[width="80%",link="cmpdcmts.png"]
 
 ==== Instruction Cache misses ====
 
 http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/cmpcmts.sh[[script]]
-http://leaf.dragonflybsd.org/~beket/geant4/icmisses_smartstack.png[[full-size plot]]
+http://leaf.dragonflybsd.org/~beket/geant4/@@cmpicmts.png[[full-size plot]]
 
-image:icmisses_smartstack.png[width="80%",link="icmisses_smartstack.png"]
+image:cmpicmts.png[width="80%",link="cmpdcmts.png"]
