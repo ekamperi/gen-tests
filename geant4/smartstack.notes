@@ -1,0 +1,37 @@
+*version:* @@version@@
+
+=== How to enable the SmartTrackStack ===
+
+Calling +cmake -DG4_USESMARTSTACK ...+ will not work, because that sets
+a CMake cache variable. What we want is to pass a preprocessor macro
+in g\++. The proper way to do that is to add the following in the +CMakeLists.txt+
+file:
+
+----
+add_definitions(-DG4_USESMARTSTACK)
+----
+
+or modify the +CMAKE_CXX_FLAGS+ variable, again inside the +CMakeLists.txt+.
+
+
+Also, for if building the granular libraries with +gmake+, one needs to
+add +-DG4_USESMARTSTACK+ in the respective +GNUmakefile+ (+geant4.9.5.p01/source/event/GNUmakefile+):
+
+----
+CPPFLAGS += -DG4EVENT_ALLOC_EXPORT -DG4_USESMARTSTACK
+----
+
+=== The effect on SmartTrackStack on Cache Misses ===
+==== Data Cache misses ====
+
+http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/cmpcmts.sh[[script]]
+http://leaf.dragonflybsd.org/~beket/geant4/dcmisses_smartstack.png[[full-size plot]]
+
+image:dcmisses_smartstack.png[width="80%",link="dcmisses_smartstack.png"]
+
+==== Instruction Cache misses ====
+
+http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/cmpcmts.sh[[script]]
+http://leaf.dragonflybsd.org/~beket/geant4/icmisses_smartstack.png[[full-size plot]]
+
+image:icmisses_smartstack.png[width="80%",link="icmisses_smartstack.png"]
