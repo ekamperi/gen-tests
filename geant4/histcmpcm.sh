@@ -19,6 +19,15 @@ if [ ! -f "$1" ]; then
     exit 1
 fi
 
+if [[ "$1" == *.dc.* ]]; then
+    CMTYPE="Data"
+elif [[ $1 == *.ic.* ]]; then
+    CMTYPE="Instruction"
+else
+    CMTYPE=""
+    echo "cannot deduce whether data or instruction cache misses from filename" >&2
+fi
+
 cat <<EOF
 library(ggplot2)
 dat <- read.table('$1', sep='\t')
@@ -35,8 +44,8 @@ y <- y[y>0 & y<101]
 myx <- data.frame(cache_misses = x)
 myy <- data.frame(cache_misses = y)
 
-myx\$StackManager <- 'Smart'
-myy\$StackManager <- 'Default'
+myx\$StackManager <- 'Default'
+myy\$StackManager <- 'Smart'
 
 my <- rbind(myx, myy)
 
@@ -44,7 +53,7 @@ png("$1.png", width=1024, height=768, res=128)
 ggplot(my, aes(cache_misses, fill=StackManager))	\
 	   + geom_density(alpha = 0.2)			\
 	   + scale_x_log10(limits = c(0.001, 1000))	\
-	   + xlab("% Cache misses (logscale)")		\
+	   + xlab("% $CMTYPE Cache misses (logscale)")	\
 	   + opts(title = "$1")
 dev.off()
 EOF
