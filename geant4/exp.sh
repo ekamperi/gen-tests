@@ -83,12 +83,14 @@ function do_histcmpcm()
 
 function upload_results()
 {
+    echo $BENCH > "run-${ITERATION}/BENCH"
+    cp smartstack.notes "run-$ITERATION"
     scp -r "run-$ITERATION" "${USER}@${HOST}:${FILE}"
 }
 
 mkdir -p     "run-$ITERATION"
 do_dcmisses  "run-$ITERATION"
-do_cmpcmts   "run-$ITERATION"
-do_histcmpcm "run-$ITERATION"
+#do_cmpcmts   "run-$ITERATION"
+#do_histcmpcm "run-$ITERATION"
 
 upload_results
