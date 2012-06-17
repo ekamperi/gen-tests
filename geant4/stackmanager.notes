@@ -1,0 +1,21 @@
+StackManager
+	-> Singleton, constructed and manipulated by EventManager
+	-> 3 stacks: urgent, waiting, postponetonext (check geant4 user manual)
+
+
+How to determine the origin of a track?
+----
+G4int parent_ID = aTrack->get_parentID();
+where
+parent_ID = 0 indicates a primary particle
+parent_ID > 0 indicates a secondary particle
+parent_ID < 0 indicates postponed particle from previous event
+----
+
+ClassifyNewTrack() is invoked by G4StackManager whenever a new G4Track object
+is "pushed" onto a stack by G4EventManager. ClassifyNewTrack()
+user. G4ClassificationOfNewTrack has four possible values:
+fUrgent - track is placed in the urgent stack
+fWaiting - track is placed in the waiting stack, and will not be simulated until the urgent stack is empty
+fPostpone - track is postponed to the next event
+fKill - the track is deleted immediately and not stored in any stack.
