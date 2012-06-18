@@ -37,7 +37,7 @@ http://leaf.dragonflybsd.org/~beket/geant4/@@iteration@@/cmpicmts.png[[full-size
 image:cmpicmts.png[width="80%",link="cmpicmts.png"]
 
 ==== Histogram of Data Cache misses ====
-image:histcmpdcm.png[width="80%",link="histcpmdcm.png"]
+image:histcmpdcm.png[width="80%",link="histcmpdcm.png"]
 
 ==== Histogram of Instruction Cache misses ====
-image:histcmpicm.png[width="80%",link="histcpmicm.png"]
+image:histcmpicm.png[width="80%",link="histcmpicm.png"]
