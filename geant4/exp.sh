@@ -5,7 +5,7 @@ set -x
 
 FULLCMS_ORIG=/home/stathis/gen-tests/geant4/geant4.9.5.p01/bin/Linux-g++/full_cms
 FULLCMS_PATCHED=/home/stathis/gen-tests/geant4/geant4.9.5.p01/bin/Linux-g++/full_cms
-BENCH="bench1_10.g4"
+BENCH="bench1_1k.g4"
 USER=beket
 HOST=leaf.dragonflybsd.org
 FILE="~/public_html/geant4"
@@ -67,10 +67,29 @@ function do_dcmisses()
 	"$BENCH"		> "$1/${BENCH}.dc.patc.${ITERATION}"
 }
 
-function do_cmpcmts()
+function do_icmisses()
+{
+    invalidate_cpucaches
+    icmisses                    \
+        "$FULLCMS_ORIG"         \
+        "$BENCH"                > "$1/${BENCH}.ic.orig.${ITERATION}"
+
+    invalidate_cpucaches
+    icmisses                    \
+        "$FULLCMS_PATCHED"      \
+        "$BENCH"                > "$1/${BENCH}.ic.patc.${ITERATION}"
+}
+
+function do_cmpdcmts()
 {
     cmpcmts "$1/${BENCH}.dc.orig.${ITERATION}" \
-	    "$1/${BENCH}.dc.patc.${ITERATION}" > "$1/cmpcmts.gplot"
+	    "$1/${BENCH}.dc.patc.${ITERATION}" > "$1/cmpdcmts.gplot"
+}
+
+function do_cmpicmts()
+{
+    cmpcmts "$1/${BENCH}.ic.orig.${ITERATION}" \
+            "$1/${BENCH}.ic.patc.${ITERATION}" > "$1/cmpicmts.gplot"
 }
 
 function do_histcmpcm()
@@ -88,9 +107,11 @@ function upload_results()
     scp -r "run-$ITERATION" "${USER}@${HOST}:${FILE}"
 }
 
-mkdir -p     "run-$ITERATION"
-do_dcmisses  "run-$ITERATION"
-#do_cmpcmts   "run-$ITERATION"
+mkdir -p    "run-$ITERATION"
+do_dcmisses "run-$ITERATION"
+do_icmisses "run-$ITERATION"
+do_cmpdcmts "run-$ITERATION"
+do_cmpicmts "run-$ITERATION"
 #do_histcmpcm "run-$ITERATION"
 
 upload_results
