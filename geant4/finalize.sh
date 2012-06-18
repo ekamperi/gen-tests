@@ -32,13 +32,18 @@ wget -r -l1 -R index.html --no-directories -np --directory-prefix="run-${ITERATI
     cat cmpicmts.gplot | gnuplot > cmpicmts.png
 
     # Histograms
-    cat histcpmcm.rplot | R --vanilla --slave
-    read HISTDAT <"HISTDAT"
-    cp "${HISTDAT}.png" histcpmcm.png
+    cat histcmpdcm.rplot | R --vanilla --slave
+    read HISTDCMDAT <"HIST.DCMDAT"
+    cp "${HISTDCMDAT}.png" histcmpdcm.png
 
-    scp cmpdcmts.png  "${USER}@${HOST}:${FILE}/run-${ITERATION}"
-    scp cmpicmts.png  "${USER}@${HOST}:${FILE}/run-${ITERATION}"
-    scp histcpmcm.png "${USER}@${HOST}:${FILE}/run-${ITERATION}"
+    cat histcmpicm.rplot | R --vanilla --slave
+    read HISTICMDAT <"HIST.ICMDAT"
+    cp "${HISTICMDAT}.png" histcmpicm.png
+
+    scp cmpdcmts.png   "${USER}@${HOST}:${FILE}/run-${ITERATION}"
+    scp cmpicmts.png   "${USER}@${HOST}:${FILE}/run-${ITERATION}"
+    scp histcmpdcm.png "${USER}@${HOST}:${FILE}/run-${ITERATION}"
+    scp histcmpicm.png "${USER}@${HOST}:${FILE}/run-${ITERATION}"
 
     sed "s/@@iteration@@/${ITERATION}/" smartstack.notes > smartstack.notes2
 )
