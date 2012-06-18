@@ -5,7 +5,7 @@ set -x
 
 FULLCMS_ORIG=/home/stathis/gen-tests/geant4/geant4.9.5.p01/bin/Linux-g++/full_cms
 FULLCMS_PATCHED=/home/stathis/gen-tests/geant4/geant4.9.5.p01/bin/Linux-g++/full_cms
-BENCH="bench1_1k.g4"
+BENCH="bench1_100.g4"
 USER=beket
 HOST=leaf.dragonflybsd.org
 FILE="~/public_html/geant4"
@@ -95,7 +95,6 @@ function do_cmpicmts()
 function do_histcmpcm()
 {
     datfile=${BENCH}.dc.orig.${ITERATION}-${BENCH}.dc.patc.${ITERATION}.dat
-    log $datfile
 
     histcmpcm "$1/$datfile" > "$1/histcpmcm.rplot"
 }
@@ -103,6 +102,9 @@ function do_histcmpcm()
 function upload_results()
 {
     echo $BENCH > "run-${ITERATION}/BENCH"
+    echo ${BENCH}.dc.orig.${ITERATION}-${BENCH}.dc.patc.${ITERATION}.dat \
+	> "run-${ITERATION}/HISTDAT"
+
     cp smartstack.notes "run-$ITERATION"
     scp -r "run-$ITERATION" "${USER}@${HOST}:${FILE}"
 }
@@ -112,6 +114,6 @@ do_dcmisses "run-$ITERATION"
 do_icmisses "run-$ITERATION"
 do_cmpdcmts "run-$ITERATION"
 do_cmpicmts "run-$ITERATION"
-#do_histcmpcm "run-$ITERATION"
+do_histcmpcm "run-$ITERATION"
 
 upload_results
