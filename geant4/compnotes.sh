@@ -1,9 +1,14 @@
 #!/bin/bash
 
 set -e
-#set -x
+set -x
 
 REMOTE_BASE_URL="beket@leaf.dragonflybsd.org:~/public_html/geant4"
+
+if [ $# -eq 1 ]; then
+    REMOTE_BASE_URL="${REMOTE_BASE_URL}/run-$1"
+fi
+
 ASCIIDOC=( asciidoc -a data-uri
 		   -a icons
 		   -a toc
@@ -17,7 +22,11 @@ ASCIIDOC=( asciidoc -a data-uri
 GITVERS=$(git rev-list --all | wc -l)
 GITHASH=$(git rev-list --all | head -n1 | cut -c1-5)
 
-FILES=(dtrace solaris smartstack)
+if [ $# -eq 1 ]; then
+    FILES=("run-$1/smartstack")
+else
+    FILES=(dtrace solaris smartstack)
+fi
 
 for file in ${FILES[@]}
 do
