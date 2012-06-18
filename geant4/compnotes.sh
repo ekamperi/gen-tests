@@ -9,8 +9,7 @@ if [ $# -eq 1 ]; then
     REMOTE_BASE_URL="${REMOTE_BASE_URL}/run-$1"
 fi
 
-ASCIIDOC=( asciidoc -a data-uri
-		   -a icons
+ASCIIDOC=( asciidoc -a icons
 		   -a toc
 		   -a toclevels=4
 		   -a numbered
