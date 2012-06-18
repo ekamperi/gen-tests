@@ -22,16 +22,22 @@ CPPFLAGS += -DG4EVENT_ALLOC_EXPORT -DG4_USESMARTSTACK
 ----
 
 === The effect on SmartTrackStack on Cache Misses ===
-==== Data Cache misses ====
+==== Data Cache misses (as a time series)  ====
 
 http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/cmpcmts.sh[[script]]
 http://leaf.dragonflybsd.org/~beket/geant4/@@iteration@@/cmpdcmts.png[[full-size plot]]
 
 image:cmpdcmts.png[width="80%",link="cmpdcmts.png"]
 
-==== Instruction Cache misses ====
+==== Instruction Cache misses (as a time series) ====
 
 http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/cmpcmts.sh[[script]]
-http://leaf.dragonflybsd.org/~beket/geant4/@@cmpicmts.png[[full-size plot]]
+http://leaf.dragonflybsd.org/~beket/geant4/@@iteration@@/cmpicmts.png[[full-size plot]]
 
-image:cmpicmts.png[width="80%",link="cmpdcmts.png"]
+image:cmpicmts.png[width="80%",link="cmpicmts.png"]
+
+==== Histogram of Data Cache misses ====
+image:histcmpdcm.png[width="80%",link="histcpmdcm.png"]
+
+==== Histogram of Instruction Cache misses ====
+image:histcmpicm.png[width="80%",link="histcpmicm.png"]
