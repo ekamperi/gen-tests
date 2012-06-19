@@ -3,9 +3,9 @@
 set -e
 set -x
 
-FULLCMS_ORIG=/home/stathis/gen-tests/geant4/geant4.9.5.p01/bin/Linux-g++/full_cms
-FULLCMS_PATCHED=/home/stathis/gen-tests/geant4/geant4.9.5.p01/bin/Linux-g++/full_cms
-BENCH="bench1_200.g4"
+FULLCMS_ORIG=/home/stathis/gen-tests/geant4/geant4.9.5.p01-default/bin/Linux-g++/full_cms
+FULLCMS_PATCHED=/home/stathis/gen-tests/geant4/geant4.9.5.p01-smart/bin/Linux-g++/full_cms
+BENCH="bench1_1.g4"
 USER=beket
 HOST=leaf.dragonflybsd.org
 FILE="~/public_html/geant4"
@@ -34,6 +34,11 @@ function invalidate_cpucaches()
     cat /devices/pseudo/dummy@0:0
 }
 
+function cpi()
+{
+    ./x64ipc.sh -q "$@"
+}
+
 function dcmisses()
 {
     ./x64l2dcmisses.sh -q "$@"
@@ -44,14 +49,33 @@ function icmisses()
     ./x64l2icmisses.sh -q "$@"
 }
 
+function cmpcpits()
+{
+    ./cmpcpits.sh "$@"
+}
+
 function cmpcmts()
 {
     ./cmpcmts.sh "$@"
 }
 
+function histcmpcpi()
+{
+    ./histcmpcpi.sh "$@"
+}
+
 function histcmpcm()
 {
     ./histcmpcm.sh "$@"
+}
+
+function do_cpi()
+{
+    invalidate_cpucaches
+    cpi "$FULLCMS_ORIG" "$BENCH" > "$1/${BENCH}.cpi.orig.${ITERATION}"
+
+    invalidate_cpucaches
+    cpi "$FULLCMS_PATCHED" "$BENCH" > "$1/${BENCH}.cpi.patc.${ITERATION}"
 }
 
 function do_dcmisses()
@@ -80,6 +104,12 @@ function do_icmisses()
         "$BENCH"                > "$1/${BENCH}.ic.patc.${ITERATION}"
 }
 
+function do_cmpcpits()
+{
+    cmpcpits "$1/${BENCH}.cpi.orig.${ITERATION}" \
+             "$1/${BENCH}.cpi.patc.${ITERATION}" > "$1/cmpcpits.gplot"
+}
+
 function do_cmpdcmts()
 {
     cmpcmts "$1/${BENCH}.dc.orig.${ITERATION}" \
@@ -90,6 +120,12 @@ function do_cmpicmts()
 {
     cmpcmts "$1/${BENCH}.ic.orig.${ITERATION}" \
             "$1/${BENCH}.ic.patc.${ITERATION}" > "$1/cmpicmts.gplot"
+}
+
+function do_histcmpcpi()
+{
+    datfile=${BENCH}.cpi.orig.${ITERATION}-${BENCH}.cpi.patc.${ITERATION}.dat
+    histcmpcpi "$1/$datfile" > "$1/histcmpcpi.rplot"
 }
 
 function do_histcmpdcm()
@@ -117,10 +153,19 @@ function upload_results()
 }
 
 mkdir -p    "run-$ITERATION"
-do_dcmisses "run-$ITERATION"
-do_icmisses "run-$ITERATION"
-do_cmpdcmts "run-$ITERATION"
-do_cmpicmts "run-$ITERATION"
+
+# Gather data with respect to time
+do_cpi        "run-$ITERATION"
+do_dcmisses   "run-$ITERATION"
+do_icmisses   "run-$ITERATION"
+
+# Generate the time series graphs
+do_cmpcpits   "run-$ITERATION"
+do_cmpdcmts   "run-$ITERATION"
+do_cmpicmts   "run-$ITERATION"
+
+# Generate the histograms
+do_histcmpcpi "run-$ITERATION"
 do_histcmpdcm "run-$ITERATION"
 do_histcmpicm "run-$ITERATION"
 
