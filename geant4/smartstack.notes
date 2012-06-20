@@ -21,7 +21,16 @@ add +-DG4_USESMARTSTACK+ in the respective +GNUmakefile+ (+geant4.9.5.p01/source
 CPPFLAGS += -DG4EVENT_ALLOC_EXPORT -DG4_USESMARTSTACK
 ----
 
-=== The effect on SmartTrackStack on Cache Misses ===
+=== The effect of SmartTrackStack on Cycles Per Instruction ratio ===
+http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/cmpcpits.sh[[script]]
+http://leaf.dragonflybsd.org/~beket/geant4/@@iteration@@/cmpcpits.png[[full-size plot]]
+
+image:cmpcpits.png[width="80%",link="cmpcpits.png"] 
+
+=== Histograms of Cycle Per Instruction ratio ===
+image:histcmpcpi.png[width="80%",link="histcmpcpi.png"]
+
+=== The effect of SmartTrackStack on Cache Misses ===
 ==== Data Cache misses (as a time series)  ====
 
 http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/cmpcmts.sh[[script]]
