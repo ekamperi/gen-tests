@@ -25,6 +25,9 @@ wget -r -l1 -R index.html --no-directories -np --directory-prefix="run-${ITERATI
 (
     cd "run-${ITERATION}"
 
+    # Cycles Per Instruction
+    cat cmpcpits.gplot | gnuplot > cmpcpits.png
+
     # Data Cache misses
     cat cmpdcmts.gplot | gnuplot > cmpdcmts.png
 
@@ -32,6 +35,10 @@ wget -r -l1 -R index.html --no-directories -np --directory-prefix="run-${ITERATI
     cat cmpicmts.gplot | gnuplot > cmpicmts.png
 
     # Histograms
+    cat histcmpcpi.rplot | R --vanilla --slave
+    read HISTCPIDAT <"HIST.CPIDAT"
+    cp "${HISTCPIDAT}.png" histcmpcpi.png
+
     cat histcmpdcm.rplot | R --vanilla --slave
     read HISTDCMDAT <"HIST.DCMDAT"
     cp "${HISTDCMDAT}.png" histcmpdcm.png
@@ -40,8 +47,12 @@ wget -r -l1 -R index.html --no-directories -np --directory-prefix="run-${ITERATI
     read HISTICMDAT <"HIST.ICMDAT"
     cp "${HISTICMDAT}.png" histcmpicm.png
 
+    # Upload the results
+    scp cmpcpits.png   "${USER}@${HOST}:${FILE}/run-${ITERATION}"
     scp cmpdcmts.png   "${USER}@${HOST}:${FILE}/run-${ITERATION}"
     scp cmpicmts.png   "${USER}@${HOST}:${FILE}/run-${ITERATION}"
+
+    scp histcmpcpi.png "${USER}@${HOST}:${FILE}/run-${ITERATION}"
     scp histcmpdcm.png "${USER}@${HOST}:${FILE}/run-${ITERATION}"
     scp histcmpicm.png "${USER}@${HOST}:${FILE}/run-${ITERATION}"
 
