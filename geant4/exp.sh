@@ -143,8 +143,13 @@ function do_histcmpicm()
 function upload_results()
 {
     echo $BENCH > "run-${ITERATION}/BENCH"
+
+    echo ${BENCH}.cpi.orig.${ITERATION}-${BENCH}.cpi.patc.${ITERATION}.dat \
+	> "run-${ITERATION}/HIST.CPIDAT"
+
     echo ${BENCH}.dc.orig.${ITERATION}-${BENCH}.dc.patc.${ITERATION}.dat \
 	> "run-${ITERATION}/HIST.DCMDAT"
+
     echo ${BENCH}.ic.orig.${ITERATION}-${BENCH}.ic.patc.${ITERATION}.dat \
         > "run-${ITERATION}/HIST.ICMDAT"
 
