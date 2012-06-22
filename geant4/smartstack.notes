@@ -21,6 +21,12 @@ add +-DG4_USESMARTSTACK+ in the respective +GNUmakefile+ (+geant4.9.5.p01/source
 CPPFLAGS += -DG4EVENT_ALLOC_EXPORT -DG4_USESMARTSTACK
 ----
 
+=== The effect of SmartTrackStack on time spent by a +::ProcessOneEvent()+ call ===
+http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/evtplot.sh[[script]]
+http://leaf.dragonflybsd.org/~beket/geant4/@@iteration@@/evtplot.png[[full-size plot]]
+
+image:evtplot.png[width="80%",link="evtplot.png"]
+
 === The effect of SmartTrackStack on Cycles Per Instruction ratio ===
 http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/cmpcpits.sh[[script]]
 http://leaf.dragonflybsd.org/~beket/geant4/@@iteration@@/cmpcpits.png[[full-size plot]]
