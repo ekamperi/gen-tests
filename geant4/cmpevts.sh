@@ -1,10 +1,10 @@
 #!/bin/bash
 #
-# evtplot - plots some metric (e.g., time spent in bar() call) as a function
+# cmpevts - plots some metric (e.g., time spent in bar() call) as a function
 # of the event generation (1st, 2nd, ..., n-th).
 #
-# USAGE: evtplot metric file.1 file.2 | gnuplot > evtplot.png
-# USAGE: evtplot metric file.1 file.2 | gnuplot | display -
+# USAGE: cmpevts metric file.1 file.2 | gnuplot > cmpevts.png
+# USAGE: cmpevts metric file.1 file.2 | gnuplot | display -
 #
 
 function erx()
