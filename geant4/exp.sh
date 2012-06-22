@@ -34,9 +34,13 @@ function invalidate_cpucaches()
     cat /devices/pseudo/dummy@0:0
 }
 
+################################################################################
+#				External scripts wrappers		       #
+################################################################################
+
 function procevts()
 {
-    ./procevts.d "$@"
+    ./procevts.sh "$@"
 }
 
 function cpi()
@@ -52,6 +56,11 @@ function dcmisses()
 function icmisses()
 {
     ./x64l2icmisses.sh -q "$@"
+}
+
+function cmpevts()
+{
+    ./cmpevts.sh "$@"
 }
 
 function cmpcpits()
@@ -74,15 +83,21 @@ function histcmpcm()
     ./histcmpcm.sh "$@"
 }
 
+################################################################################
+#				Gather data				       #
+################################################################################
+
 function do_procevts()
 {
     invalidate_cpucaches
-    procevts "$FULLCMS_ORIG"
-	     "$BENCH" > "$1/${BENCH}.cpi.orig.${ITERATION}"
+    procevts				     \
+	"$1/${BENCH}.evts.orig.${ITERATION}" \
+	"${FULLCMS_ORIG} ${BENCH}"
 
     invalidate_cpucaches
-    procevts "$FULLCMS_PATCHED"
-	     "$BENCH" > "$1/${BENCH}.cpi.patc.${ITERATION}"
+    procevts				     \
+	"$1/${BENCH}.evts.patc.${ITERATION}" \
+	"${FULLCMS_PATCHED} ${BENCH}"
 }
 
 function do_cpi()
@@ -123,6 +138,7 @@ function do_icmisses()
 ################################################################################
 #				Graphs					       #
 ################################################################################
+
 function do_cmpevts()
 {
     cmpevts '::ProcessOneEvent()'		  \
