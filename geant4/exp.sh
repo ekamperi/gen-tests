@@ -34,6 +34,11 @@ function invalidate_cpucaches()
     cat /devices/pseudo/dummy@0:0
 }
 
+function procevts()
+{
+    ./procevts.d "$@"
+}
+
 function cpi()
 {
     ./x64ipc.sh -q "$@"
@@ -69,6 +74,17 @@ function histcmpcm()
     ./histcmpcm.sh "$@"
 }
 
+function do_procevts()
+{
+    invalidate_cpucaches
+    procevts "$FULLCMS_ORIG"
+	     "$BENCH" > "$1/${BENCH}.cpi.orig.${ITERATION}"
+
+    invalidate_cpucaches
+    procevts "$FULLCMS_PATCHED"
+	     "$BENCH" > "$1/${BENCH}.cpi.patc.${ITERATION}"
+}
+
 function do_cpi()
 {
     invalidate_cpucaches
@@ -102,6 +118,16 @@ function do_icmisses()
     icmisses                    \
         "$FULLCMS_PATCHED"      \
         "$BENCH"                > "$1/${BENCH}.ic.patc.${ITERATION}"
+}
+
+################################################################################
+#				Graphs					       #
+################################################################################
+function do_cmpevts()
+{
+    cmpevts '::ProcessOneEvent()'		  \
+	     "$1/${BENCH}.evts.orig.${ITERATION}" \
+	     "$1/${BENCH}.evts.patc.${ITERATION}" > "$1/cmpevts.gplot"
 }
 
 function do_cmpcpits()
@@ -140,6 +166,9 @@ function do_histcmpicm()
     histcmpcm "$1/$datfile" > "$1/histcmpicm.rplot"
 }
 
+################################################################################
+#				Upload results				       #
+################################################################################
 function upload_results()
 {
     echo $BENCH > "run-${ITERATION}/BENCH"
@@ -160,11 +189,13 @@ function upload_results()
 mkdir -p    "run-$ITERATION"
 
 # Gather data with respect to time
+do_procevts   "run-$ITERATION"
 do_cpi        "run-$ITERATION"
 do_dcmisses   "run-$ITERATION"
 do_icmisses   "run-$ITERATION"
 
 # Generate the time series graphs
+do_cmpevts    "run-$ITERATION"
 do_cmpcpits   "run-$ITERATION"
 do_cmpdcmts   "run-$ITERATION"
 do_cmpicmts   "run-$ITERATION"
