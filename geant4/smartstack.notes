@@ -22,10 +22,10 @@ CPPFLAGS += -DG4EVENT_ALLOC_EXPORT -DG4_USESMARTSTACK
 ----
 
 === The effect of SmartTrackStack on time spent by a +::ProcessOneEvent()+ call ===
-http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/evtplot.sh[[script]]
-http://leaf.dragonflybsd.org/~beket/geant4/@@iteration@@/evtplot.png[[full-size plot]]
+http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/cmpevts.sh[[script]]
+http://leaf.dragonflybsd.org/~beket/geant4/@@iteration@@/cmpevts.png[[full-size plot]]
 
-image:evtplot.png[width="80%",link="evtplot.png"]
+image:cmpevts.png[width="80%",link="cmpevts.png"]
 
 === The effect of SmartTrackStack on Cycles Per Instruction ratio ===
 http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/cmpcpits.sh[[script]]
