@@ -33,12 +33,18 @@ fi
 pics='BU_cpu_clk_unhalted'                      # cycles
 pics=$pics,'FR_retired_x86_instr_w_excp_intr'   # instructions
 
-/usr/bin/cputrack -tc $pics -T 0.1 "$@" |
+/usr/bin/cputrack -tc $pics -T 0.2 "$@" |
+{
+    if ((quiet)); then
+        pbind -b2 $(pgrep full_cms) > /dev/null;
+    else
+        pbind -b2 $(pgrep full_cms);
+    fi
     awk -v quiet=$quiet 'BEGIN {
 	if (!quiet) {
 	    printf "%16s %8s %8s\n", "Instructions", "CPI", "%CPU";
 	}
-	    skipped = 0
+	skipped = 0
     }
     NR != 1 {			# skip first line (header)
 	total  = $4 + 0		# to force arithmetic context
@@ -55,5 +61,8 @@ pics=$pics,'FR_retired_x86_instr_w_excp_intr'   # instructions
 	}
     }
     END {
-	printf "skipped = %d\n", skipped
+	if (!quiet) {
+	    printf "skipped = %d\n", skipped
+	}
     }'
+}
