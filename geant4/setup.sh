@@ -6,13 +6,14 @@ set -e
 BASEURL="http://geant4.cern.ch/support/source"
 GEANT4TARBALL="geant4.9.5.p01.tar.gz"
 BASEINSTALLDIR="/opt"
-INSTALLDIR="$BASEINSTALLDIR/${GEANT4TARBALL%.tar.gz}"	# remove the .tar.gz part
+INSTALLDIR="$BASEINSTALLDIR/${GEANT4TARBALL%.tar.gz}-dqsmart"	# remove the .tar.gz part
 SOURCEDIR="./${GEANT4TARBALL%.tar.gz}"
-BUILDDIR="./${GEANT4TARBALL%.tar.gz}-build"
+BUILDDIR="./${GEANT4TARBALL%.tar.gz}-build-dqsmart"
 XERCESC_ROOT_DIR="/opt/xerces-c-3.1.1"
 PHYSICSDATA="physicsdata"
-NUMBEROFJOBS="3"
+NUMBEROFJOBS="4"
 SOLARIS11DIFFURL="http://leaf.dragonflybsd.org/~beket/geant4/solaris11.diff"
+GSOCDIFFURL="http://leaf.dragonflybsd.org/~beket/geant4/gsoc.diff"
 
 function usage()
 {
@@ -174,6 +175,14 @@ function pre_build()
 	curl -o solaris11.diff ${SOLARIS11DIFFURL}
 	patch -N -p0 < solaris11.diff || true    # ignore, if already applied
     fi
+
+    echo "Applying gsoc.diff patch to source tree"
+    (
+	cd "${SOURCEDIR}/source"
+	rm -f gsoc.diff
+	curl -o gsoc.diff ${GSOCDIFFURL}
+	patch -N -p1 < gsoc.diff || true # ignore, if already applied
+    )
 }
 
 function build()
