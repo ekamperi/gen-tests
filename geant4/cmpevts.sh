@@ -6,7 +6,7 @@
 # USAGE: cmpevts metricname file.1 file.2 | gnuplot > cmpevts.png
 # USAGE: cmpevts metricname file.1 file.2 | gnuplot | display -
 #
-# Example: cmpevts '::ProcessOneEvent()' 
+# Example: cmpevts '::ProcessOneTrack()'
 #
 
 set -e
@@ -41,9 +41,8 @@ cat <<EOF
 set terminal png enhanced size 1024,768
 set xlabel "event generation (1st, 2nd, 3rd, ..., n-th)" 
 set ylabel "time (ns)"
-set logscale y 
 
 set title 'Time spent in $1'
-plot '$b2-$b3.dat' using 1 with lines title '$e2',\
-     '$b2-$b3.dat' using 2 with lines title '$e3'
+plot '$b2-$b3.dat' using 1 with points pointtype 6 title '$e2',\
+     '$b2-$b3.dat' using 2 with points pointtype 7 title '$e3'
 EOF
