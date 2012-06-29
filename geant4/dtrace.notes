@@ -462,3 +462,13 @@ G4EventManager::ProcessOneEvent+0x11:   jmp    -0x11f6  <G4EventManager::DoProce
 As we can see, instead of a call/ret to +G4EventManager::DoProcessing()+ there
 is instead a jump call. Which is the reason why DTrace appears to be missing
 the +ProcessOneEvent()+ (since its stack-frame is being taken by +DoProcessing()+.
+
+==== How to measure time spent in +ProcessOneEvent()+ ====
+
+In continuation of the above, in order to precisely measure the time spent in
++ProcessOneEvent()+, we need to follow the execution to +DoProcessing()+ and
+find the address where it ret'urns. We then supply that address as the return
+point to DTrace. E.g.
+
+----
+----
