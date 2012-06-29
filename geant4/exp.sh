@@ -4,10 +4,10 @@ set -e
 set -x
 
 FULLCMS_ORIG=/home/stathis/gen-tests/geant4/geant4.9.5.p01-default/bin/Linux-g++/full_cms
-FULLCMS_PATCHED=/home/stathis/gen-tests/geant4/geant4.9.5.p01-smart/bin/Linux-g++/full_cms
-BENCH="bench1_1.g4"
-USER=beket
-HOST=leaf.dragonflybsd.org
+FULLCMS_PATCHED=/home/stathis/gen-tests/geant4/geant4.9.5.p01/bin/Linux-g++/full_cms
+BENCH="bench1_100.g4"
+USER=stathis
+HOST=island.quantumachine.net
 FILE="~/public_html/geant4"
 
 function log()
@@ -73,6 +73,11 @@ function cmpcmts()
     ./cmpcmts.sh "$@"
 }
 
+function histcmpevts()
+{
+    ./histcmpevts.sh "$@"
+}
+
 function histcmpcpi()
 {
     ./histcmpcpi.sh "$@"
@@ -92,11 +97,13 @@ function do_procevts()
     invalidate_cpucaches
     procevts				     \
 	"$1/${BENCH}.evts.orig.${ITERATION}" \
+	"8c8fbe8"			     \
 	"${FULLCMS_ORIG} ${BENCH}"
 
     invalidate_cpucaches
     procevts				     \
 	"$1/${BENCH}.evts.patc.${ITERATION}" \
+	"8c96610"			     \
 	"${FULLCMS_PATCHED} ${BENCH}"
 }
 
@@ -164,6 +171,12 @@ function do_cmpicmts()
             "$1/${BENCH}.ic.patc.${ITERATION}" > "$1/cmpicmts.gplot"
 }
 
+function do_histcmpevts()
+{
+    datfile=${BENCH}.evts.orig.${ITERATION}-${BENCH}.evts.patc.${ITERATION}.dat
+    histcmpevts "$1/$datfile" > "$1/histcmpevts.rplot"
+}
+
 function do_histcmpcpi()
 {
     datfile=${BENCH}.cpi.orig.${ITERATION}-${BENCH}.cpi.patc.${ITERATION}.dat
@@ -188,6 +201,9 @@ function do_histcmpicm()
 function upload_results()
 {
     echo $BENCH > "run-${ITERATION}/BENCH"
+
+    echo ${BENCH}.evts.orig.${ITERATION}-${BENCH}.evts.patc.${ITERATION}.dat \
+        > "run-${ITERATION}/HIST.EVTSDAT"
 
     echo ${BENCH}.cpi.orig.${ITERATION}-${BENCH}.cpi.patc.${ITERATION}.dat \
 	> "run-${ITERATION}/HIST.CPIDAT"
@@ -217,8 +233,9 @@ do_cmpdcmts   "run-$ITERATION"
 do_cmpicmts   "run-$ITERATION"
 
 # Generate the histograms
-do_histcmpcpi "run-$ITERATION"
-do_histcmpdcm "run-$ITERATION"
-do_histcmpicm "run-$ITERATION"
+do_histcmpevts "run-$ITERATION"
+do_histcmpcpi  "run-$ITERATION"
+do_histcmpdcm  "run-$ITERATION"
+do_histcmpicm  "run-$ITERATION"
 
 upload_results
