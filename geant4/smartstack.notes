@@ -1,6 +1,11 @@
 *version:* @@version@@
 
-=== How to enable the SmartTrackStack ===
+.Short summary of this profiling cycle
+****
+@@summary@@
+****
+
+=== How to enable the SmartTrackStack
 
 Calling +cmake -DG4_USESMARTSTACK ...+ will not work, because that sets
 a CMake cache variable. What we want is to pass a preprocessor macro
@@ -21,38 +26,68 @@ add +-DG4_USESMARTSTACK+ in the respective +GNUmakefile+ (+geant4.9.5.p01/source
 CPPFLAGS += -DG4EVENT_ALLOC_EXPORT -DG4_USESMARTSTACK
 ----
 
-=== The effect of SmartTrackStack on time spent by a +::ProcessOneEvent()+ call ===
+=== The effect of SmartTrackStack on time spent by a +::ProcessOneEvent()+ call
 http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/cmpevts.sh[[script]]
 http://leaf.dragonflybsd.org/~beket/geant4/@@iteration@@/cmpevts.png[[full-size plot]]
-
 image:cmpevts.png[width="80%",link="cmpevts.png"]
 
-=== The effect of SmartTrackStack on Cycles Per Instruction ratio ===
+==== Histogram of +::ProcessOneEvent()+ time spent
+image:histcmpevts.png[width="80%",link="histcmpevts.png"]
+
+image:timeflame.orig.svg[width="80%",link="timeflame.orig.svg"]
+
+(Click on the image to enlarge)
+
+image:timeflame.patc.svg[width="80%",link="timeflame.patc.svg"]
+
+(Click on the image to enlarge)
+
+=== The effect of SmartTrackStack on Cycles Per Instruction ratio
 http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/cmpcpits.sh[[script]]
 http://leaf.dragonflybsd.org/~beket/geant4/@@iteration@@/cmpcpits.png[[full-size plot]]
 
 image:cmpcpits.png[width="80%",link="cmpcpits.png"] 
 
-=== Histograms of Cycle Per Instruction ratio ===
+=== Histograms of Cycle Per Instruction ratio
 image:histcmpcpi.png[width="80%",link="histcmpcpi.png"]
 
-=== The effect of SmartTrackStack on Cache Misses ===
-==== Data Cache misses (as a time series)  ====
+=== The effect of SmartTrackStack on Cache Misses
+==== Data Cache misses (as a time series)
 
 http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/cmpcmts.sh[[script]]
 http://leaf.dragonflybsd.org/~beket/geant4/@@iteration@@/cmpdcmts.png[[full-size plot]]
 
 image:cmpdcmts.png[width="80%",link="cmpdcmts.png"]
 
-==== Instruction Cache misses (as a time series) ====
+==== Histogram of Data Cache misses
+image:histcmpdcm.png[width="80%",link="histcmpdcm.png"]
+
+==== Flame/leaf graphs of Data Cache misses
+
+image:dcmflame.orig.svg[width="80%",link="dcmflame.orig.svg"]
+
+(Click on the image to enlarge)
+
+image:dcmflame.patc.svg[width="80%",link="dcmflame.patc.svg"]
+
+(Click on the image to enlarge)
+
+==== Instruction Cache misses (as a time series)
 
 http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/cmpcmts.sh[[script]]
 http://leaf.dragonflybsd.org/~beket/geant4/@@iteration@@/cmpicmts.png[[full-size plot]]
 
 image:cmpicmts.png[width="80%",link="cmpicmts.png"]
 
-==== Histogram of Data Cache misses ====
-image:histcmpdcm.png[width="80%",link="histcmpdcm.png"]
-
-==== Histogram of Instruction Cache misses ====
+==== Histogram of Instruction Cache misses
 image:histcmpicm.png[width="80%",link="histcmpicm.png"]
+
+==== Flame/leaf graphs of Instruction Cache misses
+
+image:icmflame.orig.svg[width="80%",link="icmflame.orig.svg"]
+
+(Click on the image to enlarge)
+
+image:icmflame.patc.svg[width="80%",link="icmflame.patc.svg"]
+
+(Click on the image to enlarge)
