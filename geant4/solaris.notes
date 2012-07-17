@@ -270,3 +270,28 @@ make[1]: *** [source/processes/electromagnetic/dna/molecules/management/CMakeFil
 make[1]: Leaving directory `/home/stathis/gen-tests/geant4/geant4.9.5.p01-build-smart'
 make: *** [all] Error 2
 ----
+
+How to find memory leaks with libumem
+----
+
+----
+LD_PRELOAD=libumem.so.1; export LD_PRELOAD
+UMEM_DEBUG=default; export UMEM_DEBUG
+/usr/bin/mdb /home/stathis/gen-tests/geant4/geant4.9.5.p01/bin/Linux-g++/full_cms ./bench1_10.g4
+^C
+^Cmdb: stop on SIGINT
+mdb: target stopped at:
+_ZN10G4QPDGCode9MakeQCodeERKi+0x43e:    leal   (%eax,%eax,2),%ebx
+mdb: You've got symbols!
+Loading modules: [ ld.so.1 libumem.so.1 libc.so.1 libuutil.so.1 libnvpair.so.1 ]
+> ::findleaks -dv                               
+findleaks: using cached results (use '-f' to force a full run)
+CACHE     LEAKED   BUFCTL CALLER
+099bf390       1 0aa867c8 libstdc++.so.6.0.14`_Znwj+0x29
+099bf390       1 0ac60438 libstdc++.so.6.0.14`_Znwj+0x29
+099bf390       1 0ac60780 libstdc++.so.6.0.14`_Znwj+0x29
+...
+> $G
+C++ symbol demangling enabled
+> ::walk leak | ::bufctl_audit !tee umem.txt
+----
