@@ -42,8 +42,7 @@ my <- rbind(myx, myy)
 png("$b1.png", width=1024, height=768, res=128)
 ggplot(my, aes(cache_misses, fill=StackManager))		\
 	   + geom_density(alpha = 0.2)				\
-	   + scale_x_log10()					\
-	   + xlab("Time spent in ::ProcessOneEvent() (ns)")	\
+	   + xlab("Time spent in ::ProcessOneEvent() (msec)")	\
 	   + opts(title = "$b1")
 dev.off()
 EOF

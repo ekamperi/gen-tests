@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-#set -x
+set -x
 
 usage()
 {
@@ -36,9 +36,9 @@ pics=$pics,'DC_dtlb_L1_miss_L2_miss'   # DC L2 misses
 /usr/bin/cputrack -c $pics,umask=31 -T 0.2 "$@" |
 {
     if ((quiet)); then
-        pbind -b2 $(pgrep full_cms) > /dev/null;
+	pbind -b2 $(pgrep full_cms) > /dev/null;
     else
-        pbind -b2 $(pgrep full_cms);
+	pbind -b2 $(pgrep full_cms);
     fi
     awk -v quiet=$quiet 'BEGIN {
 	if (!quiet) {

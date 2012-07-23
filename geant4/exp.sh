@@ -5,7 +5,7 @@ set -x
 
 FULLCMS_ORIG=/home/stathis/gen-tests/geant4/geant4.9.5.p01-default/bin/Linux-g++/full_cms
 FULLCMS_PATCHED=/home/stathis/gen-tests/geant4/geant4.9.5.p01/bin/Linux-g++/full_cms
-BENCH="bench1_100.g4"
+BENCH="bench1_300.g4"
 USER=stathis
 HOST=island.quantumachine.net
 FILE="~/public_html/geant4"
@@ -34,6 +34,8 @@ function invalidate_cpucaches()
     cat /devices/pseudo/dummy@0:0
 }
 
+# XXX: To be done- check if $BENCH exists
+
 ################################################################################
 #				External scripts wrappers		       #
 ################################################################################
@@ -51,6 +53,21 @@ function cpi()
 function dcmisses()
 {
     ./x64l2dcmisses.sh -q "$@"
+}
+
+function timeflame()
+{
+    ./timeflame.sh "$@"
+}
+
+function dcmflame()
+{
+    ./dcmflame.sh "$@"
+}
+
+function icmflame()
+{
+    ./icmflame.sh "$@"
 }
 
 function icmisses()
@@ -103,7 +120,7 @@ function do_procevts()
     invalidate_cpucaches
     procevts				     \
 	"$1/${BENCH}.evts.patc.${ITERATION}" \
-	"8c96610"			     \
+	"8ca82e0"			     \
 	"${FULLCMS_PATCHED} ${BENCH}"
 }
 
@@ -127,6 +144,49 @@ function do_dcmisses()
     dcmisses			\
 	"$FULLCMS_PATCHED"	\
 	"$BENCH"		> "$1/${BENCH}.dc.patc.${ITERATION}"
+}
+
+################################################################################
+#				Flame graphs
+################################################################################
+
+function do_timeflame()
+{
+    rm -f timeflame.orig
+    invalidate_cpucaches
+    timeflame timeflame.orig "$FULLCMS_ORIG" "$BENCH"
+    mv timeflame.orig.svg "$1/timeflame.orig.svg"
+
+    rm -f timeflame.patc
+    invalidate_cpucaches
+    timeflame timeflame.patc "$FULLCMS_PATCHED" "$BENCH"
+    mv timeflame.patc.svg "$1/timeflame.patc.svg"
+}
+
+function do_dcmflame()
+{
+    rm -f dcmflame.orig
+    invalidate_cpucaches
+    dcmflame dcmflame.orig "$FULLCMS_ORIG" "$BENCH"
+    mv dcmflame.orig.svg "$1/dcmflame.orig.svg"
+
+    rm -f dcmflame.patc
+    invalidate_cpucaches
+    dcmflame dcmflame.patc "$FULLCMS_PATCHED" "$BENCH"
+    mv dcmflame.patc.svg "$1/dcmflame.patc.svg"
+}
+
+function do_icmflame()
+{
+    rm -f icmflame.orig
+    invalidate_cpucaches
+    icmflame icmflame.orig "$FULLCMS_ORIG" "$BENCH"
+    mv icmflame.orig.svg "$1/icmflame.orig.svg"
+
+    rm -f icmflame.patc
+    invalidate_cpucaches
+    icmflame icmflame.patc "$FULLCMS_PATCHED" "$BENCH"
+    mv icmflame.patc.svg "$1/icmflame.patc.svg"
 }
 
 function do_icmisses()
@@ -225,6 +285,9 @@ do_procevts   "run-$ITERATION"
 do_cpi        "run-$ITERATION"
 do_dcmisses   "run-$ITERATION"
 do_icmisses   "run-$ITERATION"
+do_timeflame  "run-$ITERATION"
+do_dcmflame   "run-$ITERATION"
+do_icmflame   "run-$ITERATION"
 
 # Generate the time series graphs
 do_cmpevts    "run-$ITERATION"

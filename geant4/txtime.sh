@@ -8,7 +8,7 @@
 #
 
 set -e
-set -x
+#set -x
 
 iterations=$1
 shift
@@ -20,7 +20,8 @@ j=0
 times=();
 for ((j=0; j<$iterations; j++))
 do
-    sudo cat /devices/pseudo/dummy@0:0
+#    sudo cat /devices/pseudo/dummy@0:0
     times+=("$({ time "${command[@]}"  >/dev/null 2>&1;} 2>&1)" )
+    echo "${times[j]}"
 done
 echo "${times[*]}"

@@ -48,6 +48,6 @@ cpc:::FR_retired_branches_mispred-user-5000
 c++filt -n -p			 |
 grep ProcessOneTrack             |
 sed "s/${binary}\`//g"           |
-grep -v StatAccepTest            |
+grep -v full_cms	         |
 ./flamegraph.pl			 |
 sed "s/Flame Graph/${title}/g" > "${outfile}.svg"

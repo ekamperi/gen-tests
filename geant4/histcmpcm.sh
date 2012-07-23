@@ -28,9 +28,11 @@ else
     echo "cannot deduce whether data or instruction cache misses from filename" >&2
 fi
 
+b1=$(basename $1)
+
 cat <<EOF
 library(ggplot2)
-dat <- read.table('$1', sep='\t')
+dat <- read.table('$b1', sep='\t')
 
 x <- dat\$V1
 y <- dat\$V2
@@ -49,11 +51,11 @@ myy\$StackManager <- 'Smart'
 
 my <- rbind(myx, myy)
 
-png("$1.png", width=1024, height=768, res=128)
+png("$b1.png", width=1024, height=768, res=128)
 ggplot(my, aes(cache_misses, fill=StackManager))	\
 	   + geom_density(alpha = 0.2)			\
 	   + scale_x_log10(limits = c(0.001, 1000))	\
 	   + xlab("% $CMTYPE Cache misses (logscale)")	\
-	   + opts(title = "$1")
+	   + opts(title = "$b1")
 dev.off()
 EOF

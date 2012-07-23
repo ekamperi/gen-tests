@@ -45,7 +45,7 @@ my <- rbind(myx, myy)
 png("$b1.png", width=1024, height=768, res=128)
 ggplot(my, aes(cache_misses, fill=StackManager))		\
 	   + geom_density(alpha = 0.2)				\
-	   + scale_x_log10(limits = c(0.001, 1000))		\
+	   + scale_x_log10(limits = c(0.5, 5))			\
 	   + xlab("% Cycles Per Instructions (logscale)")	\
 	   + opts(title = "$b1")
 dev.off()

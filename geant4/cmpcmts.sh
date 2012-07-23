@@ -17,12 +17,15 @@
 set -e
 #set -x
 
+b1=$(basename $1)
+b2=$(basename $2)
+
 paste <(awk '{ print $4 }' $1) \
-      <(awk '{ print $4 }' $2) > $1-$2.dat
+      <(awk '{ print $4 }' $2) > $(dirname $1)/$b1-$b2.dat
 
 # Escape _ as gnuplot will think that what follows it, is a subscript
-e1=${1//_/\\_}
-e2=${2//_/\\_}
+e1=${b1//_/\\_}
+e2=${b2//_/\\_}
 
 cat<<EOF
 set terminal png enhanced size 1024,768
@@ -31,6 +34,6 @@ set xlabel "time (0.1s)"
 set ylabel "% Cache Misses (logscale)"
 set logscale y
 
-plot '$1-$2.dat' using 1 with points pointtype 6 title '$e1', \
-     '$1-$2.dat' using 2 with points pointtype 7 title '$e2'
+plot '$b1-$b2.dat' using 1 with points pointtype 6 title '$e1', \
+     '$b1-$b2.dat' using 2 with points pointtype 7 title '$e2'
 EOF

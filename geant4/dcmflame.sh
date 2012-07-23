@@ -48,6 +48,6 @@ cpc:::PAPI_l2_dcm-all-10000
 c++filt -n -p			 |
 grep ProcessOneTrack             |
 sed "s/${binary}\`//g"           |
-grep -v StatAccepTest            |
+grep -v full_cms	         |
 ./flamegraph.pl			 |
 sed "s/Flame Graph/${title}/g" > "${outfile}.svg"

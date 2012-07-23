@@ -47,6 +47,6 @@ profile-97
 ./stackcollapse.pl "$outfile"    |
 c++filt -n -p			 |
 sed "s/${binary}\`//g"           |
-grep -v StatAccepTest            |
+grep -v full_cms		 |
 ./flamegraph.pl			 |
 sed "s/Flame Graph/${title}/g" > "${outfile}.svg"
