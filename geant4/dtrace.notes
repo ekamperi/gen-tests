@@ -1,14 +1,45 @@
 *version:* @@version@@
 
 == How to profile with DTrace
+=== How to measure the total execution time ===
+Total execution time is the single most important metric by which we score
+geant4 and full_cms.
+
+.What should be the entry point for our profiling ?
+
+Since we would like to skip the whole initialization part of +full_cms+, we
+shoule trace from +BeamOn()+ or even better from the +EventManager::DoEventLoop()+,
+because +BeamOn()+ calls some initialization routines itself.
+
+We use the following script:
+----
+#!/bin/bash
+
+set -e
+set -x
+
+benchmarks=(bench1_10.g4 bench1_100.g4 bench1_200.g4 bench1_300.g4 bench1_500.g4 bench1_1k.g4 bench1_5k.g4)
+
+for j in {1..5};
+do
+    for bench in "${benchmarks[@]}";
+    do
+        cat /devices/pseudo/dummy@0:0
+        dtrace -n '
+                pid$target::*DoEventLoop*:entry                { self->pstart = vtimestamp; } 
+                pid$target::*DoEventLoop*:return/self->pstart/ { @ = sum((vtimestamp - self->pstart)/1000000); 
+                					         self->pstart = 0; }' -c \
+                '/home/stathis/gen-tests/geant4/geant4.9.5.p01/bin/Linux-g++/full_cms ./'${bench}'' -o \
+                    "res-${bench}-$j"
+    done
+done
+----
+
 === How to measure the average time spent by a function ===
 
 .What should be the entry point for our profiling ?
 
-We would like to skip the whole initialization part of +full_cms+, therefore one
-shoule trace from +BeamOn()+ or even better from the +EventManager::DoEventLoop()+,
-because +BeamOn()+ calls some initialization routines itself. For this purpose,
-we use a predicate as shown in +stack2dtrace.sh+ file.
+As previous.
 
 .Which functions should we be profiling ?
 
@@ -18,12 +49,12 @@ use +vtimestamp+ instead of +timestamp+, so that the results are less affected b
 
 Another, more pragmatic approach, is to identify those functions that contribute most in the overall
 execution time and focus on profiling them only. This can be done by taking sample stack traces,
-while +full_cms+ is running. Then, we examine those stack traces and deduce which functions are the 
+while +full_cms+ is running. Then, we examine those stack traces and deduce which functions are the
 "hottest" (a function that is taking a lot time to execute, is more likely to get sampled, since we
 are sampling at a fixed rate).
 
 More information can be found https://github.com/brendangregg/FlameGraph[here]. E.g.,
- 
+
 ----
 solaris# dtrace -x ustackframes=100								  \
 	 	-x strsize=5000									  \
@@ -135,17 +166,17 @@ we can measure the cycles per instruction (CPI) of the +full_cms+ experiment
 during its lifetime. For example:
 
 ----
-solaris# ./x64ipc.sh ./full_cms ./bench1_10.g4 
+solaris# ./x64ipc.sh ./full_cms ./bench1_10.g4
     Instructions      CPI     %CPU
-        71986399     1.13    65.42
-           69678     2.00     9.69
-         3035697     1.22    17.47
-           21070     3.13     7.21
-         2479098     1.22    18.21
-           21119     3.31     7.09
-         1684096     1.15    18.34
-           21170     3.20     7.05
-         1117784     1.06    18.38
+	71986399     1.13    65.42
+	   69678     2.00     9.69
+	 3035697     1.22    17.47
+	   21070     3.13     7.21
+	 2479098     1.22    18.21
+	   21119     3.31     7.09
+	 1684096     1.15    18.34
+	   21170     3.20     7.05
+	 1117784     1.06    18.38
 ^C
 ----
 
@@ -260,7 +291,7 @@ solaris# objdump -d /tmp/dummy| /usr/gnu/bin/grep -C5 wbinvd
  341:   eb 00                   jmp    343 <dummy_open+0x13>
  343:   48 8d 45 fc             lea    -0x4(%rbp),%rax
  347:   8b 00                   mov    (%rax),%eax
-solaris# 
+solaris#
 ----
 
 ==== How to invalidate caches from within a DTrace script ====
@@ -331,14 +362,14 @@ dtrace_dif_subr+0x25b7:         addq   $0x5b6a9,%rax
 dtrace_dif_subr+0x25bd:         js     +0x8     <dtrace_dif_subr+0x25c7>
 dtrace_dif_subr+0x25bf:         cmpq   $0x1b0963,%rax
 dtrace_dif_subr+0x25c5:         jl     +0xf     <dtrace_dif_subr+0x25d6>
-dtrace_dif_subr+0x25c7:         cqtd   
+dtrace_dif_subr+0x25c7:         cqtd
 dtrace_dif_subr+0x25c9:         movq   $0x1b0963,%rcx
 dtrace_dif_subr+0x25d0:         idivq  %rcx
 dtrace_dif_subr+0x25d3:         movq   %rdx,%rax
 dtrace_dif_subr+0x25d6:         movl   %r12d,%ecx
 dtrace_dif_subr+0x25d9:         movq   %rax,(%rbx,%rcx,8)
 dtrace_dif_subr+0x25dd:         addq   $0xc8,%rsp
-> 
+>
 ----
 
 We then replaced the +idivq+ instruction, which occupied +3+ bytes,
@@ -357,8 +388,8 @@ went as planned:
 ----
 > dtrace_dif_subr+0x25d0::dis
 > dtrace_dif_subr+0x25c9:         movq   $0x1b0963,%rcx
-> dtrace_dif_subr+0x25d0:         nop    
-> dtrace_dif_subr+0x25d1:         wbinvd 
+> dtrace_dif_subr+0x25d0:         nop
+> dtrace_dif_subr+0x25d1:         wbinvd
 > dtrace_dif_subr+0x25d3:         movq   %rdx,%rax
 >
 ----
@@ -404,49 +435,47 @@ reason we made the +full_cms+ bind to a specific cpu (other than #0) during
 its lifetime. The command that we used was +pbind(1M)+ in Solaris. After that
 the vast majority of the outliers has been disappeared.
 
-=== Why, in the flame/leaf-graphs, are functions appearing to be called by
-others, whereas there is no such direct call in the source code ===
+=== Why, in the flame/leaf-graphs, are functions appearing to be called by others, whereas there is no such direct call in the source code
 
-This is an artifact caused by a compiler optimization, known as tail-call elimination or
-tail-call optimization. This type of optimization (which happens by default in g++ at
-the -O2 optimization level),  happens when a function A() calls function C() as its
+This is an artifact caused by a compiler optimization, known as *tail-call elimination* or
+*tail-call optimization*. This type of optimization (which happens by default in g++ at
+the +-O2+ optimization level), happens when a function +A()+ calls function +C()+ as its
 last action. E.g.
-
 ----
 int A()
 {
-	B();
-	return C();
+    B();
+    return C();
 }
 ----
 
-In that case, the generated code is not this (pseudo-assembly):
-
+In that case, the generated code is *not* this (pseudo-assembly):
 ----
 A:
-	call B
-	call C
-	ret
+    call B
+    call C
+    ret
 ----
 
 but this:
-
+[subs="quotes"]
 ----
 A:
-	call B
-	jmp C
+    call B
+    *jmp C*
 ----
 
-The benefit, in terms of performance, is that we don't setup a new
-stack trace for the function that is about to be called.
-A typical example can be found in the +ProcessEventOne()+ function. In the
-source code there is this chain of calls:
+The _benefit_, in terms of performance, is that we don't setup a new
+stack trace for the function that is about to be called. The _drawback_ is
+that we lose potentially useful information for debugging and profiling.
+A typical example can be found in the +ProcessOneEvent()+ function. In the
+source code there exists this sequence of function calls:
 +DoEventLoop() -> ProcessOneEvent() -> DoProcessing() -> ...+
 
 In the generated leafgraphs though, +DoProcessing()+ appears to be a direct
-node of +DoEventLoop()+, with +ProcessOneEvent()+ not appearing at all. In
-the disassembled code:
-
+descendant node of +DoEventLoop()+, with +ProcessOneEvent()+ not appearing at
+all. In the disassembled code:
+[subs="quotes"]
 ----
 > $G
 C++ symbol demangling enabled
@@ -455,20 +484,38 @@ G4EventManager::ProcessOneEvent:subl   $0xc,%esp
 G4EventManager::ProcessOneEvent+3:      movl   0x10(%esp),%eax
 G4EventManager::ProcessOneEvent+7:      movl   $0x0,0x10(%eax)
 G4EventManager::ProcessOneEvent+0xe:    addl   $0xc,%esp
-G4EventManager::ProcessOneEvent+0x11:   jmp    -0x11f6  <G4EventManager::DoProcessing>
-> 
+*G4EventManager::ProcessOneEvent+0x11:   jmp    -0x11f6  <G4EventManager::DoProcessing>*
+>
 ----
 
-As we can see, instead of a call/ret to +G4EventManager::DoProcessing()+ there
-is instead a jump call. Which is the reason why DTrace appears to be missing
+As we can see, instead of a +call/ret+ to +G4EventManager::DoProcessing()+ there
+is instead a +jmp+ instruction. Which is the reason why DTrace appears to be missing
 the +ProcessOneEvent()+ (since its stack-frame is being taken by +DoProcessing()+.
 
 ==== How to measure time spent in +ProcessOneEvent()+ ====
 
 In continuation of the above, in order to precisely measure the time spent in
 +ProcessOneEvent()+, we need to follow the execution to +DoProcessing()+ and
-find the address where it ret'urns. We then supply that address as the return
-point to DTrace. E.g.
-
+find the address where it +ret+'urns. We do so by disassemblying +DoProcessing()+.
+We then supply that address as the return point to DTrace, which can probe arbitrary
+addresses, as shown below:
 ----
+dtrace -n '
+BEGIN
+{
+	evtcnt = 0;
+}
+
+pid$target::_ZN14G4EventManager15ProcessOneEventEP7G4Event:entry
+{
+	self->pstart = vtimestamp;
+}
+
+pid$target::-:8c8fbcf
+/self->pstart/
+{
+	t = vtimestamp - self->pstart;
+	printf("evtcnt=%d t=%d\n", ++evtcnt, t);
+	self->pstart = 0;
+}' -c '/home/stathis/gen-tests/geant4/geant4.9.5.p01-default/bin/Linux-g++/full_cms ./bench1_10.g4' -o poe.out
 ----
