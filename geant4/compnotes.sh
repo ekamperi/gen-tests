@@ -21,7 +21,7 @@ ASCIIDOC=( asciidoc -a icons
 GITVERS=$(git rev-list --all | wc -l)
 GITHASH=$(git rev-list --all | head -n1 | cut -c1-5)
 
-FILES=(dtrace solaris smartstack)
+FILES=(dtrace README solaris smartstack)
 
 for file in ${FILES[@]}
 do
