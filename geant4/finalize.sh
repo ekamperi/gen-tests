@@ -5,7 +5,7 @@
 
 user="stathis"
 host="island.quantumachine.net"
-file="~/public_html/geant4"
+remote_base_path="~/public_html/geant4"
 
 if [ ! $# -eq 1 ]; then
     echo "usage: $(basename $0) file"
@@ -55,16 +55,14 @@ wget -q -r -l1 -R index.html --no-directories -np	\
     ############################################################################
     #				Upload the results			       #
     ############################################################################
-    scp rcmpevts.png    "${user}@${host}:${file}/run-${iteration}"
-    scp rcmpevts2.png   "${user}@${host}:${file}/run-${iteration}"
-    scp cmpcpits.png    "${user}@${host}:${file}/run-${iteration}"
-    scp cmpdcmts.png    "${user}@${host}:${file}/run-${iteration}"
-    scp cmpicmts.png    "${user}@${host}:${file}/run-${iteration}"
+    FILES=(rcmpevts.png rcmpevts2.png cmpcpits.png cmpdcmts.png cmpicmts.png
+	   histcmpevts.png histcmpcpi.png histcmpdcm.png histcmpicm.png)
 
-    scp histcmpevts.png "${user}@${host}:${file}/run-${iteration}"
-    scp histcmpcpi.png  "${user}@${host}:${file}/run-${iteration}"
-    scp histcmpdcm.png  "${user}@${host}:${file}/run-${iteration}"
-    scp histcmpicm.png  "${user}@${host}:${file}/run-${iteration}"
+    for file in ${FILES[@]}
+    do
+	echo "-> Uploading file '${file}'"
+	scp "${file}" "${user}@${host}:${remote_base_path}/run-${iteration}"
+    done
 
     sed "s/@@iteration@@/${iteration}/" smartstack.notes > smartstack.notes2
 )
