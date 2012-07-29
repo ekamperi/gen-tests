@@ -1,5 +1,5 @@
 == General grammar and rules
-Many of the files that contain captured data abide to a simple grammar with a BNF-like
+Many of the files that contain captured data abide by the rules of a simple grammar with a BNF-like
 syntax as per the following:
 ----
 <filename> ::= <macro> "." <benchmark> "." <version> "." <run> "." <opt-parsed> <opt-filename>
