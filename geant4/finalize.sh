@@ -58,7 +58,7 @@ wget -q -r -l1 -R index.html --no-directories -np	\
     FILES=(rcmpevts.png rcmpevts2.png cmpcpits.png cmpdcmts.png cmpicmts.png
 	   histcmpevts.png histcmpcpi.png histcmpdcm.png histcmpicm.png)
 
-    for file in ${FILES[@]}
+    for file in "${FILES[@]}"
     do
 	echo "-> Uploading file '${file}'"
 	scp "${file}" "${user}@${host}:${remote_base_path}/run-${iteration}"
