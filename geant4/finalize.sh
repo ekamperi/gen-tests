@@ -3,27 +3,23 @@
 #set -e
 #set -x
 
-USER="stathis"
-HOST="island.quantumachine.net"
-FILE="~/public_html/geant4"
+user="stathis"
+host="island.quantumachine.net"
+file="~/public_html/geant4"
 
 if [ ! $# -eq 1 ]; then
     echo "usage: $(basename $0) file"
     exit 1
 fi
 
-ITERATION=$1
+iteration=$1
 
-wget --no-directories --directory-prefix="run-${ITERATION}" \
-    "http://${HOST}/~${USER}/geant4/run-${ITERATION}/BENCH"
-
-read BENCH <"run-${ITERATION}/BENCH"
-
-wget -r -l1 -R index.html --no-directories -np --directory-prefix="run-${ITERATION}" \
-    "http://${HOST}/~${USER}/geant4/run-${ITERATION}"
-
+echo "Downloading run-${iteration}/ directory"
+wget -q -r -l1 -R index.html --no-directories -np	\
+     --directory-prefix="run-${iteration}"		\
+     "http://${host}/~${user}/geant4/run-${iteration}"
 (
-    cd "run-${ITERATION}"
+    cd "run-${iteration}"
 
     # Events
     cat rcmpevts.rplot  | R --vanilla --slave
@@ -37,7 +33,9 @@ wget -r -l1 -R index.html --no-directories -np --directory-prefix="run-${ITERATI
     # Instruction Cache misses
     cat cmpicmts.gplot | gnuplot > cmpicmts.png
 
-    # Histograms
+    ############################################################################
+    #				HISTOGRAMS				       #
+    ############################################################################
     cat histcmpevts.rplot | R --vanilla --slave
     read HISTEVTSDAT <"HIST.EVTSDAT"
     cp "${HISTEVTSDAT}.png" histcmpevts.png
@@ -54,19 +52,21 @@ wget -r -l1 -R index.html --no-directories -np --directory-prefix="run-${ITERATI
     read HISTICMDAT <"HIST.ICMDAT"
     cp "${HISTICMDAT}.png" histcmpicm.png
 
-    # Upload the results
-    scp rcmpevts.png     "${USER}@${HOST}:${FILE}/run-${ITERATION}"
-    scp rcmpevts2.png     "${USER}@${HOST}:${FILE}/run-${ITERATION}"
-    scp cmpcpits.png    "${USER}@${HOST}:${FILE}/run-${ITERATION}"
-    scp cmpdcmts.png    "${USER}@${HOST}:${FILE}/run-${ITERATION}"
-    scp cmpicmts.png    "${USER}@${HOST}:${FILE}/run-${ITERATION}"
+    ############################################################################
+    #				Upload the results			       #
+    ############################################################################
+    scp rcmpevts.png    "${user}@${host}:${file}/run-${iteration}"
+    scp rcmpevts2.png   "${user}@${host}:${file}/run-${iteration}"
+    scp cmpcpits.png    "${user}@${host}:${file}/run-${iteration}"
+    scp cmpdcmts.png    "${user}@${host}:${file}/run-${iteration}"
+    scp cmpicmts.png    "${user}@${host}:${file}/run-${iteration}"
 
-    scp histcmpevts.png "${USER}@${HOST}:${FILE}/run-${ITERATION}"
-    scp histcmpcpi.png  "${USER}@${HOST}:${FILE}/run-${ITERATION}"
-    scp histcmpdcm.png  "${USER}@${HOST}:${FILE}/run-${ITERATION}"
-    scp histcmpicm.png  "${USER}@${HOST}:${FILE}/run-${ITERATION}"
+    scp histcmpevts.png "${user}@${host}:${file}/run-${iteration}"
+    scp histcmpcpi.png  "${user}@${host}:${file}/run-${iteration}"
+    scp histcmpdcm.png  "${user}@${host}:${file}/run-${iteration}"
+    scp histcmpicm.png  "${user}@${host}:${file}/run-${iteration}"
 
-    sed "s/@@iteration@@/${ITERATION}/" smartstack.notes > smartstack.notes2
+    sed "s/@@iteration@@/${iteration}/" smartstack.notes > smartstack.notes2
 )
 
-./compnotes.sh ${ITERATION}
+./compnotes.sh ${iteration}
