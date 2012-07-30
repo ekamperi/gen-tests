@@ -27,9 +27,13 @@ CPPFLAGS += -DG4EVENT_ALLOC_EXPORT -DG4_USESMARTSTACK
 ----
 
 === The effect of SmartTrackStack on time spent by a +::ProcessOneEvent()+ call
-http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/cmpevts.sh[[script]]
-http://leaf.dragonflybsd.org/~beket/geant4/@@iteration@@/cmpevts.png[[full-size plot]]
-image:cmpevts.png[width="80%",link="cmpevts.png"]
+http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/rcmpevts.sh[[script]]
+http://leaf.dragonflybsd.org/~beket/geant4/@@iteration@@/rcmpevts.png[[full-size plot]]
+image:rcmpevts.png[width="80%",link="rcmpevts.png"]
+
+http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/rcmpevts.sh[[script]]
+http://leaf.dragonflybsd.org/~beket/geant4/@@iteration@@/rcmpevts2.png[[full-size plot]]
+image:rcmpevts2.png[width="80%",link="rcmpevts2.png"]
 
 ==== Histogram of +::ProcessOneEvent()+ time spent
 image:histcmpevts.png[width="80%",link="histcmpevts.png"]
