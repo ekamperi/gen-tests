@@ -1,0 +1,37 @@
+library('ggplot2')
+
+dat1 <- read.table('4c.obs')
+dat2 <- read.table('8c.obs')
+dat3 <- read.table('12c.obs')
+
+## Calculate the minimum length of all data frames
+minv <- min(sapply(c(dat1, dat2, dat3), length))
+
+## Select only the first 'minv' items of each data frame, so that they
+## all have the same size. This simplifies further operations.
+dat1 <- dat1[1:minv,]
+dat2 <- dat2[1:minv,]
+dat3 <- dat3[1:minv,]
+
+## The last column is our categorical value (kinetic energy precision)
+dat1$V5 <- as.factor('4 bits')
+dat2$V5 <- as.factor('8 bits')
+dat3$V5 <- as.factor('12 bits')
+
+## Combine the data frames into one, so that the resultant plots
+## are superimposed on the same canvas
+dat123 <- rbind(dat1, dat2, dat3)
+
+## Don't forget to rewind the x-axis for every initial data frame,
+## so that all plots start at x=0
+png("bitsprec.png", width = 1024, height = 768, res = 128)
+p <- ggplot(dat123,  aes(x=rep(1:minv,3), y=100*V1/V2))
+p <- p + geom_line(aes(colour=V5))
+p <- p + scale_y_log10()
+
+p <- p + labs(x = "::GetCrossSection() call sequence(1st, 2nd, 3rd, ..., n-th)")
+p <- p + labs(y = "% hits / misses (logscale)", colour = "Precision")
+p <- p + opts(title = "The hits / misses ratio of ::GetCrossSection()\nfor various precisions of Kinetic Energy")
+
+p
+dev.off()
