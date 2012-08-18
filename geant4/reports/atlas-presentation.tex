@@ -25,7 +25,7 @@
   Greece\\[1ex]
   \texttt{ekamperi@gmail.com}
 }
-\date{July, 2012}
+\date{August, 2012}
 
 \begin{frame}[plain]
   \titlepage
@@ -143,6 +143,10 @@ The rest are common for both platforms (visualisation and statistics)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{DTrace - pid provider}
+\begin{reference}{4mm}{85mm}
+It allows to trace arbitrary instructions inside a function, as it will be
+demonstrated later.
+\end{reference} 
 
 \textcolor{blue}{Definition} pid provider allows for tracing of the entry and
 return of any function in a user process
@@ -475,6 +479,19 @@ Example of a cold graph
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Overview}
+
+Ideas explored
+\begin{itemize}
+  \item {\bf Particle bunching (G4SmartTrackStack) }
+  \item Hard-coded stepping manager (G4SteppingManager)
+  \item Caching of cross-sections calculations in hadronic processes (G4CrossSectionDataStore)
+  \item Reducing branch mispredictions in Value() (G4PhysicsVector)
+  \item Caching values of ln(Energy) (G4Track)
+\end{itemize}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Particle "bunching"}
 \textcolor{blue}{Definition}
 Process \textit{same} particle types before switching to another particle type. E.g.,
@@ -503,28 +520,53 @@ Number of stacks we are using: 5
 
 \textcolor{blue}{Problems}
 \begin{itemize}
-\item Stacks can grow very large
+\item {\bf Stacks can grow very large}
 \begin{itemize}
 \item e.g., when processing electrons, the gamma stack explodes, and vice versa
 \end{itemize}
-\item So we have to restrict them, which leads to another problem
+\item Therefore, we have to {\bf restrict} them, which leads to another problem:
 \begin{itemize}
 \item What is the optimal size for each one?
-\item How much aggressively should we process a track, once it reached its upper limit ?
+\item How much aggressively should we process a track, once it has hit its upper limit ?
 \end{itemize}
 \end{itemize}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Particle "bunching" - Problems cont.}
-If we allow \textit{too large} sizes
+If we allow {\bf too large} stack sizes
 \begin{itemize}
 \item we diverge a lot in terms of geometry (it hurts)
 \end{itemize}
-If we allow \textit{too small} sizes
+If we allow {\bf too small} stack sizes
 \begin{itemize}
 \item we switch too often between stacks, and we thrash (it hurts)
 \end{itemize}
+\vspace{5mm}
+If we are {\bf too aggressive} when penalizing the offending stack,
+\begin{itemize}
+\item by processing its elements, then the other stacks will get inflated
+\end{itemize}
+
+\begin{center}
+\fcolorbox{red}{white}{Unstable equilibrium}
+\end{center}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{G4SmartTrackStack - Current state of things}
+
+\begin{center}
+The algorithm, in its current incarnation,\\
+does {\bf not} provide any benefit in terms of performance.
+\end{center}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{G4SmartTrackStack - Core of the problem}
+Although G4SmartTrackStack tries to impose limits on the maximum size a
+stack can grow to, there is {\bf degenerate} case that it does not.
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
