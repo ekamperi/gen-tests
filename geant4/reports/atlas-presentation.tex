@@ -27,10 +27,13 @@
 }
 \date{August, 2012}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}[plain]
   \titlepage
+\begin{reference}{4mm}{85mm}
+version: 256@89329
+\end{reference} 
 \end{frame}
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Overview}
@@ -341,7 +344,8 @@ the data to a tracing buffer or discard it.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Speculative tracing - A real use case}
 
-\textcolor{blue}{Problem} Some {\tt ProcessOneEvent()} need more than average time to complete
+\textcolor{blue}{Problem} Some {\tt ProcessOneEvent()} need much more than
+average time to complete
 
 \begin{center}
   \includegraphics[width=0.8\textwidth]{evts1-arrows.png}
@@ -393,6 +397,34 @@ pid$target::-:'$retaddr'
     spec = 0;
 }
 \end{lstlisting}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Speculative tracing - A real use case cont.}
+
+\textcolor{blue}{Hint} The maximum desired size for all stacks was requested to be 400.
+
+$e^-$ and $\gamma$ too often will not honour that limit.
+
+\begin{center}
+  \includegraphics[width=0.8\textwidth]{pathol-all.png}
+\end{center}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Speculative tracing - A real use case cont. - Zoom 1/2}
+
+\begin{center}
+  \includegraphics[width=0.8\textwidth]{pathol-zoom1.png}
+\end{center}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Speculative tracing - A real use case cont. - Zoom 2/2}
+
+\begin{center}
+  \includegraphics[width=0.8\textwidth]{pathol-zoom2.png}
+\end{center}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -500,7 +532,8 @@ Process \textit{same} particle types before switching to another particle type. 
 e^-, e^-, \ldots, e^-, \gamma, \gamma, \ldots, \gamma, \ldots
 \end{equation*}
 
-\textcolor{blue}{Why} Better \textit{cache utilisation}
+\textcolor{blue}{Why} Better \textit{cache utilisation} due to access to the
+same physics list
 
 \vspace{5 mm}
 
