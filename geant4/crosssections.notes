@@ -115,7 +115,7 @@ G4CrossSectionDataStore::GetCrossSection(const G4DynamicParticle* part,
 
         for (G4int i = 0; i < nElements; ++i) {
                 sigma += nAtomsPerVolume[i] *
-                    MyGetCrossSection(part, (*mat->GetElementVector())[i], mat);
+                    GetCrossSection(part, (*mat->GetElementVector())[i], mat);
                 xsecelm[i] = sigma;
         }
 
