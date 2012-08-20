@@ -1,6 +1,7 @@
 \documentclass{beamer}
 \usetheme[height=7mm]{Rochester}
 \usepackage{listings}
+\usepackage{url}
 
 %\usefonttheme{serif}
 
@@ -356,6 +357,12 @@ average time to complete
 \begin{frame}{Speculative tracing - A real use case}
 \textcolor{blue}{Strategy} We are going to trace all {\tt ProcessOneEvent()} calls, but commit to our tracing
 buffer \textit{only} those that behave bad.
+
+\vspace{5mm}
+
+In this context, "trace" refers to looking at stacks' sizes when {\tt ProcessOneEvent()}
+stalls while processing the event.
+
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -511,9 +518,18 @@ Example of a cold graph
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%								PART 2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\begin{center}
+\fcolorbox{red}{white}{\huge{{\bf PART TWO}}}
+\end{center}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Overview}
 
-Ideas explored
+\textcolor{blue}{Ideas explored}
 \begin{itemize}
   \item {\bf Particle bunching (G4SmartTrackStack) }
   \item Hard-coded stepping manager (G4SteppingManager)
@@ -578,28 +594,85 @@ If we allow {\bf too small} stack sizes
 \vspace{5mm}
 If we are {\bf too aggressive} when penalizing the offending stack,
 \begin{itemize}
-\item by processing its elements, then the other stacks will get inflated
+\item by consuming its elements, then the other stacks will get inflated (it hurts)
 \end{itemize}
 
 \begin{center}
-\fcolorbox{red}{white}{Unstable equilibrium}
+\fcolorbox{red}{white}{Outcome very dependent on the selection of above parameters}
 \end{center}
-
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{G4SmartTrackStack - Current state of things}
+\textcolor{blue}{Current state}
+The algorithm, in its current incarnation, does {\bf not} provide any benefit in
+terms of performance.
+
+\vspace{5mm}
+
+\textcolor{blue}{Problems}
+\begin{itemize}
+\item Suboptimal choice of max stack sizes
+\item Although G4SmartTrackStack tries to impose limits on the maximum size a
+stack can grow to, there is a {\bf degenerate} case where it doesn't.
+\end{itemize}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{G4SmartTrackStack - Modifications}
+
+\textcolor{blue}{{\bf Reduce size of stacks}}
+\begin{itemize}
+\item ~5\% gain in 200 events, ~3\% in 1k events, ~1\% in 2k events, cross-over at 3k events
+\end{itemize}
+\textcolor{blue}{Impose {\bf hard limits} on the size of the stacks}
+\begin{itemize}
+\item First version ever to confer a {\bf persistent} reduction in total execution time, albeit small ($<1\%$)
+\end{itemize}
+\textcolor{blue}{Show {\bf affinity for low energy $e^-$} (+ hard limits)}
+\begin{itemize}
+\item Best version of particle bunching: 4-5\% {\bf persistent} reduction in total execution time
+in FullCMS experiment (less in SimplifiedCalorimeter)
+\end{itemize}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{G4SmartTrackStack}
 
 \begin{center}
-The algorithm, in its current incarnation,\\
-does {\bf not} provide any benefit in terms of performance.
+  \includegraphics[width=1.0\textwidth]{trackingcmp.png}
 \end{center}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}{G4SmartTrackStack - Core of the problem}
-Although G4SmartTrackStack tries to impose limits on the maximum size a
-stack can grow to, there is {\bf degenerate} case that it does not.
+\begin{frame}{Future plans}
+
+\begin{itemize}
+\item Document everything- positive and negative results
+\item Break up commits so that each one introduces only one feature
+\item Try to reproduce the results in a computing environment closer to CERN's
+\end{itemize}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\UrlFont{\scriptsize\ttfamily}
+\begin{frame}{Documentation}
+
+\textcolor{blue}{Documentation will be appearing in the following links:}
+
+\begin{itemize}
+\item \url{http://leaf.dragonflybsd.org/~beket/geant4/dtrace.html}
+\item \url{http://leaf.dragonflybsd.org/~beket/geant4/solaris.html}
+\end{itemize}
+
+\vspace{5mm}
+
+\begin{itemize}
+\item \url{http://island.quantumachine.net/~stathis/geant4/smartstack.html}
+\item \url{http://island.quantumachine.net/~stathis/geant4/crosssections.html}
+\item \url{http://island.quantumachine.net/~stathis/geant4/hardstepping.html}
+\item \url{http://island.quantumachine.net/~stathis/geant4/lnenergy.html}
+\end{itemize}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
