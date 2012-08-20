@@ -17,6 +17,7 @@
 \begin{document}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \title{Profile and reorder code execution in Geant4 to increase performance}
 \subtitle{A Google Summer of Code Project}
 \author{Stathis Kamperis}
@@ -29,6 +30,7 @@
 \date{August, 2012}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}[plain]
   \titlepage
 \begin{reference}{4mm}{85mm}
@@ -36,6 +38,7 @@ version: 256@89329
 \end{reference} 
 \end{frame}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Overview}
 
@@ -49,69 +52,85 @@ Geant4
 
 Full CMS
 \begin{itemize}
-\item Complex geometry and physics
+	\item Complex geometry and physics
 \end{itemize}
 
 \begin{center}
-\fcolorbox{red}{white}{Very low visibility to the runtime aspects of the simulations}
+	\fcolorbox{red}{white}{Very low visibility to the runtime aspects of the simulations}
 \end{center}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Profiling targets}
+
 \begin{itemize}
-\item Full CMS experiment
-\item Simplified Calorimeter
-\begin{itemize}
-\item Faster initialization, faster profiling cycles
-\item Simpler Geometry
-\begin{itemize}
-\item Useful for examining how (lack of complex) geometry affects performance
-\end{itemize}
-\end{itemize}
+	\item Full CMS experiment
+	\item Simplified Calorimeter
+
+	\begin{itemize}
+		\item Faster initialization, faster profiling cycles
+		\item Simpler Geometry
+		\begin{itemize}
+			\item Useful for examining how (lack of complex) geometry affects performance
+		\end{itemize}
+	\end{itemize}
+	
 \item Examples bundled with Geant4
+	
 \end{itemize}
 \end{frame}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Profiling tools}
 
 \textcolor{blue}{Ported Geant4 to Solaris 11/x64}
 
 \begin{itemize}
-\item DTrace
+	\item DTrace
+
+	\begin{itemize}
+		\item A dynamic tracing framework
+		\item Available also in Mac OSX (an officially supported platform by Geant4)
+		\item Fine-grained profiling
+	\end{itemize}
+
+	\item mdb (Modular debugger)
+
+	\item cputrack
+	\begin{itemize}
+		\item Access CPU performance counters
+		\item data cache misses, instruction cache misses, branch mispredictions, ...
+	\end{itemize}
+\end{itemize}	
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Profiling tools - cont.}
+
 \begin{itemize}
-\item A dynamic tracing framework
-\item Available also in Mac OSX (an officially supported platform by Geant4)
-\item Fine-grained profiling
-\end{itemize}
-\item mdb (Modular debugger)
-\item cputrack
-\begin{itemize}
-\item Access CPU performance counters
-\item data cache misses, instruction cache misses, branch mispredictions, ...
-\end{itemize}
-\item libumem
-\begin{itemize}
-\item Useful for debugging memory problems (leaks, corruptions, etc)
-\item As simple as running: LD\_PRELOAD=libumem.so.1 ./a.out
-\item Can be used in conjuction with mdb \(::findleaks, ::umem\_verify, ...\)
-\end{itemize}
+	\item libumem
+	
+	\begin{itemize}
+		\item Useful for debugging memory problems (leaks, corruptions, etc)
+		\item As simple as running: LD\_PRELOAD=libumem.so.1 ./a.out
+		\item Can be used in conjuction with mdb \(::findleaks, ::umem\_verify, ...\)
+	\end{itemize}
+	
+	\item pbind (to bind profiled process to a specific CPU)
+	\item A pseudo device driver to invalidate CPU caches on demand
+	\item Visualisation tools and Statistics
+	
+	\begin{itemize}
+		\item gnuplot, ggplot2, R
+	\end{itemize}
 \end{itemize}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}{Profiling tools - cont.}
-\begin{itemize}
-\item pbind (to bind profiled process to a specific CPU)
-\item A pseudo device driver to invalidate CPU caches on demand
-\item Visualisation tools and Statistics
-\begin{itemize}
-\item gnuplot, ggplot2, R
-\end{itemize}
-\end{itemize}
-\end{frame}
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Profiling tools - Alternatives}
 
@@ -122,17 +141,18 @@ Full CMS
 Alternatives for Linux users:
 
 \begin{itemize}
-\item DTrace $\rightarrow$ SystemTap
-\item mdb $\rightarrow$ gdb
-\item cputrack $\rightarrow$ perf, cachegrind
-\item libumem $\rightarrow$ valgrind
-\item pbind $\rightarrow$ taskset
+	\item DTrace $\rightarrow$ SystemTap
+	\item mdb $\rightarrow$ gdb
+	\item cputrack $\rightarrow$ perf, cachegrind
+	\item libumem $\rightarrow$ valgrind
+	\item pbind $\rightarrow$ taskset
 \end{itemize}
 
 The rest are common for both platforms (visualisation and statistics)
 
 \end{frame}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{DTrace}
 
@@ -145,6 +165,8 @@ The rest are common for both platforms (visualisation and statistics)
 \end{itemize}
 \end{frame}
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{DTrace - pid provider}
 \begin{reference}{4mm}{85mm}
@@ -160,6 +182,8 @@ return of any function in a user process
 The pid provider has no probe effect when probes are not enabled.
 \end{frame}
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{frame}[fragile]{DTrace - pid provider 1}
@@ -199,6 +223,7 @@ pid$target::*G4AllocatorPool*Grow*:return
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}[fragile]{DTrace - pid provider 2}
 \textcolor{blue}{How do we skip the initialization part of Geant4/Full CMS ?}
 \begin{itemize}
@@ -228,22 +253,32 @@ someprobe
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{USDT (user-level statically defined tracing)}
-\textcolor{blue}{Allows to place custom probe points in application code}
+
+{\bf \textcolor{blue}{Allows to place custom probe points in application code}}
+
 \begin{itemize}
-\item Available both in development and production builds
-\begin{itemize}
-\item No need to recompile with a debug flag set
+	\item Available {\bf both} in development and production builds
+	
+	\begin{itemize}
+		\item No need to recompile with a debug flag set
+	\end{itemize}
+	
+	\item DTrace dynamically activates the probes when asked
+	
+	\begin{itemize}
+		\item By {\bf dynamically} rewriting the instructions of the profiled app
+	\end{itemize}
+
+	\item {\bf Negligible overhead} when not in use (a few NOPs)
+	
+	\item Take advantage of DTrace {\bf rich reporting capabilities (aggregations)}
 \end{itemize}
-\item DTrace dynamically activates the probes when asked
-\begin{itemize}
-\item By dynamically modifying the instructions of the profiled app
-\end{itemize}
-\item Negligible overhead when not in use (a few NOPs)
-\item Take advantage of DTrace rich reporting capabilities (aggregations)
-\end{itemize}
+
 \end{frame}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{USDT (user-level statically defined tracing)}
 \begin{itemize}
@@ -256,6 +291,7 @@ to fire the corresponding DTrace probes
 \end{itemize}
 \end{frame}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}[fragile]{USDT - Example 1}
 \lstset{basicstyle=\tiny\ttfamily}
@@ -286,6 +322,7 @@ G4SmartTrackStack::PopFromStack track=2 size=443
 \end{lstlisting}
 \end{frame}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}[fragile]{USDT - Example 2}
 \lstset{basicstyle=\tiny\ttfamily}
@@ -320,6 +357,7 @@ simple$target:::
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{USDT - Example 3}
 
 \textcolor{blue}{Objective} Visualize the size of stacks and the total energy of their particles
@@ -334,6 +372,7 @@ The following graph is from a simulation of 2 events in Full CMS:
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Speculative tracing - Introduction}
 \begin{reference}{4mm}{85mm}
 From DTrace guide
@@ -342,6 +381,7 @@ From DTrace guide
 the data to a tracing buffer or discard it.
 \end{frame}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Speculative tracing - A real use case}
 
@@ -354,6 +394,7 @@ average time to complete
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Speculative tracing - A real use case}
 \textcolor{blue}{Strategy} We are going to trace all {\tt ProcessOneEvent()} calls, but commit to our tracing
 buffer \textit{only} those that behave bad.
@@ -365,6 +406,7 @@ stalls while processing the event.
 
 \end{frame}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}[fragile]{Speculative tracing - A real use case cont.}
 \lstset{basicstyle=\tiny\ttfamily}
@@ -407,6 +449,7 @@ pid$target::-:'$retaddr'
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Speculative tracing - A real use case cont.}
 
 \textcolor{blue}{Hint} The maximum desired size for all stacks was requested to be 400.
@@ -419,6 +462,7 @@ $e^-$ and $\gamma$ too often will not honour that limit.
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Speculative tracing - A real use case cont. - Zoom 1/2}
 
 \begin{center}
@@ -427,6 +471,7 @@ $e^-$ and $\gamma$ too often will not honour that limit.
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Speculative tracing - A real use case cont. - Zoom 2/2}
 
 \begin{center}
@@ -434,6 +479,7 @@ $e^-$ and $\gamma$ too often will not honour that limit.
 \end{center}
 \end{frame}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Flame graphs}
 \textcolor{blue}{Definition} Flame graphs are a visualization method for sampled stack traces
@@ -444,38 +490,42 @@ $e^-$ and $\gamma$ too often will not honour that limit.
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Flame graphs}
 \textcolor{blue}{Scope} Anything that can be sampled by DTrace can be visualized as a flame graph
+
 \begin{itemize}
-\item Function execution time
-\item Data cache misses
-\item Instruction cache misses
-\item Branch mispredictions
-\item Memory allocation sizes
-\item ...
+	\item Function execution time
+	\item Data cache misses
+	\item Instruction cache misses
+	\item Branch mispredictions
+	\item Memory allocation sizes
+	\item ...
 \end{itemize}
 
 \begin{reference}{4mm}{85mm}
-Developed by Brendan Gregg
+	Developed by Brendan Gregg
 \end{reference}
 \end{frame}
 
 \begin{frame}{Flame graphs}
 \textcolor{blue}{Hints}
+
 \begin{itemize}
-\item Identification of hot code-paths
-\item The x-axis is the sample population
-\item The y-axis is the stack depth
-\item The width of a box is proportional to the measured quantity. E.g.,
-\begin{itemize}
-\item A wide box means that a function either takes a lot of time to complete or
-that it is called too often (in either case the probability that its stack trace
-is sampled increases)
-\end{itemize}
-\item The colors are \textit{not} significant (they are picked at random to be "warm")
+	\item Identification of hot code-paths
+	\item The x-axis is the sample population
+	\item The y-axis is the stack depth
+	\item The width of a box is proportional to the measured quantity. E.g.,
+	\begin{itemize}
+		\item A wide box means that a function either takes a lot of time to complete or
+		that it is called too often (in either case the probability that its stack trace
+		is sampled increases)
+	\end{itemize}
+	\item The colors are \textit{not} significant (they are picked at random to be "warm")
 \end{itemize}
 \end{frame}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Flame graphs - Validation}
 \textcolor{blue}{Problem} How do we know that flame graphs are valid ?
@@ -491,6 +541,7 @@ We then \textit{regenerated} the flame graph and the function's box in the was
 \textit{vastly increased}.
 \end{frame}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Flame graphs - Deltas}
 
@@ -527,6 +578,7 @@ Example of a cold graph
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Overview}
 
 \textcolor{blue}{Ideas explored}
@@ -540,12 +592,13 @@ Example of a cold graph
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Particle "bunching"}
 \textcolor{blue}{Definition}
 Process \textit{same} particle types before switching to another particle type. E.g.,
 
 \begin{equation*}
-e^-, e^-, \ldots, e^-, \gamma, \gamma, \ldots, \gamma, \ldots
+\ldots, e^-, e^-, \ldots, e^-, \gamma, \gamma, \ldots, \gamma, \ldots
 \end{equation*}
 
 \textcolor{blue}{Why} Better \textit{cache utilisation} due to access to the
@@ -565,6 +618,7 @@ Number of stacks we are using: 5
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Particle "bunching" - Problems}
 
 \textcolor{blue}{Problems}
@@ -581,6 +635,7 @@ Number of stacks we are using: 5
 \end{itemize}
 \end{frame}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Particle "bunching" - Problems cont.}
 If we allow {\bf too large} stack sizes
@@ -603,6 +658,7 @@ If we are {\bf too aggressive} when penalizing the offending stack,
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{G4SmartTrackStack - Current state of things}
 \textcolor{blue}{Current state}
 The algorithm, in its current incarnation, does {\bf not} provide any benefit in
@@ -618,6 +674,7 @@ stack can grow to, there is a {\bf degenerate} case where it doesn't.
 \end{itemize}
 \end{frame}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{G4SmartTrackStack - Modifications}
 
@@ -637,6 +694,7 @@ in FullCMS experiment (less in SimplifiedCalorimeter)
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{G4SmartTrackStack}
 
 \begin{center}
@@ -644,6 +702,7 @@ in FullCMS experiment (less in SimplifiedCalorimeter)
 \end{center}
 \end{frame}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Future plans}
 
@@ -654,6 +713,7 @@ in FullCMS experiment (less in SimplifiedCalorimeter)
 \end{itemize}
 \end{frame}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \def\UrlFont{\scriptsize\ttfamily}
 \begin{frame}{Documentation}
@@ -675,6 +735,7 @@ in FullCMS experiment (less in SimplifiedCalorimeter)
 \end{itemize}
 \end{frame}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{The end}
 \vspace*{\fill}
