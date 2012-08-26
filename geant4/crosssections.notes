@@ -57,6 +57,14 @@ END
 
 NOTE: The above method can be applied to any other function in general.
 
+NOTE: The first time I looked at how cross-sections are distributed,
+and before doing the following elaborate analysis, I did an error in my
+calculations. The results I got gave me the false impression that there were
+a lot more repeated values than they actually are. In hindsight,
+perhaps it wouldn't make _much_ sense to cache the results, but we should
+rather attack the problem from another angle. Nonetheless, the following is an
+interesting reading in my humble opinion.
+
 === The obvious way
 
 The obvious way would be to make +::GetCrossSection()+ dump at stdout the
@@ -261,7 +269,7 @@ image:sizeres.png[width="80%",link="sizeres.png"]
 
 Regarding the kinetic energy of a particle, it is stored in a double data type, which is
 +64+ bits wide as per the IEEE 754 standard. Out of the +64+ bits, the +52+ bits are used to
-represent the fraction part of the number, which translates to +log_10(2) ~ 16+ decimal
+represent the fraction part of the number, which translates to +log_10(2^52) ~ 16+ decimal
 digits of precision.
 
 In order to increase the hits ratio, we consider using only up to +N+ bits of
@@ -276,7 +284,7 @@ union {
 uDoubleInt.d = part->GetKineticEnergy();
 std::tuple<const G4DynamicParticle *,
 	  const G4Material *, uint64_t>
-	  partmat(part, mat, (uDoubleInt.i & 0xFFFFFF0000000000) >> 40);
+	  partmat(part, mat, uDoubleInt.i & 0xFFFFFF0000000000);
 -----
 
 This method increases the hits ratio, since more identical tuples are being generated,
@@ -303,3 +311,4 @@ Currently every hadronic process has its own instance of +G4CrossSectionDataStor
 and therefore its own cache. I turned +G4CrossSectionDataStore+ into a singleton
 in an attempt to unify the caches, but Geant4 would throw an exception from some
 other part of the program.
+
