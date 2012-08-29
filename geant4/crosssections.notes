@@ -265,6 +265,13 @@ after every purge cycle (here they don't).
 
 image:sizeres.png[width="80%",link="sizeres.png"]
 
+=== Fourth attempth
+Since the vast majority of recurring cross section values is +zero+, I decided
+to try caching only those (Particle, Material, Kinetic Energy) keys for which
+the cross section calculation would result in a zero outcome. This significantly
+increased the hits vs. misses ratio, and also allowed the hash map to reduce in
+size (or, relatedly, the hash map to be purged less often).
+
 === Increasing the hits ratio
 
 Regarding the kinetic energy of a particle, it is stored in a double data type, which is
@@ -296,6 +303,21 @@ number of bits that are used when creating the hash key.
 
 image:bitsprec.png[width="80%",link="bitsprec.png"]
 
+=== What hadronic processes are amenable to cross-section caching ?
+Every hadronic process has its own instance of +G4CrossSectionDataStore+.
+By gathering statistics (hits, misses, load factor) on a per
++G4CrossSectionDataStore+ instance basis, we have observed that not all of them
+exhibited the same statistical characteristics. Some instances would
+have a zero hits/misses ratio, whereas others a ratio of 20. Therefore,
+it would only make sense to enable caching on those instances where it
+could actually make a (positive) difference.
+
+We subsequently modified the +G4HadronicProcess+ and +G4CrossSectionDataStore+
+classes so that when the former instantiated the latter, it would also
+pass its process name as the "owner" of the cross-section data store. This
+way we could map a +G4CrossSectionDataStore+ instance back to the hadronic process,
+and thus identify which one of them would most interest us.
+
 === Validation of the caching algorithm
 
 We can enable a code block, via conditional compilation with +#if+, which
@@ -311,4 +333,3 @@ Currently every hadronic process has its own instance of +G4CrossSectionDataStor
 and therefore its own cache. I turned +G4CrossSectionDataStore+ into a singleton
 in an attempt to unify the caches, but Geant4 would throw an exception from some
 other part of the program.
-
