@@ -356,3 +356,6 @@ Currently every hadronic process has its own instance of +G4CrossSectionDataStor
 and therefore its own cache. I turned +G4CrossSectionDataStore+ into a singleton
 in an attempt to unify the caches, but Geant4 would throw an exception from some
 other part of the program.
+
+After talking to John Apostolakis regarding this, not being able to unify the
+caches should be considered a good thing.
