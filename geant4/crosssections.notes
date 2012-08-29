@@ -24,7 +24,7 @@ pid$target::_ZN23G4CrossSectionDataStore17GetCrossSectionEPK17G4DynamicParticleP
 [ ... snip ... ]
  ---  EndOfEventAction  ---  event= 20   t=1.34s   random=0.693159
 ^C
-          4942549     # ~5M times for 20 events (which is a lot)
+	  4942549     # ~5M times for 20 events (which is a lot)
 -----
 
 === How many times ::GetCrossSection() is called
@@ -50,7 +50,7 @@ END
 [ ... snip ... ]
  ---  EndOfEventAction  ---  event= 20   t=1.61s   random=0.320998
 ^C
-             3507     # msec (which is also a lot)
+	     3507     # msec (which is also a lot)
 -----
 
 == How to measure the repeatability of the cross section values
@@ -83,16 +83,16 @@ Let us look at the disassembled code of the epilogue of +::GetCrossSection()+:
 -----
 	... snip ...
 
-        fstl   (%eax,%ebx,8)				;; store ST(0), 'sigma', to address EAX + 8*EBX
-        addl   $0x1,%ebx				;; increment EBX by 1
-        cmpl   %ebx,-0x24(%ebp)				;; compare EBX to 'nElements'
-        jg     -0x41    <::GetCrossSection+0x38>	;; loop if condition true
-        addl   $0x3c,%esp				;; adjust ESP
-        popl   %ebx
-        popl   %esi
-        popl   %edi
-        popl   %ebp
-        ret						;; return to caller
+	fstl   (%eax,%ebx,8)				;; store ST(0), 'sigma', to address EAX + 8*EBX
+	addl   $0x1,%ebx				;; increment EBX by 1
+	cmpl   %ebx,-0x24(%ebp)				;; compare EBX to 'nElements'
+	jg     -0x41    <::GetCrossSection+0x38>	;; loop if condition true
+	addl   $0x3c,%esp				;; adjust ESP
+	popl   %ebx
+	popl   %esi
+	popl   %edi
+	popl   %ebp
+	ret						;; return to caller
 -----
 
 Judging from the above we conclude that the result of the calculation
@@ -111,25 +111,25 @@ which is 64bits wide.
 -----
 G4double
 G4CrossSectionDataStore::GetCrossSection(const G4DynamicParticle* part,
-                                         const G4Material* mat)
+					 const G4Material* mat)
 {
-        G4double sigma(0);
-        G4int nElements                 = mat->GetNumberOfElements();
-        const G4double* nAtomsPerVolume = mat->GetVecNbOfAtomsPerVolume();
+	G4double sigma(0);
+	G4int nElements                 = mat->GetNumberOfElements();
+	const G4double* nAtomsPerVolume = mat->GetVecNbOfAtomsPerVolume();
 
-        if (unlikely(G4int(xsecelm.capacity()) < nElements)) {
-                xsecelm.resize(nElements);
-        }
+	if (unlikely(G4int(xsecelm.capacity()) < nElements)) {
+		xsecelm.resize(nElements);
+	}
 
-        for (G4int i = 0; i < nElements; ++i) {
-                sigma += nAtomsPerVolume[i] *
-                    GetCrossSection(part, (*mat->GetElementVector())[i], mat);
-                xsecelm[i] = sigma;
-        }
+	for (G4int i = 0; i < nElements; ++i) {
+		sigma += nAtomsPerVolume[i] *
+		    GetCrossSection(part, (*mat->GetElementVector())[i], mat);
+		xsecelm[i] = sigma;
+	}
 
-        __asm__ __volatile__ ("" : : "A" (*(&sigma)));    // This copies sigma to EAX:EDX
+	__asm__ __volatile__ ("" : : "A" (*(&sigma)));    // This copies sigma to EAX:EDX
 
-        return sigma;
+	return sigma;
 }
 -----
 
@@ -181,8 +181,8 @@ integers, we use a C/C++ union:
 
 -----
 union DoubleInt {
-        int32_t u_i[2];
-        double  u_d;
+	int32_t u_i[2];
+	double  u_d;
 };
 -----
 
@@ -303,20 +303,43 @@ number of bits that are used when creating the hash key.
 
 image:bitsprec.png[width="80%",link="bitsprec.png"]
 
-=== What hadronic processes are amenable to cross-section caching ?
+=== Which hadronic processes are amenable to cross-section caching ?
 Every hadronic process has its own instance of +G4CrossSectionDataStore+.
 By gathering statistics (hits, misses, load factor) on a per
 +G4CrossSectionDataStore+ instance basis, we have observed that not all of them
 exhibited the same statistical characteristics. Some instances would
 have a zero hits/misses ratio, whereas others a ratio of 20. Therefore,
-it would only make sense to enable caching on those instances where it
-could actually make a (positive) difference.
+it would only make sense to enable caching on those cases where it could
+actually make a (positive) difference.
 
 We subsequently modified the +G4HadronicProcess+ and +G4CrossSectionDataStore+
 classes so that when the former instantiated the latter, it would also
-pass its process name as the "owner" of the cross-section data store. This
-way we could map a +G4CrossSectionDataStore+ instance back to the hadronic process,
-and thus identify which one of them would most interest us.
+pass its process name and the particle type as the "owner" of the cross-section
+data store. This way we could map a +G4CrossSectionDataStore+ instance back to
+the hadronic process, and thus identify which one of them would most interest us.
+
+The combinations that manifest a considerable +hits/(hits+misses)+ ratio, at
+their (presumed) steady state, in a +5.000+ events Full CMS simulation are:
+
+-----
+PhotonInelastic  / gamma	( ~90% )
+nFission	 / neutron	( ~98% )
+ElectroNuclear	 / e-		( ~94% )
+NeutronInelastic / neutron	( ~35% )
+PositronNuclear	 / e+		( ~67% )
+hadElastic	 / alpha	( ~41% )
+
+hadElasticTriton / triton	( ~2-3% )
+nCapture	 / neutron	( ~2-2% )
+-----
+
+http://island.quantumachine.net/~stathis/geant4/hits/[Cache hits and misses]
+
+http://island.quantumachine.net/~stathis/geant4/hits/[Hash maps load factors]
+
+And here is the
+http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/plothl.sh[bash/R script]
+that was used to generate all the related plots.
 
 === Validation of the caching algorithm
 
