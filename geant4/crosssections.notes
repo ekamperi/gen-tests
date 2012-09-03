@@ -333,15 +333,17 @@ hadElasticTriton / triton	( ~2-3% )
 nCapture	 / neutron	( ~2-2% )
 -----
 
-The rest of the combinations fall into the +0-2%+ interval.
+The rest of the combinations fall into the +0-2%+ range.
 
-http://island.quantumachine.net/~stathis/geant4/hits/[Cache hits and misses]
+The list of plots with
+http://island.quantumachine.net/~stathis/geant4/hits/[cache hits and misses].
 
-http://island.quantumachine.net/~stathis/geant4/hits/[Hash maps load factors]
+The list of plots with
+http://island.quantumachine.net/~stathis/geant4/loads/[hash maps' load factors].
 
 And here is the
 http://gitweb.dragonflybsd.org/~beket/gen-tests.git/blob_plain/master:/geant4/plothl.sh[bash/R script]
-that was used to generate all the related plots.
+that was used to generate all the above plots.
 
 NOTE: In order for a process to benefit from caching, not only do the hits need
 to outweigh the misses, but also there have to be a lot of cross section
