@@ -1,0 +1,24 @@
+library('ggplot2')
+
+df <- read.table('val.all', colClasses=c("factor", rep("numeric", 2)))
+
+png("branch-count.png", width=1024, height=768, res=128)
+p <- ggplot(data=df, aes(x=1:length(df$V1), y=df$V2))
+p <- p + geom_line(aes(color=df$V1))
+p <- p + xlab("Time (sec)")
+p <- p + ylab("Count")
+p <- p + labs(color = "Offsets (decimal)")
+p <- p + opts(title="Evolution of branch execution counts")
+p
+dev.off()
+
+png("branch-time.png",	width=1024, height=768,	res=128)
+p2 <- ggplot(data=df, aes(x=1:length(df$V1), y=df$V3))
+p2 <- p2 + geom_line(aes(color=df$V1))
+p2 <- p2 + xlab("Time (sec)")
+p2 <- p2 + ylab("Average CPU time (ns) (logscale)")
+p2 <- p2 + labs(color = "Offsets (decimal)")
+p2 <- p2 + opts(title="Evolution of branch average time")
+p2 <- p2 + scale_y_log10()
+p2
+dev.off()

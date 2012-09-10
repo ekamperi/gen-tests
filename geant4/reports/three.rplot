@@ -1,0 +1,21 @@
+library('ggplot2')
+library('reshape2')
+
+default <- c(8723566, 8720272, 8730680, 8719287, 8720683)
+hard    <- c(8676825, 8671770, 8674035, 8673805, 8672033)
+elec    <- c(8459686, 8456849, 8457266, 8458880, 8457691)
+
+df <- data.frame(default, hard, elec)/1000
+names(df) <- c("default", "hard limits", "hard limits + elec affinity")
+mdf <- melt(df)
+
+png("three.png", width = 1024, height = 768, res = 128)
+p <- ggplot(mdf)
+p <- p + geom_point(aes(x=rep(1:5,3), y=mdf$value, color=mdf$variable))
+p <- p + geom_line(aes(x=rep(1:5,3), y=mdf$value, color=mdf$variable))
+p <- p + xlab("Experiment #")
+p <- p + ylab("Total time in DoEventLoop() in sec")
+p <- p + labs(color="Tracking algorithm")
+p <- p + opts(title="Comparison of three different tracking algorithms") 
+p
+dev.off()
