@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-#set -x
+set -x
 
 host="git://gitweb.dragonflybsd.org/~beket"
 reposdir="git-repos"
@@ -17,20 +17,17 @@ repos=(
 
 clonerepo()
 {
-    git clone "$1" >/dev/null 2>/dev/null
+    ( cd "$1" && git clone "$2" )
 }
 
 updaterepo()
 {
-    cd "$1" && git pull >/dev/null 2>/dev/null
+    ( cd "$1" && git pull )
 }
 
 mkdir -p "${reposdir}"
-(
-    cd "${reposdir}"
-    for repo in "${repos[@]}"
-    do
-	echo "-> Fetching repository '${repo}'"
-	clonerepo  "${host}/${repo}.git" || updaterepo "${repo}"
-    done
-)
+for repo in "${repos[@]}"
+do
+    echo "-> Fetching repository '${repo}'"
+    clonerepo "${reposdir}" "${host}/${repo}.git" || updaterepo "${reposdir}/${repo}"
+done
