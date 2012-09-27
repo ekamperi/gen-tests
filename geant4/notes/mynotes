@@ -1,0 +1,96 @@
+--- TODOS ---
+* send patch to make geant4 compile under solaris 11 (+examples -> +socket nls)
+
+--- HOW TO INSTALL OPENGROK ---
+http://hub.opensolaris.org/bin/view/Project+opengrok/installdescription
+
+--- HOW TO INSTALL GEANT4 in Fedora 16 ---
+wget http://geant4.cern.ch/support/source/geant4.9.5.p01.tar.gz
+cp ~/Downloads/geant4.9.5.p01.tar.gz /tmp
+cd /tmp && tar xzfv geant4.9.5.p01.tar.gz
+mkdir geant4.9.5.p01-build
+cd geant4.9.5.p01-build
+
+sudo yum install cmake
+sudo yum groupinstall "X Software Development"		# Needed for visualisation
+sudo yum install xerces-c-devel				# Needed for GDML
+
+cmake -DCMAKE_INSTALL_PREFIX=/opt/geant4.9.5.p01	\
+      -DCMAKE_BUILD_TYPE=Debug				\
+      -DGEANT4_USE_GDML=ON				\
+      -DGEANT4_USE_OPENGL_X11=ON			\
+            /tmp/geant4.9.5.p01
+make -j5
+sudo make install
+
+-- HOW TO DOWNLOAD PHYSICS DATA ---
+mkdir -p ~/Downloads/physicsdata && cd ~/Downloads/physicsdata
+
+# Neutron data files WITH thermal cross sections - version 4.0
+wget http://geant4.cern.ch/support/source/G4NDL.4.0.tar.gz
+
+# Neutron data files WITHOUT thermal cross sections - version 0.2
+wget http://geant4.cern.ch/support/source/G4NDL.0.2.tar.gz
+
+# Data files for low energy electromagnetic processes - version 6.23
+wget http://geant4.cern.ch/support/source/G4EMLOW.6.23.tar.gz
+
+# Data files for photon evaporation - version 2.2
+wget http://geant4.cern.ch/support/source/G4PhotonEvaporation.2.2.tar.gz
+
+# Data files for radioactive decay hadronic processes - version 3.4
+wget http://geant4.cern.ch/support/source/G4RadioactiveDecay.3.4.tar.gz
+
+# Data files for nuclear shell effects in INCL/ABLA hadronic model - version 3.0
+wget http://geant4.cern.ch/support/source/G4ABLA.3.0.tar.gz
+
+# Data files for evaluated neutron cross sections on natural composition of elements - version 1.1
+wget http://geant4.cern.ch/support/source/G4NEUTRONXS.1.1.tar.gz
+
+# Data files for shell ionisation cross sections - version 1.3
+wget http://geant4.cern.ch/support/source/G4PII.1.3.tar.gz
+
+# Data files for measured optical surface reflectance - version 1.0
+wget http://geant4.cern.ch/support/source/RealSurface.1.0.tar.gz
+
+sudo mkdir -p /opt/geant4.9.5.p01/physicsdata
+sudo cp *.tar.gz /opt/geant4.9.5.p01/physicsdata
+cd /opt/geant4.9.5.p01/physicsdata
+for f in *.tar.gz; do sudo tar xzfv $f; done
+
+PHYSICSDATAPATH=/opt/geant4.9.5.p01/physicsdata
+
+export $NeutronHPCrossSections
+#Path to external data set for Neutron Scattering processes.
+
+export $G4LEDATA
+Path to external data set for low energy electromagnetic processes.
+
+export $G4LEVELGAMMADATA
+Path to the data set for Photon Evaporation.
+
+export $G4RADIOACTIVEDATA
+Path to the data set for Radiative Decay processes.
+
+$G4ELASTICDATA
+Path to the data set for Elastic Scattering processes.
+
+-- HOW TO INSTALL GEANT4 IN SOLARIS 11 ---
+* cmake 2.8 is needed but, as of the time of writing, Solaris 11 bundles cmake 2.6
+* one needs to install cmake 2.6 and then use that to bootstrap cmake 2.8
+* finally use cmake 2.8 to build geant4 as previously advised
+
+--- HOW TO BUILD AND RUN EXAMPLES ---
+
+cd /tmp/geant4.9.5.p01/examples/novice
+mkdir N02-build && cd N02-build
+cmake -DGeant4_DIR=/opt/geant4.9.5.p01/lib/Geant4-9.5.1 ../N02
+make && ./exampleN02
+
+
+--- LINKS ---
+https://twiki.cern.ch/twiki/bin/view/Main/JohnApGuideToG4Tracking
+https://twiki.cern.ch/twiki/bin/view/Geant4/G4CPT
+https://twiki.cern.ch/twiki/bin/view/Geant4/Geant4PerformanceTips
+
+debuginfo-install glibc-2.14.90-24.fc16.6.i686 libICE-1.0.7-1.fc16.i686 libSM-1.2.0-2.fc15.i686 libX11-1.4.3-1.fc16.i686 libXau-1.0.6-2.fc15.i686 libXdamage-1.1.3-2.fc15.i686 libXext-1.3.0-1.fc16.i686 libXfixes-5.0-1.fc16.i686 libXmu-1.1.0-2.fc15.i686 libXt-1.1.1-1.fc16.i686 libXxf86vm-1.1.1-2.fc15.i686 libdrm-2.4.33-1.fc16.i686 libgcc-4.6.3-2.fc16.i686 libstdc++-4.6.3-2.fc16.i686 libuuid-2.20.1-2.2.fc16.i686 libxcb-1.7-3.fc16.i686 mesa-libGL-7.11.2-3.fc16.i686 mesa-libGLU-7.11.2-3.fc16.i686 xerces-c-3.1.1-1.fc16.i686
