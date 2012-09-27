@@ -1,0 +1,518 @@
+diff --git a/examples/novice/N00/CMakeLists.txt b/examples/novice/N00/CMakeLists.txt
+new file mode 100644
+index 0000000..2796643
+--- /dev/null
++++ b/examples/novice/N00/CMakeLists.txt
+@@ -0,0 +1,50 @@
++#----------------------------------------------------------------------------
++# Setup the project
++#
++cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
++project(N00)
++
++#----------------------------------------------------------------------------
++# Find Geant4 package, activating all available UI and Vis drivers by default
++# You can set WITH_GEANT4_UIVIS to OFF via the command line or ccmake/cmake-gui
++# to build a batch mode only executable
++#
++option(WITH_GEANT4_UIVIS "Build example with Geant4 UI and Vis drivers" ON)
++if(WITH_GEANT4_UIVIS)
++  find_package(Geant4 REQUIRED ui_all vis_all)
++else()
++  find_package(Geant4 REQUIRED)
++endif()
++
++#----------------------------------------------------------------------------
++# Setup Geant4 include directories and compile definitions
++# Setup include directory for this project
++#
++include(${Geant4_USE_FILE})
++include_directories(${PROJECT_SOURCE_DIR}/include)
++
++#----------------------------------------------------------------------------
++# Locate sources and headers for this project
++# NB: headers are included so they will show up in IDEs
++#
++file(GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cc)
++file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
++
++#----------------------------------------------------------------------------
++# Add the executable, and link it to the Geant4 libraries
++#
++add_executable(listProcs listProcs.cc ${sources} ${headers})
++target_link_libraries(listProcs ${Geant4_LIBRARIES})
++
++#----------------------------------------------------------------------------
++# For internal Geant4 use - but has no effect if you build this
++# example standalone
++#
++add_custom_target(N00 DEPENDS listProcs)
++
++#----------------------------------------------------------------------------
++# Install the executable to 'bin' directory under CMAKE_INSTALL_PREFIX
++#
++install(TARGETS listProcs DESTINATION bin)
++
++
+diff --git a/examples/novice/N00/GNUmakefile b/examples/novice/N00/GNUmakefile
+new file mode 100644
+index 0000000..0c49a59
+--- /dev/null
++++ b/examples/novice/N00/GNUmakefile
+@@ -0,0 +1,17 @@
++# $Id: GNUmakefile,v 1.1 1999-00-07 16:05:40 gunter Exp $
++# --------------------------------------------------------------
++# GNUmakefile for examples module.  Gabriele Cosmo, 06/04/98.
++# --------------------------------------------------------------
++
++name := listProcs
++G4TARGET := $(name)
++G4EXLIB := true
++
++ifndef G4INSTALL
++  G4INSTALL = ../../..
++endif
++
++.PHONY: all
++all: lib bin
++
++include $(G4INSTALL)/config/binmake.gmk
+diff --git a/examples/novice/N00/include/ListProcsDetectorConstruction.hh b/examples/novice/N00/include/ListProcsDetectorConstruction.hh
+new file mode 100644
+index 0000000..885de5c
+--- /dev/null
++++ b/examples/novice/N00/include/ListProcsDetectorConstruction.hh
+@@ -0,0 +1,49 @@
++// ********************************************************************
++// * License and Disclaimer                                           *
++// *                                                                  *
++// * The  Geant4 software  is  copyright of the Copyright Holders  of *
++// * the Geant4 Collaboration.  It is provided  under  the terms  and *
++// * conditions of the Geant4 Software License,  included in the file *
++// * LICENSE and available at  http://cern.ch/geant4/license .  These *
++// * include a list of copyright holders.                             *
++// *                                                                  *
++// * Neither the authors of this software system, nor their employing *
++// * institutes,nor the agencies providing financial support for this *
++// * work  make  any representation or  warranty, express or implied, *
++// * regarding  this  software system or assume any liability for its *
++// * use.  Please see the license in the file  LICENSE  and URL above *
++// * for the full disclaimer and the limitation of liability.         *
++// *                                                                  *
++// * This  code  implementation is the result of  the  scientific and *
++// * technical work of the GEANT4 collaboration.                      *
++// * By using,  copying,  modifying or  distributing the software (or *
++// * any work based  on the software)  you  agree  to acknowledge its *
++// * use  in  resulting  scientific  publications,  and indicate your *
++// * acceptance of all terms of the Geant4 Software license.          *
++// ********************************************************************
++
++#ifndef ListProcsDetectorConstruction_H
++#define ListProcsDetectorConstruction_H 1
++
++class G4LogicalVolume;
++class G4VPhysicalVolume;
++
++#include "G4VUserDetectorConstruction.hh"
++
++class ListProcsDetectorConstruction : public G4VUserDetectorConstruction
++{
++public:
++	ListProcsDetectorConstruction();
++	~ListProcsDetectorConstruction();
++
++	G4VPhysicalVolume* Construct();
++
++private:
++	// Logical volumes
++	G4LogicalVolume* experimentalHall_log;
++
++	// Physical volumes
++	G4VPhysicalVolume* experimentalHall_phys;
++};
++
++#endif
+diff --git a/examples/novice/N00/include/ListProcsPhysicsList.hh b/examples/novice/N00/include/ListProcsPhysicsList.hh
+new file mode 100644
+index 0000000..8924e50
+--- /dev/null
++++ b/examples/novice/N00/include/ListProcsPhysicsList.hh
+@@ -0,0 +1,44 @@
++// ********************************************************************
++// * License and Disclaimer                                           *
++// *                                                                  *
++// * The  Geant4 software  is  copyright of the Copyright Holders  of *
++// * the Geant4 Collaboration.  It is provided  under  the terms  and *
++// * conditions of the Geant4 Software License,  included in the file *
++// * LICENSE and available at  http://cern.ch/geant4/license .  These *
++// * include a list of copyright holders.                             *
++// *                                                                  *
++// * Neither the authors of this software system, nor their employing *
++// * institutes,nor the agencies providing financial support for this *
++// * work  make  any representation or  warranty, express or implied, *
++// * regarding  this  software system or assume any liability for its *
++// * use.  Please see the license in the file  LICENSE  and URL above *
++// * for the full disclaimer and the limitation of liability.         *
++// *                                                                  *
++// * This  code  implementation is the result of  the  scientific and *
++// * technical work of the GEANT4 collaboration.                      *
++// * By using,  copying,  modifying or  distributing the software (or *
++// * any work based  on the software)  you  agree  to acknowledge its *
++// * use  in  resulting  scientific  publications,  and indicate your *
++// * acceptance of all terms of the Geant4 Software license.          *
++// ********************************************************************
++
++#ifndef ListProcsPhysicsList_h
++#define ListProcsPhysicsList_h 1
++
++#include "G4VUserPhysicsList.hh"
++
++/*******************************************************************************
++ * We need to derive this class off the G4VUserPhysicsList class in order to,
++ * among other things, acquire access to the protected members of the latter.
++ * Namely the 'theParticleIterator' member variable.
++ ******************************************************************************/
++
++class ListProcsPhysicsList : public G4VUserPhysicsList
++{
++public:
++	ListProcsPhysicsList();
++	~ListProcsPhysicsList();
++	void dumpAllParticlesAndProcesses() const;
++};
++
++#endif
+diff --git a/examples/novice/N00/include/ListProcsPrimaryGeneratorAction.hh b/examples/novice/N00/include/ListProcsPrimaryGeneratorAction.hh
+new file mode 100644
+index 0000000..ea54177
+--- /dev/null
++++ b/examples/novice/N00/include/ListProcsPrimaryGeneratorAction.hh
+@@ -0,0 +1,43 @@
++// ********************************************************************
++// * License and Disclaimer                                           *
++// *                                                                  *
++// * The  Geant4 software  is  copyright of the Copyright Holders  of *
++// * the Geant4 Collaboration.  It is provided  under  the terms  and *
++// * conditions of the Geant4 Software License,  included in the file *
++// * LICENSE and available at  http://cern.ch/geant4/license .  These *
++// * include a list of copyright holders.                             *
++// *                                                                  *
++// * Neither the authors of this software system, nor their employing *
++// * institutes,nor the agencies providing financial support for this *
++// * work  make  any representation or  warranty, express or implied, *
++// * regarding  this  software system or assume any liability for its *
++// * use.  Please see the license in the file  LICENSE  and URL above *
++// * for the full disclaimer and the limitation of liability.         *
++// *                                                                  *
++// * This  code  implementation is the result of  the  scientific and *
++// * technical work of the GEANT4 collaboration.                      *
++// * By using,  copying,  modifying or  distributing the software (or *
++// * any work based  on the software)  you  agree  to acknowledge its *
++// * use  in  resulting  scientific  publications,  and indicate your *
++// * acceptance of all terms of the Geant4 Software license.          *
++// ********************************************************************
++
++#ifndef ListProcsPrimaryGeneratorAction_h
++#define ListProcsPrimaryGeneratorAction_h 1
++
++#include "G4VUserPrimaryGeneratorAction.hh"
++
++class G4ParticleGun;
++class G4Event;
++
++class ListProcsPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
++{
++public:
++	ListProcsPrimaryGeneratorAction();
++	~ListProcsPrimaryGeneratorAction();
++
++public:
++	void GeneratePrimaries(G4Event* anEvent);
++};
++
++#endif
+diff --git a/examples/novice/N00/listProcs.cc b/examples/novice/N00/listProcs.cc
+new file mode 100644
+index 0000000..2ca50ce
+--- /dev/null
++++ b/examples/novice/N00/listProcs.cc
+@@ -0,0 +1,100 @@
++#include <iomanip>
++
++#include "G4RunManager.hh"
++#include "G4PhysListFactory.hh"
++
++#include "ListProcsDetectorConstruction.hh"
++#include "ListProcsPhysicsList.hh"
++#include "ListProcsPrimaryGeneratorAction.hh"
++
++// Function prototypes
++static void usage(const char *name);
++static void dumpAllPhysicsLists(const G4PhysListFactory *physListFactory);
++
++int
++main(int argc, char *argv[])
++{
++	G4String physListName;
++	if (argc > 2) {
++		usage(argv[0]);
++		// NEVER REACHED
++	} else if (argc == 2) {
++		physListName = argv[1];
++		G4cout << "Using Physics List: '" << physListName << "'" << G4endl;
++	} else {
++		physListName = "QGSP_BERT";
++		G4cout << "Using Physics List: 'QGSP_BERT' [default]" << G4endl;
++	}
++
++	G4RunManager* runManager = new G4RunManager;
++
++	G4PhysListFactory factory;
++	G4VUserPhysicsList* physList;
++	if (factory.IsReferencePhysList(physListName)) {
++		physList = factory.GetReferencePhysList(physListName);
++		runManager->SetUserInitialization(physList);
++	} else {
++		G4cerr << "ERROR Physics List: '" << physListName
++		       << "' does NOT exist"	  << G4endl;
++		usage(argv[0]);
++		// NEVER REACHED
++	}
++
++	// Set mandatory initialization and user action classes
++	G4VUserDetectorConstruction   *detector   =
++	    new ListProcsDetectorConstruction;
++	G4VUserPrimaryGeneratorAction *gen_action =
++	    new ListProcsPrimaryGeneratorAction;
++	runManager->SetUserInitialization(detector);
++       	runManager->SetUserAction(gen_action);
++
++	runManager->Initialize();
++
++	// We are downcasting, which needs to be explicit
++	ListProcsPhysicsList *ppl = static_cast<ListProcsPhysicsList *>(physList);
++	ppl->dumpAllParticlesAndProcesses();
++
++	delete runManager;
++
++	return 0;
++}
++
++/*******************************************************************************
++ * Prints the available physics lists of a G4PhysListFactory object.
++ ******************************************************************************/
++
++static void
++dumpAllPhysicsLists(const G4PhysListFactory *physListFactory)
++{
++	if (physListFactory) {
++		std::vector<G4String> availablePhysLists =
++		    physListFactory->AvailablePhysLists();
++
++		for (unsigned int i = 0; i < availablePhysLists.size(); i++) {
++			if (i && i % 4 == 0)
++				G4cerr << G4endl;
++			G4cerr << std::left
++			       << std::setw(15)
++			       << availablePhysLists[i] << " ";
++		}
++		G4cerr << G4endl;
++	}
++}
++
++/*******************************************************************************
++ * Prints usage syntax, along with the available physics lists to standard error
++ * stream and then exits with a failure exit code.
++ *******************************************************************************/
++
++static void
++usage(const char *name)
++{
++	G4cerr << "Usage: " << name << " [<Physics List>]" << G4endl;
++	G4cerr << "\t\t--- Available Physics Lists ---" << G4endl;
++
++	G4PhysListFactory factory;
++	dumpAllPhysicsLists(&factory);
++
++	exit(EXIT_FAILURE);
++	// NEVER REACHED
++}
+diff --git a/examples/novice/N00/src/ListProcsDetectorConstruction.cc b/examples/novice/N00/src/ListProcsDetectorConstruction.cc
+new file mode 100644
+index 0000000..7937e0a
+--- /dev/null
++++ b/examples/novice/N00/src/ListProcsDetectorConstruction.cc
+@@ -0,0 +1,64 @@
++// ********************************************************************
++// * License and Disclaimer                                           *
++// *                                                                  *
++// * The  Geant4 software  is  copyright of the Copyright Holders  of *
++// * the Geant4 Collaboration.  It is provided  under  the terms  and *
++// * conditions of the Geant4 Software License,  included in the file *
++// * LICENSE and available at  http://cern.ch/geant4/license .  These *
++// * include a list of copyright holders.                             *
++// *                                                                  *
++// * Neither the authors of this software system, nor their employing *
++// * institutes,nor the agencies providing financial support for this *
++// * work  make  any representation or  warranty, express or implied, *
++// * regarding  this  software system or assume any liability for its *
++// * use.  Please see the license in the file  LICENSE  and URL above *
++// * for the full disclaimer and the limitation of liability.         *
++// *                                                                  *
++// * This  code  implementation is the result of  the  scientific and *
++// * technical work of the GEANT4 collaboration.                      *
++// * By using,  copying,  modifying or  distributing the software (or *
++// * any work based  on the software)  you  agree  to acknowledge its *
++// * use  in  resulting  scientific  publications,  and indicate your *
++// * acceptance of all terms of the Geant4 Software license.          *
++// ********************************************************************
++
++#include "ListProcsDetectorConstruction.hh"
++
++#include "G4Material.hh"
++#include "G4Box.hh"
++#include "G4LogicalVolume.hh"
++#include "G4ThreeVector.hh"
++#include "G4PVPlacement.hh"
++
++ListProcsDetectorConstruction::ListProcsDetectorConstruction()
++	:  experimentalHall_log(0)
++{
++}
++
++ListProcsDetectorConstruction::~ListProcsDetectorConstruction()
++{
++}
++
++G4VPhysicalVolume* ListProcsDetectorConstruction::Construct()
++{
++	G4Material* Ar =
++	    new G4Material("ArgonGas",
++		/* atomic number */ 18.,
++		/* atomic mass   */ 39.95 *  g/mole,
++		/* density       */ 1.782 * mg/cm3);
++
++	G4double expHall_x = 1.0 * m;
++	G4double expHall_y = 1.0 * m;
++	G4double expHall_z = 1.0 * m;
++
++	G4Box* experimentalHall_box
++	    = new G4Box("expHall_box", expHall_x, expHall_y, expHall_z);
++
++	experimentalHall_log = new G4LogicalVolume(experimentalHall_box,
++	    Ar, "expHall_log", 0, 0, 0);
++
++	experimentalHall_phys = new G4PVPlacement(0, G4ThreeVector(),
++	    experimentalHall_log, "expHall", 0, false, 0);
++	
++	return experimentalHall_phys;
++}
+diff --git a/examples/novice/N00/src/ListProcsPhysicsList.cc b/examples/novice/N00/src/ListProcsPhysicsList.cc
+new file mode 100644
+index 0000000..d85bd02
+--- /dev/null
++++ b/examples/novice/N00/src/ListProcsPhysicsList.cc
+@@ -0,0 +1,60 @@
++// ********************************************************************
++// * License and Disclaimer                                           *
++// *                                                                  *
++// * The  Geant4 software  is  copyright of the Copyright Holders  of *
++// * the Geant4 Collaboration.  It is provided  under  the terms  and *
++// * conditions of the Geant4 Software License,  included in the file *
++// * LICENSE and available at  http://cern.ch/geant4/license .  These *
++// * include a list of copyright holders.                             *
++// *                                                                  *
++// * Neither the authors of this software system, nor their employing *
++// * institutes,nor the agencies providing financial support for this *
++// * work  make  any representation or  warranty, express or implied, *
++// * regarding  this  software system or assume any liability for its *
++// * use.  Please see the license in the file  LICENSE  and URL above *
++// * for the full disclaimer and the limitation of liability.         *
++// *                                                                  *
++// * This  code  implementation is the result of  the  scientific and *
++// * technical work of the GEANT4 collaboration.                      *
++// * By using,  copying,  modifying or  distributing the software (or *
++// * any work based  on the software)  you  agree  to acknowledge its *
++// * use  in  resulting  scientific  publications,  and indicate your *
++// * acceptance of all terms of the Geant4 Software license.          *
++// ********************************************************************
++
++#include <iomanip>
++
++#include "ListProcsPhysicsList.hh"
++#include "G4RunManager.hh"
++
++ListProcsPhysicsList::ListProcsPhysicsList()
++{
++}
++
++ListProcsPhysicsList::~ListProcsPhysicsList()
++{
++}
++
++/*******************************************************************************
++ * For every particle, print its name, type and available physics' processes to
++ * standard output stream.
++ ******************************************************************************/
++
++void ListProcsPhysicsList::dumpAllParticlesAndProcesses() const
++{
++	for (theParticleIterator->reset();
++	     (*theParticleIterator)();
++	     /* none */) {
++		G4ParticleDefinition *pParticle = theParticleIterator->value();
++		G4ProcessManager *pProcManager = pParticle->GetProcessManager();
++
++		G4ProcessVector *pProcVector = pProcManager->GetProcessList();
++		for (int i = 0; i < pProcVector->size(); i++) {
++			G4cout << std::left
++			       << std::setw(22) << pParticle->GetParticleName() << " "
++			       << std::setw(15) << pParticle->GetParticleType() << " "
++			       << std::setw(22) << (*pProcVector)[i]->GetProcessName()
++			       << G4endl;
++		}
++	}
++}
+diff --git a/examples/novice/N00/src/ListProcsPrimaryGeneratorAction.cc b/examples/novice/N00/src/ListProcsPrimaryGeneratorAction.cc
+new file mode 100644
+index 0000000..277e975
+--- /dev/null
++++ b/examples/novice/N00/src/ListProcsPrimaryGeneratorAction.cc
+@@ -0,0 +1,37 @@
++// ********************************************************************
++// * License and Disclaimer                                           *
++// *                                                                  *
++// * The  Geant4 software  is  copyright of the Copyright Holders  of *
++// * the Geant4 Collaboration.  It is provided  under  the terms  and *
++// * conditions of the Geant4 Software License,  included in the file *
++// * LICENSE and available at  http://cern.ch/geant4/license .  These *
++// * include a list of copyright holders.                             *
++// *                                                                  *
++// * Neither the authors of this software system, nor their employing *
++// * institutes,nor the agencies providing financial support for this *
++// * work  make  any representation or  warranty, express or implied, *
++// * regarding  this  software system or assume any liability for its *
++// * use.  Please see the license in the file  LICENSE  and URL above *
++// * for the full disclaimer and the limitation of liability.         *
++// *                                                                  *
++// * This  code  implementation is the result of  the  scientific and *
++// * technical work of the GEANT4 collaboration.                      *
++// * By using,  copying,  modifying or  distributing the software (or *
++// * any work based  on the software)  you  agree  to acknowledge its *
++// * use  in  resulting  scientific  publications,  and indicate your *
++// * acceptance of all terms of the Geant4 Software license.          *
++// ********************************************************************
++
++#include "ListProcsPrimaryGeneratorAction.hh"
++
++ListProcsPrimaryGeneratorAction::ListProcsPrimaryGeneratorAction()
++{
++}
++
++ListProcsPrimaryGeneratorAction::~ListProcsPrimaryGeneratorAction()
++{
++}
++
++void ListProcsPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
++{
++}

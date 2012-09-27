@@ -1,0 +1,329 @@
+diff --git a/source/event/GNUmakefile b/source/event/GNUmakefile
+index 963e88e..162219b 100644
+--- a/source/event/GNUmakefile
++++ b/source/event/GNUmakefile
+@@ -16,7 +16,7 @@ GLOBLIBS += libG4intercoms.lib libG4global.lib
+ 
+ include $(G4INSTALL)/config/architecture.gmk
+ 
+-CPPFLAGS += -DG4EVENT_ALLOC_EXPORT
++CPPFLAGS += -DG4EVENT_ALLOC_EXPORT -DG4_USESMARTSTACK
+ CPPFLAGS += \
+             -I$(G4BASE)/global/management/include \
+             -I$(G4BASE)/global/HEPRandom/include \
+diff --git a/source/event/include/G4SmartTrackStack.hh b/source/event/include/G4SmartTrackStack.hh
+index bad82c6..b645f45 100644
+--- a/source/event/include/G4SmartTrackStack.hh
++++ b/source/event/include/G4SmartTrackStack.hh
+@@ -36,7 +36,7 @@
+ #define G4SmartTrackStack_h 1
+ 
+ #include "G4StackedTrack.hh"
+-#include "G4TrackStack.hh"
++#include "G4TrackStackDQ.hh"
+ #include "globals.hh"
+ 
+ // class description:
+@@ -61,12 +61,12 @@ class G4SmartTrackStack
+       void PushToStack(G4StackedTrack * aStackedTrack);
+       G4StackedTrack * PopFromStack();
+       void clear();
+-      void TransferTo(G4TrackStack * aStack);
++      void TransferTo(G4TrackStackDQ * aStack);
+ 
+   private:
+       G4int fTurn;
+       G4int nTurn; // should be 5
+-      G4TrackStack* stacks[5];
++      G4TrackStackDQ* stacks[5];
+       // = 0 : all primaries and secondaries except followings
+       // = 1 : secondary neutrons
+       // = 2 : secondary electrons
+@@ -86,8 +86,11 @@ class G4SmartTrackStack
+   private:
+       inline G4int n_stackedTrack() const
+       {
+-        return stacks[0]->GetNTrack()+stacks[1]->GetNTrack()
+-         +stacks[2]->GetNTrack()+stacks[3]->GetNTrack()+stacks[4]->GetNTrack();
++	      return stacks[0]->GetNTrack() +
++		     stacks[1]->GetNTrack() +
++		     stacks[2]->GetNTrack() +
++		     stacks[3]->GetNTrack() +
++		     stacks[4]->GetNTrack();
+       }
+ };
+ 
+diff --git a/source/event/include/G4TrackStackDQ.hh b/source/event/include/G4TrackStackDQ.hh
+new file mode 100644
+index 0000000..d8da84b
+--- /dev/null
++++ b/source/event/include/G4TrackStackDQ.hh
+@@ -0,0 +1,72 @@
++//
++// ********************************************************************
++// * License and Disclaimer                                           *
++// *                                                                  *
++// * The  Geant4 software  is  copyright of the Copyright Holders  of *
++// * the Geant4 Collaboration.  It is provided  under  the terms  and *
++// * conditions of the Geant4 Software License,  included in the file *
++// * LICENSE and available at  http://cern.ch/geant4/license .  These *
++// * include a list of copyright holders.                             *
++// *                                                                  *
++// * Neither the authors of this software system, nor their employing *
++// * institutes,nor the agencies providing financial support for this *
++// * work  make  any representation or  warranty, express or implied, *
++// * regarding  this  software system or assume any liability for its *
++// * use.  Please see the license in the file  LICENSE  and URL above *
++// * for the full disclaimer and the limitation of liability.         *
++// *                                                                  *
++// * This  code  implementation is the result of  the  scientific and *
++// * technical work of the GEANT4 collaboration.                      *
++// * By using,  copying,  modifying or  distributing the software (or *
++// * any work based  on the software)  you  agree  to acknowledge its *
++// * use  in  resulting  scientific  publications,  and indicate your *
++// * acceptance of all terms of the Geant4 Software license.          *
++// ********************************************************************
++
++#ifndef G4TrackStackDQ_h
++#define G4TrackStackDQ_h 1
++
++#include <deque>
++#include "G4StackedTrack.hh"
++#include "globals.hh"
++
++class G4SmartTrackStack;
++
++// class description:
++//
++// This is a stack class used by G4StackManager. This class object
++// stores G4StackedTrack class objects in the form of bi-directional
++// linked list.
++
++class G4TrackStackDQ 
++{
++public:
++	G4TrackStackDQ();
++	~G4TrackStackDQ();
++
++private:
++	const G4TrackStackDQ & operator=(const G4TrackStackDQ &right);
++	G4int operator==(const G4TrackStackDQ &right) const;
++	G4int operator!=(const G4TrackStackDQ &right) const;
++
++public:
++	void PushToStack(G4StackedTrack *aStackedTrack);
++	G4StackedTrack *PopFromStack();
++	void clear();
++	void TransferTo(G4TrackStackDQ *aStack);
++	void TransferTo(G4SmartTrackStack *aStack);
++
++private:
++	G4int n_stackedTrack;
++	G4StackedTrack *firstStackedTrack;
++	G4StackedTrack *lastStackedTrack;
++	G4int maxNTracks;
++	std::deque<G4StackedTrack*> dqStackedTracks;
++
++public:
++	inline G4int GetNTrack()    const { return n_stackedTrack; }
++	inline G4int GetMaxNTrack() const { return maxNTracks; }
++};
++
++#endif
++
+diff --git a/source/event/sources.cmake b/source/event/sources.cmake
+index 40c9fc4..d9c094b 100644
+--- a/source/event/sources.cmake
++++ b/source/event/sources.cmake
+@@ -79,6 +79,7 @@ GEANT4_DEFINE_MODULE(NAME G4event
+         G4StackedTrack.hh
+         G4StackingMessenger.hh
+         G4TrackStack.hh
++	G4TrackStackDQ.hh
+         G4TrajectoryContainer.hh
+         G4UserEventAction.hh
+         G4UserStackingAction.hh
+@@ -115,6 +116,7 @@ GEANT4_DEFINE_MODULE(NAME G4event
+         G4StackedTrack.cc
+         G4StackingMessenger.cc
+         G4TrackStack.cc
++	G4TrackStackDQ.cc
+         G4TrajectoryContainer.cc
+         G4UserEventAction.cc
+         G4UserStackingAction.cc
+diff --git a/source/event/src/G4SmartTrackStack.cc b/source/event/src/G4SmartTrackStack.cc
+index b446ca8..febd978 100644
+--- a/source/event/src/G4SmartTrackStack.cc
++++ b/source/event/src/G4SmartTrackStack.cc
+@@ -35,7 +35,9 @@
+ :fTurn(0),nTurn(5)
+ {
+   for(int i=0;i<nTurn;i++)
+-  { stacks[i] = new G4TrackStack(); }
++    { stacks[i] = new G4TrackStackDQ();
++    G4cout << "stacks[" << i << "]" << stacks[i]->GetNTrack() << G4endl;
++    }
+   // If entry of one sub-stack exceeds safetyValve1, we will stick
+   // to that sub-stack until entry of that sub-stack goes down
+   // to safetyValve2.
+@@ -58,7 +60,7 @@ int G4SmartTrackStack::operator==(const G4SmartTrackStack &right) const
+ int G4SmartTrackStack::operator!=(const G4SmartTrackStack &right) const
+ { return (this!=&right); }
+ 
+-void G4SmartTrackStack::TransferTo(G4TrackStack * aStack)
++void G4SmartTrackStack::TransferTo(G4TrackStackDQ * aStack)
+ {
+   for(int i=0;i<nTurn;i++)
+   { stacks[i]->TransferTo(aStack); }
+@@ -67,6 +69,7 @@ void G4SmartTrackStack::TransferTo(G4TrackStack * aStack)
+ G4StackedTrack * G4SmartTrackStack::PopFromStack()
+ {
+   if( n_stackedTrack() == 0 ) return 0;
++
+   G4StackedTrack * aStackedTrack = 0;
+   while(!aStackedTrack)
+   {
+diff --git a/source/event/src/G4TrackStackDQ.cc b/source/event/src/G4TrackStackDQ.cc
+new file mode 100644
+index 0000000..4e68577
+--- /dev/null
++++ b/source/event/src/G4TrackStackDQ.cc
+@@ -0,0 +1,138 @@
++//
++// ********************************************************************
++// * License and Disclaimer                                           *
++// *                                                                  *
++// * The  Geant4 software  is  copyright of the Copyright Holders  of *
++// * the Geant4 Collaboration.  It is provided  under  the terms  and *
++// * conditions of the Geant4 Software License,  included in the file *
++// * LICENSE and available at  http://cern.ch/geant4/license .  These *
++// * include a list of copyright holders.                             *
++// *                                                                  *
++// * Neither the authors of this software system, nor their employing *
++// * institutes,nor the agencies providing financial support for this *
++// * work  make  any representation or  warranty, express or implied, *
++// * regarding  this  software system or assume any liability for its *
++// * use.  Please see the license in the file  LICENSE  and URL above *
++// * for the full disclaimer and the limitation of liability.         *
++// *                                                                  *
++// * This  code  implementation is the result of  the  scientific and *
++// * technical work of the GEANT4 collaboration.                      *
++// * By using,  copying,  modifying or  distributing the software (or *
++// * any work based  on the software)  you  agree  to acknowledge its *
++// * use  in  resulting  scientific  publications,  and indicate your *
++// * acceptance of all terms of the Geant4 Software license.          *
++// ********************************************************************
++
++#include "G4TrackStackDQ.hh"
++#include "G4SmartTrackStack.hh"
++#include "G4VTrajectory.hh"
++
++// PORTED
++G4TrackStackDQ::G4TrackStackDQ()
++	:n_stackedTrack(0), firstStackedTrack(0), lastStackedTrack(0)
++{
++	maxNTracks = 0;
++	G4cout << "+++ Using the DQ Track Stack +++       " << n_stackedTrack << G4endl;
++}
++
++// PORTED
++G4TrackStackDQ::~G4TrackStackDQ()
++{
++	clear();
++}
++
++const G4TrackStackDQ & G4TrackStackDQ::operator=(const G4TrackStackDQ &right) 
++{
++  G4cout << "++++++++++++++++++++++++ = operator called ! right = " << right.n_stackedTrack << G4endl;
++	n_stackedTrack    = right.n_stackedTrack;
++	firstStackedTrack = right.firstStackedTrack;
++	lastStackedTrack  = right.lastStackedTrack;
++
++	return *this; 
++}
++
++int G4TrackStackDQ::operator==(const G4TrackStackDQ &right) const
++{
++	return (firstStackedTrack == right.firstStackedTrack);
++}
++
++int G4TrackStackDQ::operator!=(const G4TrackStackDQ &right) const
++{
++	return (firstStackedTrack != right.firstStackedTrack);
++}
++
++// PORTED
++void G4TrackStackDQ::TransferTo(G4TrackStackDQ *aStack)
++{
++	if (aStack->n_stackedTrack) {
++		aStack->dqStackedTracks.insert(
++			aStack->dqStackedTracks.end(),
++			dqStackedTracks.begin(),
++			dqStackedTracks.end());
++
++		aStack->lastStackedTrack = lastStackedTrack;
++		aStack->n_stackedTrack += n_stackedTrack;
++	} else {
++		*aStack = *this;
++	}
++	
++	n_stackedTrack    = 0;
++	firstStackedTrack = 0;
++	lastStackedTrack  = 0;
++}
++
++// PORTED
++void G4TrackStackDQ::TransferTo(G4SmartTrackStack *aStack)
++{
++	while (n_stackedTrack)
++		aStack->PushToStack(PopFromStack());
++}
++
++// PORTED
++G4StackedTrack *G4TrackStackDQ::PopFromStack()
++{
++	G4StackedTrack *aStackedTrack = NULL;
++
++	if (n_stackedTrack) {
++		aStackedTrack = dqStackedTracks.back();
++		dqStackedTracks.pop_back();
++		n_stackedTrack--;
++
++		firstStackedTrack = dqStackedTracks.front();
++		if (!dqStackedTracks.empty())
++		  lastStackedTrack  = dqStackedTracks.back();
++		else
++		  lastStackedTrack = NULL;
++	}
++
++	return aStackedTrack;
++}
++
++// PORTED
++void G4TrackStackDQ::PushToStack(G4StackedTrack *aStackedTrack)
++{
++	if (aStackedTrack) {
++		dqStackedTracks.push_back(aStackedTrack);
++		lastStackedTrack = aStackedTrack;
++		n_stackedTrack++;
++		if (n_stackedTrack > maxNTracks)
++			maxNTracks = n_stackedTrack;
++	}
++}
++
++// PORTED
++void G4TrackStackDQ::clear()
++{
++	// delete tracks in the stack
++	std::deque<G4StackedTrack*>::iterator itr;
++	for (itr  = dqStackedTracks.begin();
++	     itr != dqStackedTracks.end(); itr++) {  
++	  delete (*itr)->GetTrack();
++	  delete (*itr)->GetTrajectory();
++	  delete (*itr);
++	}
++
++	n_stackedTrack    = 0;
++	firstStackedTrack = 0;
++	lastStackedTrack  = 0;
++}

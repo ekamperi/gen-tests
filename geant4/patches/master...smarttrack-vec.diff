@@ -1,0 +1,1071 @@
+diff --git a/config/common.gmk b/config/common.gmk
+index b282cf9..e5c023a 100644
+--- a/config/common.gmk
++++ b/config/common.gmk
+@@ -59,6 +59,12 @@ ifneq ($(G4LIB_BUILD_STATIC),)
+ $(G4LIBDIR)/lib$(name).a: $(G4TMPDIR)/obj.last
+ 	@if [ ! -d $(G4LIBDIR) ] ; then mkdir $(G4LIBDIR) ;fi
+ 	@echo Creating/replacing object files in $(G4LIBDIR)/lib$(name).a ...
++	dtrace -G -32 -o /home/stathis/FullCMS/simple_probes.o \
++	       -s /home/stathis/FullCMS/simple_probes.d \
++	       /home/stathis/gen-tests/geant4/geant4.9.5.p01/tmp/Linux-g++/G4event/G4SmartTrackStack.o
++#	dtrace -G -32 -o /home/stathis/SimplifiedCalorimeter/SimplifiedCalorimeter/simple_probes.o \
++#	       -s /home/stathis/SimplifiedCalorimeter/SimplifiedCalorimeter/simple_probes.d \
++#	       /home/stathis/gen-tests/geant4/geant4.9.5.p01/tmp/Linux-g++/G4event/G4SmartTrackStack.o
+ 	@rm -f $(G4LIBDIR)/lib$(name).a
+ 	@$(AR) $(OUT_LIB)$(G4LIBDIR)/lib$(name).a $(G4TMPDIR)/*.o
+ 	@if [ X$(G4SYSTEM) != XWIN32-VC ] ; then  \
+@@ -71,7 +77,6 @@ endif
+ #
+ # Actual targets for .o, .d files
+ #
+-
+ $(G4TMPDIR)/%.o: src/%.cc
+ ifdef CPPVERBOSE
+ 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $(OUT_OBJ)$(G4TMPDIR)/$(*F).o src/$*.cc
+diff --git a/source/GNUmakefile b/source/GNUmakefile
+index c18fde6..12ce646 100644
+--- a/source/GNUmakefile
++++ b/source/GNUmakefile
+@@ -94,13 +94,22 @@ libmap: liblist
+ 	done
+ 	@$(ECHO) "Making libname.map starter file ..."
+ 	@$(TOUCH) /tmp/G4libname.map.starter.$(unique);
+-	@for i in `$(CAT) /tmp/G4_granlib_makefiles.$(unique)`; \
+-	do \
+-	  $(GREP) '^ *name *:=' $$i | $(CUT) -d \  -f 3 \
+-	  >> /tmp/G4libname.map.starter.$(unique); \
+-	  $(ECHO) $$i | $(SED) "s/^\\./source/" \
+-	  >> /tmp/G4libname.map.starter.$(unique); \
++
++#	while IFS= read -r N; do 				\
++#	  $(GREP) '^ *name *:=' "$N" | $(CUT) -d \  -f 3	\
++#          >> /tmp/G4libname.map.starter.$(unique); 		\
++#	  $(ECHO) "$N" | $(SED) "s/^\\./source/" 		\
++#	  >> /tmp/G4libname.map.starter.$(unique);		\
++#	done < <(cat /tmp/G4_granlib_makefiles.$(unique))
++
++	@for i in `$(CAT) /tmp/G4_granlib_makefiles.$(unique) | sed 's/^-e //'`; \
++	do									 \
++	  $(GREP) -e '^ *name *:=' $$i | $(CUT) -d \  -f 3        		 \
++	    >> /tmp/G4libname.map.starter.$(unique);             		 \
++	  echo $$i | $(SED) "s/^\\./source/"                			 \
++	    >> /tmp/G4libname.map.starter.$(unique);              		 \
+ 	done
++
+ 	@$(ECHO) "Making libname.map ..."
+ 	@rm -f $(G4LIBDIR)/libname.map;
+ 	@G4TMP=$(G4TMP); export G4TMP; \
+diff --git a/source/event/GNUmakefile b/source/event/GNUmakefile
+index 963e88e..a31d360 100644
+--- a/source/event/GNUmakefile
++++ b/source/event/GNUmakefile
+@@ -16,7 +16,7 @@ GLOBLIBS += libG4intercoms.lib libG4global.lib
+ 
+ include $(G4INSTALL)/config/architecture.gmk
+ 
+-CPPFLAGS += -DG4EVENT_ALLOC_EXPORT
++CPPFLAGS += -DG4EVENT_ALLOC_EXPORT -DG4_USESMARTSTACK
+ CPPFLAGS += \
+             -I$(G4BASE)/global/management/include \
+             -I$(G4BASE)/global/HEPRandom/include \
+@@ -53,4 +53,3 @@ include $(G4INSTALL)/config/common.gmk
+ .PHONY: global
+  
+ global: lib
+-
+diff --git a/source/event/include/G4SmartTrackStack.hh b/source/event/include/G4SmartTrackStack.hh
+index bad82c6..39dbb6b 100644
+--- a/source/event/include/G4SmartTrackStack.hh
++++ b/source/event/include/G4SmartTrackStack.hh
+@@ -36,7 +36,7 @@
+ #define G4SmartTrackStack_h 1
+ 
+ #include "G4StackedTrack.hh"
+-#include "G4TrackStack.hh"
++#include "G4TrackStackDQ.hh"
+ #include "globals.hh"
+ 
+ // class description:
+@@ -61,20 +61,21 @@ class G4SmartTrackStack
+       void PushToStack(G4StackedTrack * aStackedTrack);
+       G4StackedTrack * PopFromStack();
+       void clear();
+-      void TransferTo(G4TrackStack * aStack);
++      void TransferTo(G4TrackStackDQ * aStack);
++      G4double getEnergyOfStack(G4TrackStackDQ *aTrackStack);
++      void dumpStatistics();
++
+ 
+   private:
+       G4int fTurn;
+       G4int nTurn; // should be 5
+-      G4TrackStack* stacks[5];
++      G4double energies[5];
++      G4TrackStackDQ* stacks[5];
+       // = 0 : all primaries and secondaries except followings
+       // = 1 : secondary neutrons
+       // = 2 : secondary electrons
+       // = 3 : secondary gammas
+       // = 4 : secondary positrons
+-      G4int nStick;
+-      G4int safetyValve1; 
+-      G4int safetyValve2; 
+       G4int maxNTracks;
+ 
+   public:
+@@ -86,8 +87,11 @@ class G4SmartTrackStack
+   private:
+       inline G4int n_stackedTrack() const
+       {
+-        return stacks[0]->GetNTrack()+stacks[1]->GetNTrack()
+-         +stacks[2]->GetNTrack()+stacks[3]->GetNTrack()+stacks[4]->GetNTrack();
++	      return stacks[0]->GetNTrack() +
++		     stacks[1]->GetNTrack() +
++		     stacks[2]->GetNTrack() +
++		     stacks[3]->GetNTrack() +
++		     stacks[4]->GetNTrack();
+       }
+ };
+ 
+diff --git a/source/event/include/G4StackManager.hh b/source/event/include/G4StackManager.hh
+index 9c71da1..9278faa 100644
+--- a/source/event/include/G4StackManager.hh
++++ b/source/event/include/G4StackManager.hh
+@@ -35,7 +35,7 @@
+ 
+ #include "G4UserStackingAction.hh"
+ #include "G4StackedTrack.hh"
+-#include "G4TrackStack.hh"
++#include "G4TrackStackDQ.hh"
+ #include "G4SmartTrackStack.hh"
+ #include "G4ClassificationOfNewTrack.hh"
+ #include "G4Track.hh"
+@@ -113,12 +113,12 @@ class G4StackManager
+ #ifdef G4_USESMARTSTACK
+       G4SmartTrackStack * urgentStack;
+ #else
+-      G4TrackStack * urgentStack;
++      G4TrackStackDQ * urgentStack;
+ #endif
+-      G4TrackStack * waitingStack;
+-      G4TrackStack * postponeStack;
++      G4TrackStackDQ * waitingStack;
++      G4TrackStackDQ * postponeStack;
+       G4StackingMessenger* theMessenger;
+-      std::vector<G4TrackStack*> additionalWaitingStacks;
++      std::vector<G4TrackStackDQ*> additionalWaitingStacks;
+       G4int numberOfAdditionalWaitingStacks;
+ 
+   public:
+diff --git a/source/event/include/G4TrackStack.hh b/source/event/include/G4TrackStack.hh
+index 6803415..e61e00e 100644
+--- a/source/event/include/G4TrackStack.hh
++++ b/source/event/include/G4TrackStack.hh
+@@ -48,37 +48,37 @@ class G4SmartTrackStack;
+ 
+ class G4TrackStack 
+ {
+-  public:
+-      G4TrackStack();
+-      ~G4TrackStack();
++public:
++	G4TrackStack();
++	~G4TrackStack();
+ 
+-  private:
+-      const G4TrackStack & operator=
+-                          (const G4TrackStack &right);
+-      G4int operator==(const G4TrackStack &right) const;
+-      G4int operator!=(const G4TrackStack &right) const;
++private:
++	const G4TrackStack & operator=(const G4TrackStack &right);
++	G4int operator==(const G4TrackStack &right) const;
++	G4int operator!=(const G4TrackStack &right) const;
+ 
+-  public:
+-      void PushToStack(G4StackedTrack * aStackedTrack);
+-      G4StackedTrack * PopFromStack();
+-      void GrabFromStack(G4StackedTrack * aStackedTrack);
+-      void clear();
+-      void TransferTo(G4TrackStack * aStack);
+-      void TransferTo(G4SmartTrackStack * aStack);
++public:
++	void PushToStack(G4StackedTrack * aStackedTrack);
++	G4StackedTrack * PopFromStack();
++	void GrabFromStack(G4StackedTrack * aStackedTrack);
++	void clear();
++	void TransferTo(G4TrackStack * aStack);
++	void TransferTo(G4SmartTrackStack * aStack);
+ 
+-  private:
+-      G4int n_stackedTrack;
+-      G4StackedTrack * firstStackedTrack;
+-      G4StackedTrack * lastStackedTrack;
+-      G4int maxNTracks;
++private:
++	G4int n_stackedTrack;
++	G4StackedTrack * firstStackedTrack;
++	G4StackedTrack * lastStackedTrack;
++	G4int maxNTracks;
+ 
+-  public:
+-      inline G4int GetNTrack() const
+-      { return n_stackedTrack; }
+-      inline G4int GetMaxNTrack() const
+-      { return maxNTracks; }
++	G4int safetyValve1, safetyValve2;
++	G4int nstick;
+ 
++public:
++	inline G4int GetNTrack() const
++	{ return n_stackedTrack; }
++	inline G4int GetMaxNTrack() const
++	{ return maxNTracks; }
+ };
+ 
+ #endif
+-
+diff --git a/source/event/include/G4TrackStackDQ.hh b/source/event/include/G4TrackStackDQ.hh
+new file mode 100644
+index 0000000..ef3bec6
+--- /dev/null
++++ b/source/event/include/G4TrackStackDQ.hh
+@@ -0,0 +1,87 @@
++//
++// ********************************************************************
++// * License and Disclaimer                                           *
++// *                                                                  *
++// * The  Geant4 software  is  copyright of the Copyright Holders  of *
++// * the Geant4 Collaboration.  It is provided  under  the terms  and *
++// * conditions of the Geant4 Software License,  included in the file *
++// * LICENSE and available at  http://cern.ch/geant4/license .  These *
++// * include a list of copyright holders.                             *
++// *                                                                  *
++// * Neither the authors of this software system, nor their employing *
++// * institutes,nor the agencies providing financial support for this *
++// * work  make  any representation or  warranty, express or implied, *
++// * regarding  this  software system or assume any liability for its *
++// * use.  Please see the license in the file  LICENSE  and URL above *
++// * for the full disclaimer and the limitation of liability.         *
++// *                                                                  *
++// * This  code  implementation is the result of  the  scientific and *
++// * technical work of the GEANT4 collaboration.                      *
++// * By using,  copying,  modifying or  distributing the software (or *
++// * any work based  on the software)  you  agree  to acknowledge its *
++// * use  in  resulting  scientific  publications,  and indicate your *
++// * acceptance of all terms of the Geant4 Software license.          *
++// ********************************************************************
++
++#ifndef G4TrackStackDQ_h
++#define G4TrackStackDQ_h 1
++
++#include <vector>
++#include "G4StackedTrack.hh"
++#include "globals.hh"
++
++class G4SmartTrackStack;
++
++// class description:
++//
++// This is a stack class used by G4StackManager. This class object
++// stores G4StackedTrack class objects in the form of bi-directional
++// linked list.
++
++class G4TrackStackDQ 
++{
++public:
++        G4TrackStackDQ();
++	G4TrackStackDQ(G4ParticleDefinition *partDef);
++	~G4TrackStackDQ();
++
++private:
++	const G4TrackStackDQ & operator=(const G4TrackStackDQ &right);
++	G4int operator==(const G4TrackStackDQ &right) const;
++	G4int operator!=(const G4TrackStackDQ &right) const;
++
++public:
++	void PushToStack(G4StackedTrack *aStackedTrack);
++	G4StackedTrack *PopFromStack();
++	void clear();
++	void TransferTo(G4TrackStackDQ *aStack);
++	void TransferTo(G4SmartTrackStack *aStack);
++
++private:
++	G4int n_stackedTrack;
++	G4StackedTrack *firstStackedTrack;
++	G4StackedTrack *lastStackedTrack;
++	G4int maxNTracks;
++	G4int safetyValve1, safetyValve2;
++	G4int nstick;
++
++public: // XXX
++	std::vector<G4StackedTrack*> dqStackedTracks;
++
++public:
++	inline G4int GetNTrack()    const { return n_stackedTrack; }
++	inline G4int GetMaxNTrack() const { return maxNTracks; }
++
++	inline  G4int GetSafetyValve1() const
++	{ return safetyValve1; }
++	inline G4int GetSafetyValve2() const
++	{ return safetyValve2; }
++	inline G4int GetNStick() const
++	{ return nstick; }
++
++	G4double getTotalEnergy(void) const;
++
++	void SetSafetyValve2(int x) { if (x < 0) { x = 0; } safetyValve2 = x; }
++};
++
++#endif
+diff --git a/source/event/sources.cmake b/source/event/sources.cmake
+index 40c9fc4..d9c094b 100644
+--- a/source/event/sources.cmake
++++ b/source/event/sources.cmake
+@@ -79,6 +79,7 @@ GEANT4_DEFINE_MODULE(NAME G4event
+         G4StackedTrack.hh
+         G4StackingMessenger.hh
+         G4TrackStack.hh
++	G4TrackStackDQ.hh
+         G4TrajectoryContainer.hh
+         G4UserEventAction.hh
+         G4UserStackingAction.hh
+@@ -115,6 +116,7 @@ GEANT4_DEFINE_MODULE(NAME G4event
+         G4StackedTrack.cc
+         G4StackingMessenger.cc
+         G4TrackStack.cc
++	G4TrackStackDQ.cc
+         G4TrajectoryContainer.cc
+         G4UserEventAction.cc
+         G4UserStackingAction.cc
+diff --git a/source/event/src/G4SmartTrackStack.cc b/source/event/src/G4SmartTrackStack.cc
+index b446ca8..341f82a 100644
+--- a/source/event/src/G4SmartTrackStack.cc
++++ b/source/event/src/G4SmartTrackStack.cc
+@@ -28,112 +28,164 @@
+ // GEANT4 tag $Name: not supported by cvs2svn $
+ //
+ 
++#include "simple_probes.h"
++
+ #include "G4SmartTrackStack.hh"
+ #include "G4VTrajectory.hh"
+ 
++#include "G4Electron.hh"
++
++void
++G4SmartTrackStack::dumpStatistics()
++{
++	// Print to stderr so that we can split stats output
++	// from normal output of geant4 which is typically being
++	// printed to stdout
++	for (int i = 0; i < 5; i++) {
++	  G4cerr << stacks[i]->GetNTrack() << " ";
++	  G4cerr << stacks[i]->getTotalEnergy() << " ";
++#if 0
++	  G4cerr << stacks[i]->GetSafetyValve1() << " ";
++	  G4cerr << stacks[i]->GetSafetyValve2() << " ";
++	  G4cerr << stacks[i]->GetNStick();
++	  G4cerr << G4endl;
++#endif
++	}
++	G4cerr << G4endl;
++
++}
++
+ G4SmartTrackStack::G4SmartTrackStack()
+-:fTurn(0),nTurn(5)
++	:fTurn(0), nTurn(5)
+ {
+-  for(int i=0;i<nTurn;i++)
+-  { stacks[i] = new G4TrackStack(); }
+-  // If entry of one sub-stack exceeds safetyValve1, we will stick
+-  // to that sub-stack until entry of that sub-stack goes down
+-  // to safetyValve2.
+-  nStick = 100;
+-  safetyValve1 = 3000; 
+-  safetyValve2 = safetyValve1 - nStick;
+-  maxNTracks = 0;
++	stacks[0] = new G4TrackStackDQ();
++	stacks[1] = new G4TrackStackDQ();
++	stacks[2] = new G4TrackStackDQ(G4Electron::Definition()); // electrons
++	stacks[3] = new G4TrackStackDQ();
++	stacks[4] = new G4TrackStackDQ();
++
++#if 0
++	// If entry of one sub-stack exceeds safetyValve1, we will stick
++	// to that sub-stack until entry of that sub-stack goes down
++	// to safetyValve2.
++	nStick = 100;
++	safetyValve1 = 3000;
++	safetyValve2 = safetyValve1 - nStick;
++#endif
++	maxNTracks = 0;
+ }
+ 
+ G4SmartTrackStack::~G4SmartTrackStack()
+ {
+-  for(int i=0;i<nTurn;i++)
+-  { delete stacks[i]; }
++	for (int i  = 0; i < nTurn; i++) {
++		delete stacks[i];
++	}
++}
++
++const G4SmartTrackStack &
++G4SmartTrackStack::operator=(const G4SmartTrackStack &)
++{
++	return *this;
+ }
+ 
+-const G4SmartTrackStack & G4SmartTrackStack::operator=(const G4SmartTrackStack &) 
+-{ return *this; }
+ int G4SmartTrackStack::operator==(const G4SmartTrackStack &right) const
+-{ return (this==&right); }
++{
++	return (this==&right);
++}
++
+ int G4SmartTrackStack::operator!=(const G4SmartTrackStack &right) const
+-{ return (this!=&right); }
++{
++	return (this!=&right);
++}
+ 
+-void G4SmartTrackStack::TransferTo(G4TrackStack * aStack)
++void G4SmartTrackStack::TransferTo(G4TrackStackDQ * aStack)
+ {
+-  for(int i=0;i<nTurn;i++)
+-  { stacks[i]->TransferTo(aStack); }
++	for (int i = 0; i < nTurn; i++) {
++		stacks[i]->TransferTo(aStack);
++	}
+ }
+ 
+ G4StackedTrack * G4SmartTrackStack::PopFromStack()
+ {
+-  if( n_stackedTrack() == 0 ) return 0;
+-  G4StackedTrack * aStackedTrack = 0;
+-  while(!aStackedTrack)
+-  {
+-    if(stacks[fTurn]->GetNTrack()==0)
+-    {
+-      fTurn = (fTurn+1)%nTurn;
+-      //G4cout<<"++++++++ Shift to Stack ["<<fTurn<<"] with "<<stacks[fTurn]->GetNTrack()<<" stacked tracks."<<G4endl;
+-    }
+-    else
+-    { aStackedTrack = stacks[fTurn]->PopFromStack(); }
+-  }
+-  return aStackedTrack;
++	G4StackedTrack * aStackedTrack = 0;
++
++	if (n_stackedTrack()) {
++		while (!aStackedTrack) {
++			if (stacks[fTurn]->GetNTrack()) {
++				aStackedTrack = stacks[fTurn]->PopFromStack();
++				SIMPLE_POPTRACK(
++					stacks[0]->GetNTrack(),
++					stacks[1]->GetNTrack(),
++					stacks[2]->GetNTrack(),
++					stacks[3]->GetNTrack(),
++					stacks[4]->GetNTrack());
++				energies[fTurn] -=
++				    aStackedTrack->GetTrack()->GetDynamicParticle()->GetTotalEnergy();
++			} else {
++				fTurn = (fTurn+1) % nTurn;
++			}
++		}
++	}
++
++	//	dumpStatistics();
++
++	return aStackedTrack;
+ }
+ 
+ #include "G4Neutron.hh"
+ #include "G4Gamma.hh"
+-#include "G4Electron.hh"
+ #include "G4Positron.hh"
+ 
+ void G4SmartTrackStack::PushToStack( G4StackedTrack * aStackedTrack )
+ {
+-  static G4ParticleDefinition* neutDef = G4Neutron::Definition();
+-  static G4ParticleDefinition* elecDef = G4Electron::Definition();
+-  static G4ParticleDefinition* gammDef = G4Gamma::Definition();
+-  static G4ParticleDefinition* posiDef = G4Positron::Definition();
+-
+-  if(!aStackedTrack) return;
+-
+-  G4int iDest = 0;
+-  if( aStackedTrack->GetTrack()->GetParentID() == 0 )
+-  {
+-    // We have a primary track, which should go first.
+-    fTurn = 0; // reseting the turn
+-  }
+-  else
+-  {
+-    G4ParticleDefinition* partDef = aStackedTrack->GetTrack()->GetDefinition();
+-    if(partDef==neutDef)
+-    { iDest = 1; }
+-    else if(partDef==elecDef)
+-    { iDest = 2; }
+-    else if(partDef==gammDef)
+-    { iDest = 3; }
+-    else if(partDef==posiDef)
+-    { iDest = 4; }
+-  }
+-
+-  stacks[iDest]->PushToStack(aStackedTrack);
+-  if(stacks[iDest]->GetNTrack()>safetyValve1)
+-  {
+-    // Too many tracks in the stack. Process tracks in this stack first
+-    // unless the current stack also have too many tracks.
+-    if(stacks[fTurn]->GetNTrack()<safetyValve2)
+-    {
+-      fTurn = iDest;
+-      safetyValve2 = stacks[iDest]->GetNTrack() - nStick;
+-      //G4cout<<"++++++++ Shift to Stack ["<<fTurn<<"] with "<<stacks[fTurn]->GetNTrack()<<" stacked tracks."<<G4endl;
+-    }
+-  }
+-
+-  if(n_stackedTrack()>maxNTracks) maxNTracks = n_stackedTrack();
++	static G4ParticleDefinition* neutDef = G4Neutron::Definition();
++	static G4ParticleDefinition* elecDef = G4Electron::Definition();
++	static G4ParticleDefinition* gammDef = G4Gamma::Definition();
++	static G4ParticleDefinition* posiDef = G4Positron::Definition();
++
++	if (aStackedTrack) {
++		G4int iDest = 0;
++		if (aStackedTrack->GetTrack()->GetParentID()) {
++			G4ParticleDefinition* partDef = aStackedTrack->GetTrack()->GetDefinition();
++			if (partDef == elecDef)
++				iDest = 2;
++			else if (partDef == gammDef)
++				iDest = 3;
++			else if (partDef == posiDef)
++				iDest = 4;
++			else if (partDef == neutDef)
++				iDest = 1;
++		} else {
++			// We have a primary track, which should go first.
++			fTurn = 0; // reseting the turn
++		}
++		stacks[iDest]->PushToStack(aStackedTrack);
++		SIMPLE_PUSHTRACK(
++			stacks[0]->GetNTrack(),
++			stacks[1]->GetNTrack(),
++			stacks[2]->GetNTrack(),
++			stacks[3]->GetNTrack(),
++			stacks[4]->GetNTrack());
++		energies[iDest] +=
++		    aStackedTrack->GetTrack()->GetDynamicParticle()->GetTotalEnergy();
++
++#define abs(x) ((x) >= 0 ? (x) : -(x))
++
++		G4int dy1 = stacks[iDest]->GetNTrack() - stacks[iDest]->GetSafetyValve1();
++		G4int dy2 = stacks[fTurn]->GetNTrack() - stacks[fTurn]->GetSafetyValve2();
++		if (dy1 > 0 || dy1 > dy2 || (iDest == 2 && energies[iDest] < energies[fTurn])) {
++			fTurn = iDest;
++		}
++
++		if (n_stackedTrack() > maxNTracks)
++			maxNTracks = n_stackedTrack();
++
++		//		dumpStatistics();
++	}
+ }
+ 
+ void G4SmartTrackStack::clear()
+ {
+-  for(int i=0;i<nTurn;i++)
+-  { stacks[i]->clear(); }
++	for (int i = 0; i < nTurn; i++)
++		stacks[i]->clear();
+ }
+-
+-
+diff --git a/source/event/src/G4StackManager.cc b/source/event/src/G4StackManager.cc
+index ee80c02..7bb0c87 100644
+--- a/source/event/src/G4StackManager.cc
++++ b/source/event/src/G4StackManager.cc
+@@ -45,11 +45,11 @@
+   urgentStack = new G4SmartTrackStack;
+   G4cout<<"+++ G4StackManager uses G4SmartTrackStack. +++"<<G4endl;
+ #else
+-  urgentStack = new G4TrackStack;
++  urgentStack = new G4TrackStackDQ;
+ //  G4cout<<"+++ G4StackManager uses ordinary G4TrackStack. +++"<<G4endl;
+ #endif
+-  waitingStack = new G4TrackStack;
+-  postponeStack = new G4TrackStack;
++  waitingStack = new G4TrackStackDQ;
++  postponeStack = new G4TrackStackDQ;
+ }
+ 
+ G4StackManager::~G4StackManager()
+@@ -190,7 +190,7 @@ G4Track * G4StackManager::PopNextTrack(G4VTrajectory**newTrajectory)
+ void G4StackManager::ReClassify()
+ {
+   G4StackedTrack * aStackedTrack;
+-  G4TrackStack tmpStack;
++  G4TrackStackDQ tmpStack;
+ 
+   if( !userStackingAction ) return;
+   if( GetNUrgentTrack() == 0 ) return;
+@@ -248,7 +248,7 @@ G4int G4StackManager::PrepareNewEvent()
+ #endif
+ 
+     G4StackedTrack * aStackedTrack;
+-    G4TrackStack tmpStack;
++    G4TrackStackDQ tmpStack;
+ 
+     postponeStack->TransferTo(&tmpStack);
+ 
+@@ -307,7 +307,7 @@ void G4StackManager::SetNumberOfAdditionalWaitingStacks(G4int iAdd)
+   {
+     for(int i=numberOfAdditionalWaitingStacks;i<iAdd;i++)
+     {
+-      G4TrackStack* newStack = new G4TrackStack;
++      G4TrackStackDQ* newStack = new G4TrackStackDQ;
+       additionalWaitingStacks.push_back(newStack);
+     }
+     numberOfAdditionalWaitingStacks = iAdd;
+@@ -325,7 +325,7 @@ void G4StackManager::TransferStackedTracks(G4ClassificationOfNewTrack origin, G4
+ {
+   if(origin==destination) return;
+   if(origin==fKill) return;
+-  G4TrackStack* originStack = 0;
++  G4TrackStackDQ* originStack = 0;
+   switch(origin)
+   {
+     case fUrgent:
+@@ -352,7 +352,7 @@ void G4StackManager::TransferStackedTracks(G4ClassificationOfNewTrack origin, G4
+   } 
+   else
+   {
+-    G4TrackStack* targetStack = 0;
++    G4TrackStackDQ* targetStack = 0;
+     switch(destination)
+     {
+       case fUrgent:
+@@ -386,7 +386,7 @@ void G4StackManager::TransferOneStackedTrack(G4ClassificationOfNewTrack origin,
+ {
+   if(origin==destination) return;
+   if(origin==fKill) return;
+-  G4TrackStack* originStack = 0;
++  G4TrackStackDQ* originStack = 0;
+   switch(origin)
+   {
+     case fUrgent:
+@@ -420,7 +420,7 @@ void G4StackManager::TransferOneStackedTrack(G4ClassificationOfNewTrack origin,
+   } 
+   else
+   {
+-    G4TrackStack* targetStack = 0;
++    G4TrackStackDQ* targetStack = 0;
+     switch(destination)
+     {
+       case fUrgent:
+diff --git a/source/event/src/G4TrackStackDQ.cc b/source/event/src/G4TrackStackDQ.cc
+new file mode 100644
+index 0000000..743a78b
+--- /dev/null
++++ b/source/event/src/G4TrackStackDQ.cc
+@@ -0,0 +1,180 @@
++//
++// ********************************************************************
++// * License and Disclaimer                                           *
++// *                                                                  *
++// * The  Geant4 software  is  copyright of the Copyright Holders  of *
++// * the Geant4 Collaboration.  It is provided  under  the terms  and *
++// * conditions of the Geant4 Software License,  included in the file *
++// * LICENSE and available at  http://cern.ch/geant4/license .  These *
++// * include a list of copyright holders.                             *
++// *                                                                  *
++// * Neither the authors of this software system, nor their employing *
++// * institutes,nor the agencies providing financial support for this *
++// * work  make  any representation or  warranty, express or implied, *
++// * regarding  this  software system or assume any liability for its *
++// * use.  Please see the license in the file  LICENSE  and URL above *
++// * for the full disclaimer and the limitation of liability.         *
++// *                                                                  *
++// * This  code  implementation is the result of  the  scientific and *
++// * technical work of the GEANT4 collaboration.                      *
++// * By using,  copying,  modifying or  distributing the software (or *
++// * any work based  on the software)  you  agree  to acknowledge its *
++// * use  in  resulting  scientific  publications,  and indicate your *
++// * acceptance of all terms of the Geant4 Software license.          *
++// ********************************************************************
++
++#include "G4TrackStackDQ.hh"
++#include "G4SmartTrackStack.hh"
++#include "G4VTrajectory.hh"
++#include "G4Electron.hh"
++
++G4TrackStackDQ::G4TrackStackDQ()
++	:n_stackedTrack(0), firstStackedTrack(0), lastStackedTrack(0)
++{
++	maxNTracks = 0;
++
++	dqStackedTracks.reserve(5000);
++	nstick = 100;
++	safetyValve1 = 4000;
++	safetyValve2 = safetyValve1 - nstick;
++}
++
++// PORTED
++G4TrackStackDQ::G4TrackStackDQ(G4ParticleDefinition *partDef)
++	:n_stackedTrack(0), firstStackedTrack(0), lastStackedTrack(0)
++{
++	maxNTracks = 0;
++
++	G4cout << "+++ Using the DQ Track Stack +++ " << G4endl;
++
++	if (partDef == G4Electron::Definition()) {
++		G4cout << "+++ Electron stack created +++" << G4endl;
++		dqStackedTracks.reserve(5000);
++		nstick = 100;
++		safetyValve1 = 4000;
++		safetyValve2 = safetyValve1 - nstick;
++	} else {
++		G4cout << "+++ Default stack created +++" << G4endl;
++                dqStackedTracks.reserve(5000);
++                nstick = 100;
++                safetyValve1 = 4000;
++                safetyValve2 = safetyValve1 - nstick;
++	}
++}
++
++// PORTED
++G4TrackStackDQ::~G4TrackStackDQ()
++{
++	clear();
++}
++
++const G4TrackStackDQ & G4TrackStackDQ::operator=(const G4TrackStackDQ &right) 
++{
++	n_stackedTrack    = right.n_stackedTrack;
++	firstStackedTrack = right.firstStackedTrack;
++	lastStackedTrack  = right.lastStackedTrack;
++
++	return *this; 
++}
++
++int G4TrackStackDQ::operator==(const G4TrackStackDQ &right) const
++{
++	return (firstStackedTrack == right.firstStackedTrack);
++}
++
++int G4TrackStackDQ::operator!=(const G4TrackStackDQ &right) const
++{
++	return (firstStackedTrack != right.firstStackedTrack);
++}
++
++// PORTED
++void G4TrackStackDQ::TransferTo(G4TrackStackDQ *aStack)
++{
++	if (aStack->n_stackedTrack) {
++		aStack->dqStackedTracks.insert(
++			aStack->dqStackedTracks.end(),
++			dqStackedTracks.begin(),
++			dqStackedTracks.end());
++
++		aStack->lastStackedTrack = lastStackedTrack;
++		aStack->n_stackedTrack += n_stackedTrack;
++	} else {
++		*aStack = *this;
++	}
++	
++	n_stackedTrack    = 0;
++	firstStackedTrack = 0;
++	lastStackedTrack  = 0;
++}
++
++// PORTED
++void G4TrackStackDQ::TransferTo(G4SmartTrackStack *aStack)
++{
++	while (n_stackedTrack)
++		aStack->PushToStack(PopFromStack());
++}
++
++// PORTED
++G4StackedTrack *G4TrackStackDQ::PopFromStack()
++{
++	G4StackedTrack *aStackedTrack = NULL;
++
++	if (n_stackedTrack) {
++		aStackedTrack = dqStackedTracks.back();
++		dqStackedTracks.pop_back();
++		n_stackedTrack--;
++
++		firstStackedTrack = dqStackedTracks.front();
++		if (!dqStackedTracks.empty())
++		  lastStackedTrack  = dqStackedTracks.back();
++		else
++		  lastStackedTrack = NULL;
++	}
++
++	return aStackedTrack;
++}
++
++// PORTED
++void G4TrackStackDQ::PushToStack(G4StackedTrack *aStackedTrack)
++{
++	if (aStackedTrack) {
++		dqStackedTracks.push_back(aStackedTrack);
++		lastStackedTrack = aStackedTrack;
++		n_stackedTrack++;
++		if (n_stackedTrack > maxNTracks)
++			maxNTracks = n_stackedTrack;
++	}
++}
++
++// PORTED
++void G4TrackStackDQ::clear()
++{
++	// delete tracks in the stack
++	std::vector<G4StackedTrack*>::iterator itr;
++	for (itr  = dqStackedTracks.begin();
++	     itr != dqStackedTracks.end(); itr++) {  
++	  delete (*itr)->GetTrack();
++	  delete (*itr)->GetTrajectory();
++	  delete (*itr);
++	}
++
++	n_stackedTrack    = 0;
++	firstStackedTrack = 0;
++	lastStackedTrack  = 0;
++}
++
++G4double
++G4TrackStackDQ::getTotalEnergy(void) const
++{
++	G4double totalEnergy = 0.0f;
++
++	std::vector<G4StackedTrack*>::const_iterator itr;
++
++	for (itr  = dqStackedTracks.begin();
++	     itr != dqStackedTracks.end(); itr++) {
++		totalEnergy +=
++		    (*itr)->GetTrack()->GetDynamicParticle()->GetTotalEnergy();
++	}
++
++	return totalEnergy;
++}
+diff --git a/source/event/src/simple_probes.h b/source/event/src/simple_probes.h
+new file mode 100644
+index 0000000..489a61e
+--- /dev/null
++++ b/source/event/src/simple_probes.h
+@@ -0,0 +1,63 @@
++/*
++ * Generated by dtrace(1M).
++ */
++
++#ifndef	_SIMPLE_PROBES_H
++#define	_SIMPLE_PROBES_H
++
++#include <unistd.h>
++
++#ifdef	__cplusplus
++extern "C" {
++#endif
++
++#if _DTRACE_VERSION
++
++#define	SIMPLE_POPTRACK(arg0, arg1, arg2, arg3, arg4) \
++	__dtrace_simple___poptrack(arg0, arg1, arg2, arg3, arg4)
++#ifndef	__sparc
++#define	SIMPLE_POPTRACK_ENABLED() \
++	__dtraceenabled_simple___poptrack()
++#else
++#define	SIMPLE_POPTRACK_ENABLED() \
++	__dtraceenabled_simple___poptrack(0)
++#endif
++#define	SIMPLE_PUSHTRACK(arg0, arg1, arg2, arg3, arg4) \
++	__dtrace_simple___pushtrack(arg0, arg1, arg2, arg3, arg4)
++#ifndef	__sparc
++#define	SIMPLE_PUSHTRACK_ENABLED() \
++	__dtraceenabled_simple___pushtrack()
++#else
++#define	SIMPLE_PUSHTRACK_ENABLED() \
++	__dtraceenabled_simple___pushtrack(0)
++#endif
++
++
++extern void __dtrace_simple___poptrack(int, int, int, int, int);
++#ifndef	__sparc
++extern int __dtraceenabled_simple___poptrack(void);
++#else
++extern int __dtraceenabled_simple___poptrack(long);
++#endif
++extern void __dtrace_simple___pushtrack(int, int, int, int, int);
++#ifndef	__sparc
++extern int __dtraceenabled_simple___pushtrack(void);
++#else
++extern int __dtraceenabled_simple___pushtrack(long);
++#endif
++
++#else
++
++#define	SIMPLE_POPTRACK(arg0, arg1, arg2, arg3, arg4)
++#define	SIMPLE_POPTRACK_ENABLED() (0)
++#define	SIMPLE_PUSHTRACK(arg0, arg1, arg2, arg3, arg4)
++#define	SIMPLE_PUSHTRACK_ENABLED() (0)
++
++#endif
++
++
++#ifdef	__cplusplus
++}
++#endif
++
++#endif	/* _SIMPLE_PROBES_H */
+diff --git a/source/global/sol11fix.hh b/source/global/sol11fix.hh
+new file mode 100644
+index 0000000..825fbad
+--- /dev/null
++++ b/source/global/sol11fix.hh
+@@ -0,0 +1,21 @@
++#undef  E
++
++#undef SS
++#undef UESP
++#undef EFL
++#undef CS
++#undef EIP
++#undef ERR
++#undef TRAPNO
++#undef EAX
++#undef ECX
++#undef EDX
++#undef EBX
++#undef ESP
++#undef EBP
++#undef ESI
++#undef EDI
++#undef DS
++#undef ES
++#undef FS
++#undef GS
+diff --git a/source/materials/src/G4NistElementBuilder.cc b/source/materials/src/G4NistElementBuilder.cc
+index 030ba8a..518c016 100644
+--- a/source/materials/src/G4NistElementBuilder.cc
++++ b/source/materials/src/G4NistElementBuilder.cc
+@@ -58,6 +58,7 @@
+ #include "G4NistElementBuilder.hh"
+ #include "G4Element.hh"
+ #include <sstream>
++#include "../../global/sol11fix.hh"
+ 
+ 
+ //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+diff --git a/source/processes/electromagnetic/adjoint/src/G4AdjointCSManager.cc b/source/processes/electromagnetic/adjoint/src/G4AdjointCSManager.cc
+index a3560c5..41be7aa 100644
+--- a/source/processes/electromagnetic/adjoint/src/G4AdjointCSManager.cc
++++ b/source/processes/electromagnetic/adjoint/src/G4AdjointCSManager.cc
+@@ -50,6 +50,7 @@
+ #include "G4ProductionCutsTable.hh"
+ #include <fstream>
+ #include <iomanip>
++#include "../../../../global/sol11fix.hh"
+ 
+ 
+ G4AdjointCSManager* G4AdjointCSManager::theInstance = 0;
+diff --git a/source/processes/electromagnetic/adjoint/src/G4AdjointCSMatrix.cc b/source/processes/electromagnetic/adjoint/src/G4AdjointCSMatrix.cc
+index b634ba3..62aeba6 100644
+--- a/source/processes/electromagnetic/adjoint/src/G4AdjointCSMatrix.cc
++++ b/source/processes/electromagnetic/adjoint/src/G4AdjointCSMatrix.cc
+@@ -31,6 +31,7 @@
+ #include <iomanip>
+ #include <fstream>
+ #include "G4AdjointInterpolator.hh"
++#include "../../../../global/sol11fix.hh"
+ ///////////////////////////////////////////////////////
+ //
+ G4AdjointCSMatrix::G4AdjointCSMatrix(G4bool aBool){
+diff --git a/source/processes/electromagnetic/adjoint/src/G4AdjointComptonModel.cc b/source/processes/electromagnetic/adjoint/src/G4AdjointComptonModel.cc
+index 029d9ee..3d1448c 100644
+--- a/source/processes/electromagnetic/adjoint/src/G4AdjointComptonModel.cc
++++ b/source/processes/electromagnetic/adjoint/src/G4AdjointComptonModel.cc
+@@ -37,6 +37,7 @@
+ #include "G4AdjointGamma.hh"
+ #include "G4Gamma.hh"
+ #include "G4KleinNishinaCompton.hh"
++#include "../../../../global/sol11fix.hh"
+ 
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+diff --git a/source/processes/electromagnetic/adjoint/src/G4AdjointPhotoElectricModel.cc b/source/processes/electromagnetic/adjoint/src/G4AdjointPhotoElectricModel.cc
+index 6d76102..e46228b 100644
+--- a/source/processes/electromagnetic/adjoint/src/G4AdjointPhotoElectricModel.cc
++++ b/source/processes/electromagnetic/adjoint/src/G4AdjointPhotoElectricModel.cc
+@@ -36,6 +36,7 @@
+ #include "G4AdjointElectron.hh"
+ #include  "G4Gamma.hh"
+ #include "G4AdjointGamma.hh"
++#include "../../../../global/sol11fix.hh"
+ 
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+diff --git a/source/processes/hadronic/models/cascade/cascade/src/G4NonEquilibriumEvaporator.cc b/source/processes/hadronic/models/cascade/cascade/src/G4NonEquilibriumEvaporator.cc
+index cb2ec64..7b6fa9f 100644
+--- a/source/processes/hadronic/models/cascade/cascade/src/G4NonEquilibriumEvaporator.cc
++++ b/source/processes/hadronic/models/cascade/cascade/src/G4NonEquilibriumEvaporator.cc
+@@ -52,6 +52,7 @@
+ #include "G4InuclSpecialFunctions.hh"
+ #include "G4LorentzConvertor.hh"
+ #include <cmath>
++#include "../../../../../global/sol11fix.hh"
+ 
+ using namespace G4InuclSpecialFunctions;
+ 
+diff --git a/source/processes/hadronic/models/chiral_inv_phase_space/body/src/G4QEnvironment.cc b/source/processes/hadronic/models/chiral_inv_phase_space/body/src/G4QEnvironment.cc
+index 7aa676c..e073da5 100644
+--- a/source/processes/hadronic/models/chiral_inv_phase_space/body/src/G4QEnvironment.cc
++++ b/source/processes/hadronic/models/chiral_inv_phase_space/body/src/G4QEnvironment.cc
+@@ -61,6 +61,7 @@
+ #include "G4QEnvironment.hh" 
+ #include <cmath>
+ #include <cstdlib>
++#include "../../../../../global/sol11fix.hh"
+ using namespace std;
+ 
+ G4QEnvironment::G4QEnvironment(const G4QNucleus& theEnv)
+diff --git a/source/processes/hadronic/models/chiral_inv_phase_space/cross_sections/include/G4VQCrossSection.hh b/source/processes/hadronic/models/chiral_inv_phase_space/cross_sections/include/G4VQCrossSection.hh
+index f62b49b..c0d2bad 100644
+--- a/source/processes/hadronic/models/chiral_inv_phase_space/cross_sections/include/G4VQCrossSection.hh
++++ b/source/processes/hadronic/models/chiral_inv_phase_space/cross_sections/include/G4VQCrossSection.hh
+@@ -82,6 +82,7 @@
+ #include "G4NucleiProperties.hh"
+ #include <vector>
+ #include "Randomize.hh"
++#include "../../../../../global/sol11fix.hh"
+ 
+ class G4VQCrossSection
+ {
+diff --git a/source/processes/hadronic/models/de_excitation/multifragmentation/src/G4StatMFMacroMultiNucleon.cc b/source/processes/hadronic/models/de_excitation/multifragmentation/src/G4StatMFMacroMultiNucleon.cc
+index 0cf5fef..5a3435d 100644
+--- a/source/processes/hadronic/models/de_excitation/multifragmentation/src/G4StatMFMacroMultiNucleon.cc
++++ b/source/processes/hadronic/models/de_excitation/multifragmentation/src/G4StatMFMacroMultiNucleon.cc
+@@ -37,6 +37,7 @@
+ //          symmetry energy 
+ 
+ #include "G4StatMFMacroMultiNucleon.hh"
++#include "../../../../../global/sol11fix.hh"
+ 
+ // Default constructor
+ G4StatMFMacroMultiNucleon::
+diff --git a/source/processes/hadronic/models/quasi_elastic/include/G4VCrossSection.hh b/source/processes/hadronic/models/quasi_elastic/include/G4VCrossSection.hh
+index 65907ae..063a912 100644
+--- a/source/processes/hadronic/models/quasi_elastic/include/G4VCrossSection.hh
++++ b/source/processes/hadronic/models/quasi_elastic/include/G4VCrossSection.hh
+@@ -82,6 +82,7 @@
+ #include "G4NucleiProperties.hh"
+ #include <vector>
+ #include "Randomize.hh"
++#include "../../../../global/sol11fix.hh"
+ 
+ class G4VCrossSection
+ {
