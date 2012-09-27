@@ -10,7 +10,7 @@ if [ $# -eq 1 ]; then
 fi
 
 asciidoc=( asciidoc -a icons
-		   -a toc
+		   -a toc -a data-uri
 		   -a toclevels=4
 		   -a numbered
 		   -a iconsdir=/usr/share/asciidoc/icons
@@ -21,7 +21,10 @@ asciidoc=( asciidoc -a icons
 gitvers=$(git rev-list --all | wc -l)
 githash=$(git rev-list --all | head -n1 | cut -c1-5)
 
-files=(dtrace README solaris smartstack)
+#files=(dtrace README solaris smartstack)
+files=(crosssections)
+#files=(hardstepping)
+#files=(lnenergy)
 
 for file in ${files[@]}
 do
