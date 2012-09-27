@@ -1,0 +1,90 @@
+\documentclass{beamer}
+\usetheme[height=7mm]{Rochester}
+\usepackage{listings}
+
+%\usefonttheme{serif}
+
+\usepackage[T1]{fontenc}
+\usepackage{inconsolata}
+
+\usepackage[absolute,overlay]{textpos} 
+\newenvironment{reference}[2]{% 
+  \begin{textblock*}{\textwidth}(#1,#2) 
+      \tiny\bgroup\color{red!50!black}}{\egroup\end{textblock*}} 
+
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{Profile and reorder code execution in Geant4 to increase performance}
+\subtitle{A Google Summer of Code Project}
+\author{Stathis Kamperis}
+\institute{
+  Department of Physics\\
+  Aristotle University of Thessaloniki\\
+  Greece\\[1ex]
+  \texttt{ekamperi@gmail.com}
+}
+\date{August, 2012}
+
+
+\begin{frame}[plain]
+  \titlepage
+\begin{reference}{4mm}{85mm}
+Mentors: Pere Mato Vila, John Apostolakis
+\end{reference}
+\end{frame}
+
+
+\begin{frame}{Goals}
+\begin{itemize}
+\item {\bf Profile} Geant4 to identify potential targets (first half of GSoC period)
+\item {\bf Reorder code execution} for improving serial performance (2nd half)
+\end{itemize}
+\textcolor{blue}{In reality } Goals are intermingled and alternating
+\end{frame}
+
+\begin{frame}{Methods}
+\begin{itemize}
+\item Ported Geant4 to {\bf Solaris 11/amd64}
+\begin{itemize}
+\item Instant access to {\bf diverse powerful profiling tools}, most importantly {\bf DTrace}
+\begin{itemize}
+\item ``D'' stands for Dynamic- dynamically instrument a running program by modifying its instructions while it is running
+\item Very sophisticated profiling with minimal overhead (i.e., it allows you to do some pretty crazy stuff)
+\end{itemize}
+\item (Alternatives exist for Linux)
+\end{itemize}
+\item Tool to {\bf compare 2 versions} of the same application and generate an HTML report
+\item Used {\bf FullCMS}, {\bf Simplified Calorimeter} and the examples/ as the basis of our tests
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Results}
+
+{\bf Particle ``bunching''}
+\begin{itemize}
+\item {\bf Sort} particles by their type prior to processing them
+\begin{itemize}
+\item e.g.: $\ldots, e^-, e^-, \ldots, e^-$, $\gamma, \gamma, \ldots, \gamma, \ldots$
+\end{itemize}
+\item Better {\bf cache utilisation}
+\item {\bf 4-5\% speed up} in total execution time
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Future}
+In terms of {\bf absolute} numbers, the benefit may not seem breathtaking
+
+\vspace{5mm}
+
+\textcolor{blue}{Real gain} Designed, validated, and automated some very advanced profiling methods that will help us attack performance issues in Geant4
+\end{frame}
+
+\begin{frame}
+\begin{center}
+Thank you. Questions?
+\end{center}
+\end{frame}
+
+\end{document}
