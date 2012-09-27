@@ -704,6 +704,117 @@ in FullCMS experiment (less in SimplifiedCalorimeter)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[fragile]{Reducing branch mispredictions in Value G4PhysicsVector}
+
+\textcolor{blue}{Objective} Calculate the cache hits ratio in G4PhysicsVector::Value()
+
+\lstset{basicstyle=\tiny\ttfamily}
+\lstset{frame=single, columns=flexible}
+\begin{lstlisting}
+# dtrace -qn '
+/* 0xc0 is the offset inside Value() where a cache hit takes place */
+pid$target::_ZN15G4PhysicsVector5ValueEd:c0
+{ 
+    @branch = count();
+}
+
+pid$target::_ZN15G4PhysicsVector5ValueEd:entry
+{
+    @total = count();
+}
+
+tick-100ms
+{
+    printa(@branch);
+    printa(@total);
+}' -c '/home/stathis/geant4.9.5.p01/bin/full_cms ./bench1_5k.g4' -o val
+\end{lstlisting}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}{Reducing branch mispredictions in Value G4PhysicsVector}
+\begin{center}
+  \includegraphics[width=1.0\textwidth]{G4PhysicsVector-Value.png}
+\end{center}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}{Reducing branch mispredictions in Value G4PhysicsVector}
+\begin{itemize}
+\item The cache hits ratio is not extraordinarily high,
+\item ... yet the benefit of caching outweighs (as reality dictates) the penalty of
+branch mispredictions
+\item The eventual ratio is higher than that I had in mind initially
+\item Lesson learnt: let the system reach its equilibrium before drawing any conclusions
+\end{itemize}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+
+\textcolor{blue}{"Problem"} A flamegraph showing branch mispredictions identified
+G4PhysicsVector::Value() as a significant offender
+
+\vspace{5mm}
+
+\textcolor{green}{Idea} Try to collapse some of the if-blocks, gaining branch
+predictability, but executing more cpu instructions
+
+\vspace{5mm}
+
+\textcolor{red}{Result} The branch mispredictions reduced (expected), but the
+the average time spent in that function was actually larger
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{DTrace - Introduction 1/2}
+\begin{itemize}
+\item ``D'' stands for Dynamic- it dynamically instruments a running program,
+by modifying its instructions while it is executing
+\item {\bf Deep inspection}
+\begin{itemize}
+\item Arbitrary instructions
+\item CPU registers
+\item CPU hardware counters, etc
+\end{itemize}
+\item {\bf Sophisticated profiling} (e.g., speculative tracing)
+\vspace{5mm}
+\item {\bf Built-in aggregation} functions
+\begin{itemize}
+\item count, sum, avg, min, max, stddev, \{l,\}quantize
+\end{itemize}
+
+\item {\bf Negligible runtime overhead}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{DTrace - Introduction 2/2}
+\begin{itemize}
+\item {\bf Safe} to use in production environments
+\begin{itemize}
+\item Safety was one of the central architectural decisions upon DTrace was built
+\item Explains why some common language constructs aren't supported (e.g., for-loops)
+\end{itemize}
+
+\item {\bf No source code modification} of the profiled application needed
+\item Can operate on {\bf multithreaded} programs (has support for thread-local variables)
+\item Runs on {\bf Mac OSX} out of the box; Linux port is on the way
+\item Profiling done via a simple language called D (resembling C and awk)
+\begin{itemize}
+\item Scripts can be shared, reviewed, reused, made be run unattended
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Future plans}
 
 \begin{itemize}
