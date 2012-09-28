@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #set -e
-#set -x
+set -x
 
 user="stathis"
 host="island.quantumachine.net"
@@ -53,6 +53,14 @@ wget -q -r -l1 -R index.html --no-directories -np	\
     cp "${HISTICMDAT}.png" histcmpicm.png
 
     ############################################################################
+    #				Generate the final report		       #
+    ############################################################################
+    sed "s/@@iteration@@/${iteration}/" smartstack.notes > smartstack.notes2 &&
+    mv smartstack.notes2 smartstack.notes
+
+    chmod +x ./compnotes.sh && ./compnotes.sh ${iteration}
+
+    ############################################################################
     #				Upload the results			       #
     ############################################################################
     files=(rcmpevts.png rcmpevts2.png cmpcpits.png cmpdcmts.png cmpicmts.png
@@ -63,8 +71,4 @@ wget -q -r -l1 -R index.html --no-directories -np	\
 	echo "-> Uploading file '${file}'"
 	scp "${file}" "${user}@${host}:${remote_base_path}/run-${iteration}"
     done
-
-    sed "s/@@iteration@@/${iteration}/" smartstack.notes > smartstack.notes2
 )
-
-./compnotes.sh ${iteration}
