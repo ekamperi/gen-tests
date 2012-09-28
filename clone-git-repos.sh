@@ -1,7 +1,10 @@
 #!/bin/bash
 
-set -e
+#set -e
 set -x
+
+remoteurl="git+ssh://beket@leaf.dragonflybsd.org/home/beket/git"
+remotename="leaf"
 
 leafhost="git://gitweb.dragonflybsd.org/~beket"
 bitbhost="https://ekamperi@bitbucket.org/ekamperi"
@@ -14,15 +17,20 @@ leafrepos=(
     "mathlib"
     "pcca-dbdump"
     "pcca-tests"
+    "pcca-site"
 )
 
 bitbrepos=(
     "e-galinos"
 )
 
+# $1 is the parent directory which holds all the individual
+# git repositories
+# $2 is the repo name
 clonerepo()
 {
-    ( cd "$1" && git clone "$2" )
+    ( cd "$1" && git clone "${host}/${2}.git" &&
+	( cd "$2" && git remote add "$remotename" "$remoteurl/${2}.git"))
 }
 
 updaterepo()
@@ -40,7 +48,7 @@ dohost()
     for repo in "${@}"
     do
 	echo "-> Fetching repository '${repo}'"
-	clonerepo "${reposdir}" "${host}/${repo}.git" || updaterepo "${reposdir}/${repo}"
+	clonerepo "${reposdir}" "${repo}" || updaterepo "${reposdir}/${repo}"
     done
 }
 

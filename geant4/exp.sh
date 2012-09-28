@@ -1,11 +1,11 @@
 #!/bin/bash
 
 set -e
-set -x
+#set -x
 
 FULLCMS_ORIG=/home/stathis/gen-tests/geant4/geant4.9.5.p01-default/bin/Linux-g++/full_cms
 FULLCMS_PATCHED=/home/stathis/gen-tests/geant4/geant4.9.5.p01/bin/Linux-g++/full_cms
-BENCH="bench1_300.g4"
+BENCH="bench1_3k.g4"
 USER=stathis
 HOST=island.quantumachine.net
 FILE="~/public_html/geant4"
@@ -80,6 +80,16 @@ function cmpevts()
     ./cmpevts.sh "$@"
 }
 
+function rcmpevts()
+{
+    ./rcmpevts.sh "$@"
+}
+
+function rsummary()
+{
+    ./rsummary.sh "$@"
+}
+
 function cmpcpits()
 {
     ./cmpcpits.sh "$@"
@@ -120,7 +130,7 @@ function do_procevts()
     invalidate_cpucaches
     procevts				     \
 	"$1/${BENCH}.evts.patc.${ITERATION}" \
-	"8ca82e0"			     \
+	"8ca82b0"			     \
 	"${FULLCMS_PATCHED} ${BENCH}"
 }
 
@@ -213,6 +223,13 @@ function do_cmpevts()
 	     "$1/${BENCH}.evts.patc.${ITERATION}" > "$1/cmpevts.gplot"
 }
 
+function do_rcmpevts()
+{
+    rcmpevts '::ProcessOneEvent()'                \
+	     "$1/${BENCH}.evts.orig.${ITERATION}" \
+	     "$1/${BENCH}.evts.patc.${ITERATION}" > "$1/rcmpevts.rplot"
+}
+
 function do_cmpcpits()
 {
     cmpcpits "$1/${BENCH}.cpi.orig.${ITERATION}" \
@@ -256,6 +273,15 @@ function do_histcmpicm()
 }
 
 ################################################################################
+#			Descriptive Statistics				       #
+################################################################################
+function do_rsummary()
+{
+    rsummary "$1/${BENCH}.evts.orig.${ITERATION}" \
+             "$1/${BENCH}.evts.patc.${ITERATION}" > "$1/rsummary.rplot"
+}
+
+################################################################################
 #				Upload results				       #
 ################################################################################
 function upload_results()
@@ -274,7 +300,13 @@ function upload_results()
     echo ${BENCH}.ic.orig.${ITERATION}-${BENCH}.ic.patc.${ITERATION}.dat \
         > "run-${ITERATION}/HIST.ICMDAT"
 
-    cp smartstack.notes "run-$ITERATION"
+    files=(dtrace general solaris smartstack)
+    for file in "${files[@]}"
+    do
+	cp "${file}.notes" "run-$ITERATION"
+    done
+
+    cp compnotes.sh "run-$ITERATION"
     scp -r "run-$ITERATION" "${USER}@${HOST}:${FILE}"
 }
 
@@ -291,6 +323,7 @@ do_icmflame   "run-$ITERATION"
 
 # Generate the time series graphs
 do_cmpevts    "run-$ITERATION"
+do_rcmpevts   "run-$ITERATION"
 do_cmpcpits   "run-$ITERATION"
 do_cmpdcmts   "run-$ITERATION"
 do_cmpicmts   "run-$ITERATION"
@@ -301,4 +334,8 @@ do_histcmpcpi  "run-$ITERATION"
 do_histcmpdcm  "run-$ITERATION"
 do_histcmpicm  "run-$ITERATION"
 
+# Generate descriptive statistics
+do_rsummary    "run-$ITERATION"
+
+# Upload the results
 upload_results
