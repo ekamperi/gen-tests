@@ -21,12 +21,11 @@ asciidoc=( asciidoc -a icons
 gitvers=$(git rev-list --all | wc -l)
 githash=$(git rev-list --all | head -n1 | cut -c1-5)
 
-#files=(dtrace README solaris smartstack)
-files=(crosssections)
-#files=(hardstepping)
-#files=(lnenergy)
+files=(crosssections dtrace general hardstepping lnenergy solaris)
 
-for file in ${files[@]}
+echo "Files will be uploaded to: ${remote_base_url}"
+
+for file in "${files[@]}"
 do
     echo "-> Processing document for '${file}'"
 
