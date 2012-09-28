@@ -21,7 +21,11 @@ asciidoc=( asciidoc -a icons
 gitvers=$(git rev-list --all | wc -l)
 githash=$(git rev-list --all | head -n1 | cut -c1-5)
 
-files=(crosssections dtrace general hardstepping lnenergy solaris)
+if [ $# -eq 1 ]; then
+    files=(smartstack)
+else
+    files=(*.notes)
+fi
 
 echo "Files will be uploaded to: ${remote_base_url}"
 
@@ -31,10 +35,10 @@ do
 
     # Add the version number to the documents
     sed "s/@@version@@/0.${gitvers}-${githash}/" \
-	"${file}.notes" > "${file}.notes2"
+	"${file}" > "${file}.2"
 
     # Asciidoc-ify them
-    "${asciidoc[@]}" "${file}.notes2"
+    "${asciidoc[@]}" "${file}.2"
 
     # Upload to leaf
     scp "${file}.html" "$remote_base_url"/
