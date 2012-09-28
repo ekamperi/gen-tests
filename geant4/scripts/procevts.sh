@@ -4,7 +4,7 @@
 #
 
 set -e
-set -x
+#set -x
 
 function usage()
 {

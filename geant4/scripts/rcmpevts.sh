@@ -26,7 +26,7 @@ paste "$2.parsed" "$3.parsed" > $(dirname $2)/$b2-$b3.dat
 
 cat <<EOF
 library('ggplot2')
-library('reshape')
+library('reshape2')
 
 ## Generate a scatterplot
 dat <- read.table('$b2-$b3.dat')
