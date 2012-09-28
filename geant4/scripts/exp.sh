@@ -3,9 +3,9 @@
 set -e
 #set -x
 
-FULLCMS_ORIG=/home/stathis/gen-tests/geant4/geant4.9.5.p01-default/bin/Linux-g++/full_cms
-FULLCMS_PATCHED=/home/stathis/gen-tests/geant4/geant4.9.5.p01/bin/Linux-g++/full_cms
-BENCH="bench1_3k.g4"
+FULLCMS_ORIG=/home/stathis/gen-tests/geant4/geant4.9.5.p01-default-initialcopy/bin/Linux-g++/full_cms
+FULLCMS_PATCHED=/home/stathis/gen-tests/geant4/geant4.9.5.p01-default-initialcopy/bin/Linux-g++/full_cms
+BENCH="bench1_10.g4"
 USER=stathis
 HOST=island.quantumachine.net
 FILE="~/public_html/geant4"
@@ -22,16 +22,24 @@ function err()
 }
 
 if [ ! $# -eq 1 ]; then
-    err "usage: $(basename $0)"
+    err "usage: $(basename $0) exp-id"
 else
     ITERATION=$1
 fi
+
+function check_ifroot()
+{
+    # EUID = 0 root, or non 0 otherwise
+    ((!EUID)) ||
+    err "You need to run this script as root!"
+}
 
 function invalidate_cpucaches()
 {
     # This is a special pseudo device driver that calls wbinvd,
     # whenever we open it.
-    cat /devices/pseudo/dummy@0:0
+    cat /devices/pseudo/dummy@0:0 ||
+    echo "WARNING: pseudo device driver for invalidating CPU caches not found"
 }
 
 # XXX: To be done- check if $BENCH exists
@@ -130,7 +138,7 @@ function do_procevts()
     invalidate_cpucaches
     procevts				     \
 	"$1/${BENCH}.evts.patc.${ITERATION}" \
-	"8ca82b0"			     \
+	"8c8fbe8"			     \
 	"${FULLCMS_PATCHED} ${BENCH}"
 }
 
@@ -300,15 +308,18 @@ function upload_results()
     echo ${BENCH}.ic.orig.${ITERATION}-${BENCH}.ic.patc.${ITERATION}.dat \
         > "run-${ITERATION}/HIST.ICMDAT"
 
-    files=(dtrace general solaris smartstack)
+    files=(general smartstack)
     for file in "${files[@]}"
     do
-	cp "${file}.notes" "run-$ITERATION"
+	cp "../notes/${file}.notes" "run-$ITERATION"
     done
 
     cp compnotes.sh "run-$ITERATION"
     scp -r "run-$ITERATION" "${USER}@${HOST}:${FILE}"
 }
+
+# DTrace needs escalated privileges
+check_ifroot
 
 mkdir -p    "run-$ITERATION"
 
