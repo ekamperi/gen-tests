@@ -3,12 +3,12 @@
 set -e
 #set -x
 
-FULLCMS_ORIG=/home/stathis/gen-tests/geant4/geant4.9.5.p01-default-initialcopy/bin/Linux-g++/full_cms
-FULLCMS_PATCHED=/home/stathis/gen-tests/geant4/geant4.9.5.p01-default-initialcopy/bin/Linux-g++/full_cms
-BENCH="bench1_10.g4"
-USER=stathis
-HOST=island.quantumachine.net
-FILE="~/public_html/geant4"
+fullcms_orig=/home/stathis/gen-tests/geant4/geant4.9.5.p01-default-initialcopy/bin/Linux-g++/full_cms
+fullcms_patc=/home/stathis/gen-tests/geant4/geant4.9.5.p01-default-initialcopy/bin/Linux-g++/full_cms
+bench="bench1_10.g4"
+user=stathis
+host=island.quantumachine.net
+file="~/public_html/geant4"
 
 function log()
 {
@@ -24,7 +24,7 @@ function err()
 if [ ! $# -eq 1 ]; then
     err "usage: $(basename $0) exp-id"
 else
-    ITERATION=$1
+    iteration=$1
 fi
 
 function check_ifroot()
@@ -131,37 +131,37 @@ function do_procevts()
 {
     invalidate_cpucaches
     procevts				     \
-	"$1/${BENCH}.evts.orig.${ITERATION}" \
+	"$1/${bench}.evts.orig.${iteration}" \
 	"8c8fbe8"			     \
-	"${FULLCMS_ORIG} ${BENCH}"
+	"${fullcms_orig} ${bench}"
 
     invalidate_cpucaches
     procevts				     \
-	"$1/${BENCH}.evts.patc.${ITERATION}" \
+	"$1/${bench}.evts.patc.${iteration}" \
 	"8c8fbe8"			     \
-	"${FULLCMS_PATCHED} ${BENCH}"
+	"${fullcms_patc} ${bench}"
 }
 
 function do_cpi()
 {
     invalidate_cpucaches
-    cpi "$FULLCMS_ORIG" "$BENCH" > "$1/${BENCH}.cpi.orig.${ITERATION}"
+    cpi "$fullcms_orig" "$bench" > "$1/${bench}.cpi.orig.${iteration}"
 
     invalidate_cpucaches
-    cpi "$FULLCMS_PATCHED" "$BENCH" > "$1/${BENCH}.cpi.patc.${ITERATION}"
+    cpi "$fullcms_patc" "$bench" > "$1/${bench}.cpi.patc.${iteration}"
 }
 
 function do_dcmisses()
 {
     invalidate_cpucaches
     dcmisses			\
-	"$FULLCMS_ORIG"		\
-	"$BENCH"		> "$1/${BENCH}.dc.orig.${ITERATION}"
+	"$fullcms_orig"		\
+	"$bench"		> "$1/${bench}.dc.orig.${iteration}"
 
     invalidate_cpucaches
     dcmisses			\
-	"$FULLCMS_PATCHED"	\
-	"$BENCH"		> "$1/${BENCH}.dc.patc.${ITERATION}"
+	"$fullcms_patc"	\
+	"$bench"		> "$1/${bench}.dc.patc.${iteration}"
 }
 
 ################################################################################
@@ -172,12 +172,12 @@ function do_timeflame()
 {
     rm -f timeflame.orig
     invalidate_cpucaches
-    timeflame timeflame.orig "$FULLCMS_ORIG" "$BENCH"
+    timeflame timeflame.orig "$fullcms_orig" "$bench"
     mv timeflame.orig.svg "$1/timeflame.orig.svg"
 
     rm -f timeflame.patc
     invalidate_cpucaches
-    timeflame timeflame.patc "$FULLCMS_PATCHED" "$BENCH"
+    timeflame timeflame.patc "$fullcms_patc" "$bench"
     mv timeflame.patc.svg "$1/timeflame.patc.svg"
 }
 
@@ -185,12 +185,12 @@ function do_dcmflame()
 {
     rm -f dcmflame.orig
     invalidate_cpucaches
-    dcmflame dcmflame.orig "$FULLCMS_ORIG" "$BENCH"
+    dcmflame dcmflame.orig "$fullcms_orig" "$bench"
     mv dcmflame.orig.svg "$1/dcmflame.orig.svg"
 
     rm -f dcmflame.patc
     invalidate_cpucaches
-    dcmflame dcmflame.patc "$FULLCMS_PATCHED" "$BENCH"
+    dcmflame dcmflame.patc "$fullcms_patc" "$bench"
     mv dcmflame.patc.svg "$1/dcmflame.patc.svg"
 }
 
@@ -198,12 +198,12 @@ function do_icmflame()
 {
     rm -f icmflame.orig
     invalidate_cpucaches
-    icmflame icmflame.orig "$FULLCMS_ORIG" "$BENCH"
+    icmflame icmflame.orig "$fullcms_orig" "$bench"
     mv icmflame.orig.svg "$1/icmflame.orig.svg"
 
     rm -f icmflame.patc
     invalidate_cpucaches
-    icmflame icmflame.patc "$FULLCMS_PATCHED" "$BENCH"
+    icmflame icmflame.patc "$fullcms_patc" "$bench"
     mv icmflame.patc.svg "$1/icmflame.patc.svg"
 }
 
@@ -211,13 +211,13 @@ function do_icmisses()
 {
     invalidate_cpucaches
     icmisses                    \
-        "$FULLCMS_ORIG"         \
-        "$BENCH"                > "$1/${BENCH}.ic.orig.${ITERATION}"
+        "$fullcms_orig"         \
+        "$bench"                > "$1/${bench}.ic.orig.${iteration}"
 
     invalidate_cpucaches
     icmisses                    \
-        "$FULLCMS_PATCHED"      \
-        "$BENCH"                > "$1/${BENCH}.ic.patc.${ITERATION}"
+        "$fullcms_patc"      \
+        "$bench"                > "$1/${bench}.ic.patc.${iteration}"
 }
 
 ################################################################################
@@ -227,56 +227,56 @@ function do_icmisses()
 function do_cmpevts()
 {
     cmpevts '::ProcessOneEvent()'		  \
-	     "$1/${BENCH}.evts.orig.${ITERATION}" \
-	     "$1/${BENCH}.evts.patc.${ITERATION}" > "$1/cmpevts.gplot"
+	     "$1/${bench}.evts.orig.${iteration}" \
+	     "$1/${bench}.evts.patc.${iteration}" > "$1/cmpevts.gplot"
 }
 
 function do_rcmpevts()
 {
     rcmpevts '::ProcessOneEvent()'                \
-	     "$1/${BENCH}.evts.orig.${ITERATION}" \
-	     "$1/${BENCH}.evts.patc.${ITERATION}" > "$1/rcmpevts.rplot"
+	     "$1/${bench}.evts.orig.${iteration}" \
+	     "$1/${bench}.evts.patc.${iteration}" > "$1/rcmpevts.rplot"
 }
 
 function do_cmpcpits()
 {
-    cmpcpits "$1/${BENCH}.cpi.orig.${ITERATION}" \
-             "$1/${BENCH}.cpi.patc.${ITERATION}" > "$1/cmpcpits.gplot"
+    cmpcpits "$1/${bench}.cpi.orig.${iteration}" \
+             "$1/${bench}.cpi.patc.${iteration}" > "$1/cmpcpits.gplot"
 }
 
 function do_cmpdcmts()
 {
-    cmpcmts "$1/${BENCH}.dc.orig.${ITERATION}" \
-	    "$1/${BENCH}.dc.patc.${ITERATION}" > "$1/cmpdcmts.gplot"
+    cmpcmts "$1/${bench}.dc.orig.${iteration}" \
+	    "$1/${bench}.dc.patc.${iteration}" > "$1/cmpdcmts.gplot"
 }
 
 function do_cmpicmts()
 {
-    cmpcmts "$1/${BENCH}.ic.orig.${ITERATION}" \
-            "$1/${BENCH}.ic.patc.${ITERATION}" > "$1/cmpicmts.gplot"
+    cmpcmts "$1/${bench}.ic.orig.${iteration}" \
+            "$1/${bench}.ic.patc.${iteration}" > "$1/cmpicmts.gplot"
 }
 
 function do_histcmpevts()
 {
-    datfile=${BENCH}.evts.orig.${ITERATION}-${BENCH}.evts.patc.${ITERATION}.dat
+    datfile=${bench}.evts.orig.${iteration}-${bench}.evts.patc.${iteration}.dat
     histcmpevts "$1/$datfile" > "$1/histcmpevts.rplot"
 }
 
 function do_histcmpcpi()
 {
-    datfile=${BENCH}.cpi.orig.${ITERATION}-${BENCH}.cpi.patc.${ITERATION}.dat
+    datfile=${bench}.cpi.orig.${iteration}-${bench}.cpi.patc.${iteration}.dat
     histcmpcpi "$1/$datfile" > "$1/histcmpcpi.rplot"
 }
 
 function do_histcmpdcm()
 {
-    datfile=${BENCH}.dc.orig.${ITERATION}-${BENCH}.dc.patc.${ITERATION}.dat
+    datfile=${bench}.dc.orig.${iteration}-${bench}.dc.patc.${iteration}.dat
     histcmpcm "$1/$datfile" > "$1/histcmpdcm.rplot"
 }
 
 function do_histcmpicm()
 {
-    datfile=${BENCH}.ic.orig.${ITERATION}-${BENCH}.ic.patc.${ITERATION}.dat
+    datfile=${bench}.ic.orig.${iteration}-${bench}.ic.patc.${iteration}.dat
     histcmpcm "$1/$datfile" > "$1/histcmpicm.rplot"
 }
 
@@ -285,8 +285,8 @@ function do_histcmpicm()
 ################################################################################
 function do_rsummary()
 {
-    rsummary "$1/${BENCH}.evts.orig.${ITERATION}" \
-             "$1/${BENCH}.evts.patc.${ITERATION}" > "$1/rsummary.rplot"
+    rsummary "$1/${bench}.evts.orig.${iteration}" \
+             "$1/${bench}.evts.patc.${iteration}" > "$1/rsummary.rplot"
 }
 
 ################################################################################
@@ -294,59 +294,59 @@ function do_rsummary()
 ################################################################################
 function upload_results()
 {
-    echo $BENCH > "run-${ITERATION}/BENCH"
+    echo "$bench" > "run-${iteration}/BENCH"
 
-    echo ${BENCH}.evts.orig.${ITERATION}-${BENCH}.evts.patc.${ITERATION}.dat \
-        > "run-${ITERATION}/HIST.EVTSDAT"
+    echo ${bench}.evts.orig.${iteration}-${bench}.evts.patc.${iteration}.dat \
+        > "run-${iteration}/HIST.EVTSDAT"
 
-    echo ${BENCH}.cpi.orig.${ITERATION}-${BENCH}.cpi.patc.${ITERATION}.dat \
-	> "run-${ITERATION}/HIST.CPIDAT"
+    echo ${bench}.cpi.orig.${iteration}-${bench}.cpi.patc.${iteration}.dat \
+	> "run-${iteration}/HIST.CPIDAT"
 
-    echo ${BENCH}.dc.orig.${ITERATION}-${BENCH}.dc.patc.${ITERATION}.dat \
-	> "run-${ITERATION}/HIST.DCMDAT"
+    echo ${bench}.dc.orig.${iteration}-${bench}.dc.patc.${iteration}.dat \
+	> "run-${iteration}/HIST.DCMDAT"
 
-    echo ${BENCH}.ic.orig.${ITERATION}-${BENCH}.ic.patc.${ITERATION}.dat \
-        > "run-${ITERATION}/HIST.ICMDAT"
+    echo ${bench}.ic.orig.${iteration}-${bench}.ic.patc.${iteration}.dat \
+        > "run-${iteration}/HIST.ICMDAT"
 
     files=(general smartstack)
     for file in "${files[@]}"
     do
-	cp "../notes/${file}.notes" "run-$ITERATION"
+	cp "../notes/${file}.notes" "run-${iteration}"
     done
 
-    cp compnotes.sh "run-$ITERATION"
-    scp -r "run-$ITERATION" "${USER}@${HOST}:${FILE}"
+    cp compnotes.sh "run-${iteration}"
+    scp -r "run-${iteration}" "${user}@${host}:${file}"
 }
 
 # DTrace needs escalated privileges
 check_ifroot
 
-mkdir -p    "run-$ITERATION"
+mkdir -p    "run-${iteration}"
 
 # Gather data with respect to time
-do_procevts   "run-$ITERATION"
-do_cpi        "run-$ITERATION"
-do_dcmisses   "run-$ITERATION"
-do_icmisses   "run-$ITERATION"
-do_timeflame  "run-$ITERATION"
-do_dcmflame   "run-$ITERATION"
-do_icmflame   "run-$ITERATION"
+do_procevts   "run-${iteration}"
+do_cpi        "run-${iteration}"
+do_dcmisses   "run-${iteration}"
+do_icmisses   "run-${iteration}"
+do_timeflame  "run-${iteration}"
+do_dcmflame   "run-${iteration}"
+do_icmflame   "run-${iteration}"
 
 # Generate the time series graphs
-do_cmpevts    "run-$ITERATION"
-do_rcmpevts   "run-$ITERATION"
-do_cmpcpits   "run-$ITERATION"
-do_cmpdcmts   "run-$ITERATION"
-do_cmpicmts   "run-$ITERATION"
+do_cmpevts    "run-${iteration}"
+do_rcmpevts   "run-${iteration}"
+do_cmpcpits   "run-${iteration}"
+do_cmpdcmts   "run-${iteration}"
+do_cmpicmts   "run-${iteration}"
 
 # Generate the histograms
-do_histcmpevts "run-$ITERATION"
-do_histcmpcpi  "run-$ITERATION"
-do_histcmpdcm  "run-$ITERATION"
-do_histcmpicm  "run-$ITERATION"
+do_histcmpevts "run-${iteration}"
+do_histcmpcpi  "run-${iteration}"
+do_histcmpdcm  "run-${iteration}"
+do_histcmpicm  "run-${iteration}"
 
 # Generate descriptive statistics
-do_rsummary    "run-$ITERATION"
+do_rsummary    "run-${iteration}"
 
 # Upload the results
 upload_results
