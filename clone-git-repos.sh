@@ -54,3 +54,6 @@ dohost()
 
 dohost "${leafhost}" "${leafrepos[@]}"
 dohost "${bitbhost}" "${bitbrepos[@]}"
+
+git config --global user.name "Stathis Kamperis"
+git config --global user.email ekamperi@gmail.com
