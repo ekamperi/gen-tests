@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# USAGE: dcmflame outfile /path/to/binary args
+# USAGE: icmflame outfile /path/to/binary args
 #
 
 set -e
